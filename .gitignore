@@ -40,4 +40,5 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store.dart_tool/
+.DS_Store
+.dart_tool/
