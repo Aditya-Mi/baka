@@ -160,8 +160,6 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  // Legacy compat — still called from settings sheet for biometric toggle
-  Future<bool> setupAuth({bool biometricOnly = false}) => setupBiometric();
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

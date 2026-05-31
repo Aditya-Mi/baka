@@ -6,7 +6,9 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
+import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/tag_chip.dart';
 
 class JournalCard extends ConsumerWidget {
   final JournalEntry entry;
@@ -79,26 +81,11 @@ class JournalCard extends ConsumerWidget {
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8, runSpacing: 6,
-                      children: entry.tags.map((tag) {
-                        final c = tagColorFor(tagList, tag);
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: c.withValues(alpha: 0.12),
-                            border: Border.all(
-                              color: c.withValues(alpha: 0.30), width: 1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '#$tag',
-                            style: TextStyle(fontFamily: 'Caveat',
-                              fontSize: 14, color: t.onBackground, height: 1.3,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children: entry.tags.map((tag) => TagChip(
+                        tag: tag,
+                        color: tagColorFor(tagList, tag),
+                        textColor: t.onBackground,
+                      )).toList(),
                     ),
                   ],
                 ],
@@ -109,41 +96,6 @@ class JournalCard extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Builds a [TextSpan] that renders [text] with [baseStyle] but highlights
-/// every `#word` token in bold + [highlightColor].
-/// Returns stored tag color, falls back to deterministic palette hash.
-Color tagColorFor(List<Tag> tags, String name) {
-  for (final t in tags) {
-    if (t.name == name) return t.color;
-  }
-  return TagPalette.forName(name);
-}
-
-TextSpan buildTagSpan(String text, Color highlightColor, TextStyle baseStyle) {
-  final pattern = RegExp(r'#\w+');
-  if (!pattern.hasMatch(text)) return TextSpan(text: text, style: baseStyle);
-
-  final spans = <InlineSpan>[];
-  int cursor = 0;
-  for (final m in pattern.allMatches(text)) {
-    if (m.start > cursor) {
-      spans.add(TextSpan(text: text.substring(cursor, m.start), style: baseStyle));
-    }
-    spans.add(TextSpan(
-      text: m.group(0),
-      style: baseStyle.copyWith(
-        color: highlightColor,
-        fontWeight: FontWeight.bold,
-      ),
-    ));
-    cursor = m.end;
-  }
-  if (cursor < text.length) {
-    spans.add(TextSpan(text: text.substring(cursor), style: baseStyle));
-  }
-  return TextSpan(children: spans, style: baseStyle);
 }
 
 class _CardRulesPainter extends CustomPainter {

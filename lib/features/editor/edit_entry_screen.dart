@@ -16,6 +16,7 @@ import 'package:baka/models/anchor.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/utils/hashtag_controller.dart';
+import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
 
 class EditEntryScreen extends HookConsumerWidget {
@@ -158,7 +159,7 @@ class EditEntryScreen extends HookConsumerWidget {
                         color: t.onBackground)),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () => _pickTime(ctx, entryDate),
+                    onTap: () => pickTime(ctx, entryDate),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Text(DateFormat.jm().format(date),
                           style: TextStyle(fontFamily: 'Caveat',
@@ -230,23 +231,4 @@ class EditEntryScreen extends HookConsumerWidget {
     );
   }
 
-  static Future<void> _pickTime(
-      BuildContext context, ValueNotifier<DateTime> notifier) async {
-    final current = notifier.value;
-    final picked  = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(current),
-    );
-    if (picked == null || !context.mounted) return;
-    var updated = DateTime(
-        current.year, current.month, current.day, picked.hour, picked.minute);
-    final now     = DateTime.now();
-    final isToday = current.year == now.year &&
-        current.month == now.month &&
-        current.day == now.day;
-    if (isToday && updated.isAfter(now)) {
-      updated = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-    }
-    notifier.value = updated;
-  }
 }

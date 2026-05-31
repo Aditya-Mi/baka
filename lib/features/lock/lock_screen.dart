@@ -12,6 +12,7 @@ import 'package:baka/features/lock/pin_keypad.dart';
 import 'package:baka/features/onboarding/reminder_prompt_dialog.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/security_option_tile.dart';
 
 class LockScreen extends HookConsumerWidget {
   const LockScreen({super.key});
@@ -422,9 +423,6 @@ class _NameStepState extends State<_NameStep> {
         Text('What should we call you?',
             style: TextStyle(fontFamily: 'PlayfairDisplay',
               fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
-        const SizedBox(height: 4),
-        Text('Shows as a greeting on the home screen.',
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: t.onSurfaceMuted)),
         const SizedBox(height: 20),
         TextField(
           controller: widget.ctrl,
@@ -501,20 +499,23 @@ class _SecurityStep extends StatelessWidget {
               textAlign: TextAlign.center),
         ],
         const SizedBox(height: 20),
-        _SecOpt(icon: Icons.fingerprint_rounded,
+        SecurityOptionTile(
+            icon: Icons.fingerprint_rounded,
             label: 'Fingerprint + PIN',
-            sub: 'Fingerprint first, custom PIN as fallback',
-            primary: true, t: t, loading: loading, onTap: onBiometricAndPin),
+            subtitle: 'Fingerprint first, custom PIN',
+            loading: loading, onTap: onBiometricAndPin),
         const SizedBox(height: 8),
-        _SecOpt(icon: Icons.fingerprint_rounded,
+        SecurityOptionTile(
+            icon: Icons.fingerprint_rounded,
             label: 'Fingerprint only',
-            sub: 'Biometric only, no PIN fallback',
-            primary: false, t: t, loading: loading, onTap: onBiometricOnly),
+            subtitle: 'Biometric only',
+            loading: loading, onTap: onBiometricOnly),
         const SizedBox(height: 8),
-        _SecOpt(icon: Icons.pin_outlined,
+        SecurityOptionTile(
+            icon: Icons.pin_outlined,
             label: 'PIN only',
-            sub: 'Set a custom 4-digit PIN',
-            primary: false, t: t, loading: loading, onTap: onPinOnly),
+            subtitle: 'Set a custom 4-digit PIN',
+            loading: loading, onTap: onPinOnly),
         const SizedBox(height: 12),
         TextButton(
           onPressed: loading ? null : onSkip,
@@ -607,52 +608,6 @@ class _UnlockControls extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Small shared widgets
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _SecOpt extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String sub;
-  final bool primary;
-  final BakaTokens t;
-  final bool loading;
-  final VoidCallback onTap;
-  const _SecOpt({required this.icon, required this.label, required this.sub,
-      required this.primary, required this.t, required this.loading,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg     = primary ? t.primary : Colors.transparent;
-    final fg     = primary ? Colors.white : t.onBackground;
-    final subfg  = primary ? Colors.white70 : t.onSurfaceMuted;
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: bg, borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: loading ? null : onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: primary ? null : BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: t.outline, width: 1)),
-            child: Row(children: [
-              Icon(icon, size: 20, color: fg),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(label, style: TextStyle(fontFamily: 'Caveat',
-                    fontSize: 16, fontWeight: FontWeight.w700, color: fg)),
-                Text(sub, style: TextStyle(fontFamily: 'Caveat',
-                    fontSize: 12, color: subfg)),
-              ])),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _FilledPill extends StatelessWidget {
   final String label;

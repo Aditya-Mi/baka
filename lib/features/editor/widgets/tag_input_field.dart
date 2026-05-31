@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/features/home/widgets/journal_card.dart' show tagColorFor;
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
+import 'package:baka/utils/tag_utils.dart';
+import 'package:baka/widgets/tag_chip.dart';
 
 /// Horizontal tag row with inline add-tag input.
 class TagInputField extends ConsumerStatefulWidget {
@@ -66,10 +67,10 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // Existing tags
-          ...widget.tags.map((tag) => _TagChip(
+          ...widget.tags.map((tag) => TagChip(
             tag: tag,
             color: tagColorFor(tagList, tag),
-            onBg: t.onBackground,
+            textColor: t.onBackground,
             onRemove: () => _removeTag(tag),
           )),
 
@@ -146,44 +147,3 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
   }
 }
 
-class _TagChip extends StatelessWidget {
-  final String tag;
-  final Color color;
-  final Color onBg;
-  final VoidCallback onRemove;
-
-  const _TagChip({
-    required this.tag,
-    required this.color,
-    required this.onBg,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(left: 10, right: 4, top: 4, bottom: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '#$tag',
-            style: TextStyle(fontFamily: 'Caveat',
-              fontSize: 13, fontWeight: FontWeight.w500, color: onBg,
-            ),
-          ),
-          const SizedBox(width: 2),
-          GestureDetector(
-            onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: color),
-          ),
-        ],
-      ),
-    );
-  }
-}

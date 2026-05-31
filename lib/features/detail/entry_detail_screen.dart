@@ -6,7 +6,8 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/features/home/widgets/journal_card.dart' show buildTagSpan, tagColorFor;
+import 'package:baka/utils/tag_utils.dart';
+import 'package:baka/widgets/tag_chip.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
@@ -98,26 +99,11 @@ class EntryDetailScreen extends HookConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: Wrap(
                     spacing: 6, runSpacing: 6,
-                    children: entry.tags.map((tag) {
-                      final c = tagColorFor(tagList, tag);
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: c.withValues(alpha: 0.12),
-                          border: Border.all(
-                              color: c.withValues(alpha: 0.30), width: 1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '#$tag',
-                          style: TextStyle(fontFamily: 'Caveat',
-                            fontSize: 13, fontWeight: FontWeight.w500,
-                            color: t.onBackground,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    children: entry.tags.map((tag) => TagChip(
+                      tag: tag,
+                      color: tagColorFor(tagList, tag),
+                      textColor: t.onBackground,
+                    )).toList(),
                   ),
                 ),
               ),

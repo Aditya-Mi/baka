@@ -13,6 +13,7 @@ import 'package:baka/features/settings/widgets/export_import_tile.dart';
 import 'package:baka/features/settings/widgets/theme_toggle_tile.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/security_option_tile.dart';
 
 class SettingsScreen extends HookConsumerWidget {
   const SettingsScreen({super.key});
@@ -99,7 +100,7 @@ class SettingsScreen extends HookConsumerWidget {
                   value: auth.biometricsEnabled,
                   onChanged: (enabled) {
                     if (enabled) {
-                      _showSecurityOptions(context, ref, t);
+                      _showSecurityOptions(context);
                     } else {
                       ref.read(authProvider.notifier).skipSetup();
                     }
@@ -112,7 +113,7 @@ class SettingsScreen extends HookConsumerWidget {
           _Row(
             title: 'Change security method',
             trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
-            onTap: () => _showSecurityOptions(context, ref, t),
+            onTap: () => _showSecurityOptions(context),
           ),
 
           // ── Data ─────────────────────────────────────────────────────
@@ -149,16 +150,12 @@ class SettingsScreen extends HookConsumerWidget {
     );
   }
 
-  static void _showSecurityOptions(
-    BuildContext context,
-    WidgetRef ref,
-    BakaTokens t,
-  ) {
+  static void _showSecurityOptions(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _SecurityOptionsSheet(tokens: t, ref: ref),
+      builder: (_) => const _SecurityOptionsSheet(),
     );
   }
 
@@ -291,16 +288,14 @@ class _Row extends StatelessWidget {
 
 // ── Security options sheet ────────────────────────────────────────────────────
 
-class _SecurityOptionsSheet extends StatefulWidget {
-  final BakaTokens tokens;
-  final WidgetRef ref;
-  const _SecurityOptionsSheet({required this.tokens, required this.ref});
+class _SecurityOptionsSheet extends ConsumerStatefulWidget {
+  const _SecurityOptionsSheet();
 
   @override
-  State<_SecurityOptionsSheet> createState() => _SecurityOptionsSheetState();
+  ConsumerState<_SecurityOptionsSheet> createState() => _SecurityOptionsSheetState();
 }
 
-class _SecurityOptionsSheetState extends State<_SecurityOptionsSheet> {
+class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
   bool _loading = false;
   String? _error;
   // null = choice screen, 'pin', 'biometricAndPin' = PIN setup flow
@@ -308,12 +303,10 @@ class _SecurityOptionsSheetState extends State<_SecurityOptionsSheet> {
   String? _firstPin;
   String? _pinError;
 
-  BakaTokens get t => widget.tokens;
-
   Future<void> _biometricOnly() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final ok = await widget.ref.read(authProvider.notifier).setupBiometric();
+      final ok = await ref.read(authProvider.notifier).setupBiometric();
       if (ok && mounted) {
         Navigator.of(context).pop();
       } else if (!ok) setState(() => _error = 'Biometric setup failed.');
@@ -328,86 +321,103 @@ class _SecurityOptionsSheetState extends State<_SecurityOptionsSheet> {
     setState(() { _loading = true; _pinError = null; });
     try {
       if (_pinMode == 'biometricAndPin') {
-        final ok = await widget.ref.read(authProvider.notifier).setupBiometricAndPin(pin);
+        final ok = await ref.read(authProvider.notifier).setupBiometricAndPin(pin);
         if (!ok && mounted) {
-          // Biometric unavailable — fall back to PIN only
-          await widget.ref.read(authProvider.notifier).setupPin(pin);
+          await ref.read(authProvider.notifier).setupPin(pin);
         }
       } else {
-        await widget.ref.read(authProvider.notifier).setupPin(pin);
+        await ref.read(authProvider.notifier).setupPin(pin);
       }
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
-      setState(() => _pinError = 'Something went wrong.');
+      if (mounted) setState(() => _pinError = 'Something went wrong.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _disable() async {
-    await widget.ref.read(authProvider.notifier).skipSetup();
+    await ref.read(authProvider.notifier).skipSetup();
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     return Container(
       decoration: BoxDecoration(
         color: t.surfaceElev,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 32),
-      child: _pinMode != null ? _buildPinSetup() : _buildChoices(),
+      child: _pinMode != null ? _buildPinSetup(t) : _buildChoices(t),
     );
   }
 
-  Widget _buildChoices() => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(width: 40, height: 4,
-          decoration: BoxDecoration(color: t.outline.withValues(alpha:0.5),
-              borderRadius: BorderRadius.circular(2))),
-      const SizedBox(height: 20),
-      Text('Security method', style: TextStyle(fontFamily: 'PlayfairDisplay',
-          fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
-      const SizedBox(height: 4),
-      Text('Choose how to unlock your journal.',
-          style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: t.onSurfaceMuted)),
-      const SizedBox(height: 20),
-      if (_error != null) ...[
-        Text(_error!, style: TextStyle(fontFamily: 'Lora', fontSize: 13,
-            color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
-        const SizedBox(height: 10),
+  Widget _buildChoices(BakaTokens t) {
+    final currentMode = ref.watch(authProvider).authMode;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 40, height: 4,
+            decoration: BoxDecoration(color: t.outline.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(2))),
+        const SizedBox(height: 20),
+        Text('Security method', style: TextStyle(fontFamily: 'PlayfairDisplay',
+            fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+        const SizedBox(height: 4),
+        Text('Choose how to unlock your journal.',
+            style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: t.onSurfaceMuted)),
+        const SizedBox(height: 20),
+        if (_error != null) ...[
+          Text(_error!, style: TextStyle(fontFamily: 'Lora', fontSize: 13,
+              color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
+          const SizedBox(height: 10),
+        ],
+        SecurityOptionTile(
+            label: 'Fingerprint + PIN',
+            subtitle: 'Fingerprint first, custom PIN',
+            icon: Icons.fingerprint_rounded,
+            selected: currentMode == AuthMode.biometricAndPin,
+            loading: _loading,
+            onTap: () => setState(() { _pinMode = 'biometricAndPin'; _firstPin = null; _pinError = null; })),
+        const SizedBox(height: 8),
+        SecurityOptionTile(
+            label: 'Fingerprint only',
+            subtitle: 'Biometric only',
+            icon: Icons.fingerprint_rounded,
+            selected: currentMode == AuthMode.biometric,
+            loading: _loading,
+            onTap: _biometricOnly),
+        const SizedBox(height: 8),
+        SecurityOptionTile(
+            label: 'PIN only',
+            subtitle: 'Custom 4-digit PIN to unlock',
+            icon: Icons.pin_outlined,
+            selected: currentMode == AuthMode.pin,
+            loading: _loading,
+            onTap: () => setState(() { _pinMode = 'pin'; _firstPin = null; _pinError = null; })),
+        const SizedBox(height: 8),
+        SecurityOptionTile(
+            label: 'No lock',
+            subtitle: 'Anyone can open the app',
+            icon: Icons.lock_open_outlined,
+            selected: currentMode == AuthMode.none,
+            danger: true,
+            loading: _loading,
+            onTap: _disable),
       ],
-      _Opt(label: 'Fingerprint + PIN', subtitle: 'Fingerprint first, custom PIN as fallback',
-          icon: Icons.fingerprint_rounded, primary: true, t: t, loading: _loading,
-          onTap: () => setState(() { _pinMode = 'biometricAndPin'; _firstPin = null; _pinError = null; })),
-      const SizedBox(height: 8),
-      _Opt(label: 'Fingerprint only', subtitle: 'Biometric only, no PIN fallback',
-          icon: Icons.fingerprint_rounded, primary: false, t: t, loading: _loading,
-          onTap: _biometricOnly),
-      const SizedBox(height: 8),
-      _Opt(label: 'PIN only', subtitle: 'Custom 4-digit PIN to unlock',
-          icon: Icons.pin_outlined, primary: false, t: t, loading: _loading,
-          onTap: () => setState(() { _pinMode = 'pin'; _firstPin = null; _pinError = null; })),
-      const SizedBox(height: 8),
-      _Opt(label: 'No lock', subtitle: 'Anyone can open the app',
-          icon: Icons.lock_open_outlined, primary: false, t: t, loading: _loading,
-          onTap: _disable, danger: true),
-    ],
-  );
+    );
+  }
 
-  Widget _buildPinSetup() {
+  Widget _buildPinSetup(BakaTokens t) {
     final isConfirm = _firstPin != null;
-    final _attempt  = _firstPin == null ? (_pinError == null ? 0 : 1) : 0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back arrow
         IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 18,
-              color: widget.tokens.onSurfaceMuted),
+          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: t.onSurfaceMuted),
           onPressed: () => setState(() {
             if (isConfirm) { _firstPin = null; _pinError = null; }
             else { _pinMode = null; }
@@ -437,49 +447,6 @@ class _SecurityOptionsSheetState extends State<_SecurityOptionsSheet> {
           },
         ),
       ],
-    );
-  }
-}
-
-class _Opt extends StatelessWidget {
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final bool primary;
-  final bool danger;
-  final BakaTokens t;
-  final bool loading;
-  final VoidCallback onTap;
-  const _Opt({required this.label, required this.subtitle, required this.icon, required this.primary, required this.t, required this.loading, required this.onTap, this.danger = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = primary ? t.primary : Colors.transparent;
-    final border = danger ? Colors.red.shade300 : t.outline;
-    final labelColor = primary ? Colors.white : (danger ? Colors.red.shade400 : t.onBackground);
-    final subColor = primary ? Colors.white70 : t.onSurfaceMuted;
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: loading ? null : onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: primary ? null : BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: border, width: 1)),
-            child: Row(children: [
-              Icon(icon, size: 20, color: labelColor),
-              const SizedBox(width: 12),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(label, style: TextStyle(fontFamily: 'Caveat', fontSize: 17, fontWeight: FontWeight.w700, color: labelColor)),
-                Text(subtitle, style: TextStyle(fontFamily: 'Caveat', fontSize: 13, color: subColor)),
-              ]),
-            ]),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -18,6 +18,7 @@ import 'package:baka/models/mood.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/features/editor/widgets/word_counter_bar.dart';
 import 'package:baka/utils/hashtag_controller.dart';
+import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
 
 class NewEntryScreen extends HookConsumerWidget {
@@ -233,7 +234,7 @@ class _DateRow extends StatelessWidget {
             _DateChip(
               icon: Icons.access_time,
               label: DateFormat.jm().format(date),
-              onTap: () => _pickTime(ctx, entryDate),
+              onTap: () => pickTime(ctx, entryDate),
             ),
             Text('tap time to change',
                 style: TextStyle(fontFamily: 'Caveat',
@@ -245,25 +246,6 @@ class _DateRow extends StatelessWidget {
     );
   }
 
-  static Future<void> _pickTime(
-      BuildContext context, ValueNotifier<DateTime> notifier) async {
-    final current = notifier.value;
-    final picked  = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(current),
-    );
-    if (picked == null || !context.mounted) return;
-    var updated = DateTime(
-        current.year, current.month, current.day, picked.hour, picked.minute);
-    final now     = DateTime.now();
-    final isToday = current.year == now.year &&
-        current.month == now.month &&
-        current.day == now.day;
-    if (isToday && updated.isAfter(now)) {
-      updated = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-    }
-    notifier.value = updated;
-  }
 }
 
 // ── Word/char counter — rebuilds ONLY on text change, not on mood/tag/etc ────
