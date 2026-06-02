@@ -43,8 +43,8 @@ class SettingsScreen extends HookConsumerWidget {
         title: Text(
           'Settings',
           style: TextStyle(
-            fontFamily: 'PlayfairDisplay',
-            fontSize: 22, fontWeight: FontWeight.w600, color: onBg,
+            fontFamily: 'Caveat',
+            fontSize: 28, fontWeight: FontWeight.w700, color: t.primary,
           ),
         ),
       ),
