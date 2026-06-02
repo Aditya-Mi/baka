@@ -1,4 +1,6 @@
 .gradle
+android/key.properties
+android/app/keystore.jks
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/

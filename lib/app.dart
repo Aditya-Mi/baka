@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:baka/core/auth/auth_provider.dart';
 import 'package:baka/core/notifications/notification_service.dart';
 import 'package:baka/core/notifications/reminder_provider.dart';
+import 'package:baka/core/update/update_service.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/theme/theme_provider.dart';
 import 'package:baka/core/fonts/font_provider.dart';
@@ -137,8 +138,8 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reschedule daily reminder on every app open (rotates notification body)
     ref.read(reminderProvider.notifier).refreshScheduleOnOpen();
+    UpdateService.checkForUpdate(context);
   }
 
   @override
