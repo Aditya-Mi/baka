@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -31,22 +31,17 @@ class _PhotoSheet extends StatelessWidget {
   }
 
   Future<String?> _pickAndCopy() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-    if (result == null || result.files.isEmpty) return null;
-    final src = result.files.first.path;
-    if (src == null) return null;
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (image == null) return null;
 
     final docsDir = await getApplicationDocumentsDirectory();
     final photosDir = Directory(p.join(docsDir.path, 'photos'));
     await photosDir.create(recursive: true);
 
-    final ext      = p.extension(src);
+    final ext      = p.extension(image.path);
     final fileName = '${const Uuid().v4()}$ext';
     final destPath = p.join(photosDir.path, fileName);
-    await File(src).copy(destPath);
+    await File(image.path).copy(destPath);
 
     return 'photos/$fileName';
   }

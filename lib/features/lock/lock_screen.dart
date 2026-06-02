@@ -7,9 +7,9 @@ import 'package:local_auth/local_auth.dart';
 
 import 'package:baka/core/auth/auth_provider.dart';
 import 'package:baka/core/notifications/notification_service.dart';
+import 'package:baka/core/notifications/reminder_provider.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/lock/pin_keypad.dart';
-import 'package:baka/features/onboarding/reminder_prompt_dialog.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/security_option_tile.dart';
@@ -20,7 +20,9 @@ class LockScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth    = ref.watch(authProvider);
-    final isSetup = !auth.configured;
+    // Captured once at first render — auth.configured flips to true mid-setup
+    // (after PIN/biometric/skip), so recomputing would incorrectly exit setup mode.
+    final isSetup = useMemoized(() => !auth.configured);
     final isDark  = Theme.of(context).brightness == Brightness.dark;
     final t       = context.tokens;
 
@@ -46,7 +48,7 @@ class LockScreen extends HookConsumerWidget {
 
     // Derive whether logo should show
     final showLogo = isSetup
-        ? setupStep.value < 2
+        ? setupStep.value != 2
         : (auth.authMode != AuthMode.pin && !showPinKeypad.value);
 
     // Determine if PIN controls are active (for layout)
@@ -129,7 +131,7 @@ class LockScreen extends HookConsumerWidget {
                           } else {
                             await ref.read(authProvider.notifier).setupPin(pin);
                           }
-                          if (context.mounted) await _finishSetup(context);
+                          if (context.mounted) setupStep.value = 3;
                         },
                         onUnlockPin: (pin) async {
                           final ok = await ref
@@ -164,7 +166,7 @@ class LockScreen extends HookConsumerWidget {
                                     .read(authProvider.notifier)
                                     .setupBiometric();
                                 if (ok && context.mounted) {
-                                  await _finishSetup(context);
+                                  setupStep.value = 3;
                                 } else if (!ok) {
                                   bioError.value = 'Biometric setup failed.';
                                 }
@@ -190,7 +192,11 @@ class LockScreen extends HookConsumerWidget {
                             },
                             onSkip: () async {
                               await ref.read(authProvider.notifier).skipSetup();
-                              if (context.mounted) await _finishSetup(context);
+                              if (context.mounted) setupStep.value = 3;
+                            },
+                            onReminderDone: () {
+                              ref.read(authProvider.notifier).completeOnboarding();
+                              _finishSetup(context);
                             },
                             bioError: bioError.value,
                             bioInFlight: bioInFlight.value,
@@ -230,17 +236,7 @@ class LockScreen extends HookConsumerWidget {
     );
   }
 
-  static Future<void> _finishSetup(BuildContext context) async {
-    // Request notification permission before asking about reminders
-    await NotificationService.instance.requestPermissions();
-    if (!context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const ReminderPromptDialog(),
-    );
-    if (context.mounted) context.go('/');
-  }
+  static void _finishSetup(BuildContext context) => context.go('/');
 
   static Future<void> _loadBiometricLabel(ValueNotifier<String> label) async {
     try {
@@ -349,6 +345,7 @@ class _SetupControls extends StatefulWidget {
   final VoidCallback onBiometricAndPin;
   final VoidCallback onPinOnly;
   final VoidCallback onSkip;
+  final VoidCallback onReminderDone;
   final String? bioError;
   final bool bioInFlight;
 
@@ -359,6 +356,7 @@ class _SetupControls extends StatefulWidget {
     required this.onBiometricAndPin,
     required this.onPinOnly,
     required this.onSkip,
+    required this.onReminderDone,
     required this.bioError,
     required this.bioInFlight,
   });
@@ -379,6 +377,7 @@ class _SetupControlsState extends State<_SetupControls> {
   @override
   Widget build(BuildContext context) {
     if (widget.step == 0) return _NameStep(ctrl: _nameCtrl, onDone: widget.onNameDone);
+    if (widget.step == 3) return _ReminderStep(onDone: widget.onReminderDone);
     return _SecurityStep(
       onBiometricOnly: widget.onBiometricOnly,
       onBiometricAndPin: widget.onBiometricAndPin,
@@ -519,6 +518,102 @@ class _SecurityStep extends StatelessWidget {
         const SizedBox(height: 12),
         TextButton(
           onPressed: loading ? null : onSkip,
+          style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
+          child: Text('Skip for now',
+              style: TextStyle(fontFamily: 'Caveat', fontSize: 16, color: t.onSurfaceMuted)),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reminder setup step (step 3)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ReminderStep extends HookConsumerWidget {
+  final VoidCallback onDone;
+  const _ReminderStep({required this.onDone});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t           = context.tokens;
+    final selectedTime = useState(ReminderState.defaultTime);
+    final loading      = useState(false);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 56, height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: t.primaryContainer,
+            border: Border.all(color: t.primary, width: 1.5),
+          ),
+          child: Icon(Icons.notifications_outlined, size: 28, color: t.primary),
+        ),
+        const SizedBox(height: 16),
+        Text('Daily reminders?',
+            style: TextStyle(fontFamily: 'PlayfairDisplay',
+              fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+        const SizedBox(height: 4),
+        Text('A gentle nudge to write each day.\nChange anytime in Settings.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+                color: t.onSurfaceMuted, height: 1.4)),
+        const SizedBox(height: 20),
+        // Tappable time chip
+        GestureDetector(
+          onTap: () async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: selectedTime.value,
+            );
+            if (picked != null) selectedTime.value = picked;
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: t.primaryContainer,
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(color: t.primary.withValues(alpha: 0.4), width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.access_time_rounded, size: 16, color: t.primary),
+                const SizedBox(width: 8),
+                Text(
+                  selectedTime.value.format(context),
+                  style: TextStyle(fontFamily: 'Caveat',
+                    fontSize: 16, fontWeight: FontWeight.w700, color: t.primary),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.edit_rounded, size: 13, color: t.primary.withValues(alpha: 0.7)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        AnimatedOpacity(
+          opacity: loading.value ? 0.6 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          child: _FilledPill(
+            label: loading.value ? 'Setting up…' : 'Yes, remind me',
+            onTap: loading.value ? null : () async {
+              loading.value = true;
+              await NotificationService.instance.requestPermissions();
+              await ref.read(reminderProvider.notifier).setEnabled(true);
+              await ref.read(reminderProvider.notifier).setTime(selectedTime.value);
+              loading.value = false;
+              onDone();
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: loading.value ? null : onDone,
           style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
           child: Text('Skip for now',
               style: TextStyle(fontFamily: 'Caveat', fontSize: 16, color: t.onSurfaceMuted)),

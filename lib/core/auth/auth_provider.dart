@@ -107,7 +107,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await AuthService.instance.setSkipLock(false);
       await AuthService.instance.setAuthMode(AuthMode.biometric);
       state = const AuthState(
-        isLocked: false, biometricsEnabled: true,
+        isLocked: true, biometricsEnabled: true,
         configured: true, authMode: AuthMode.biometric, isInitialized: true,
       );
     }
@@ -129,7 +129,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await AuthService.instance.setPin(pin);
       await AuthService.instance.setAuthMode(AuthMode.biometricAndPin);
       state = const AuthState(
-        isLocked: false, biometricsEnabled: true,
+        isLocked: true, biometricsEnabled: true,
         configured: true, authMode: AuthMode.biometricAndPin, isInitialized: true,
       );
     }
@@ -143,9 +143,14 @@ class AuthNotifier extends Notifier<AuthState> {
     await AuthService.instance.setPin(pin);
     await AuthService.instance.setAuthMode(AuthMode.pin);
     state = const AuthState(
-      isLocked: false, biometricsEnabled: false,
+      isLocked: true, biometricsEnabled: false,
       configured: true, authMode: AuthMode.pin, isInitialized: true,
     );
+  }
+
+  /// Called after onboarding completes (reminder step done) — unlocks without auth prompt.
+  void completeOnboarding() {
+    state = state.copyWith(isLocked: false);
   }
 
   /// No lock.
@@ -155,7 +160,7 @@ class AuthNotifier extends Notifier<AuthState> {
     await AuthService.instance.setAuthMode(AuthMode.none);
     await AuthService.instance.clearPin();
     state = const AuthState(
-      isLocked: false, biometricsEnabled: false,
+      isLocked: true, biometricsEnabled: false,
       configured: true, authMode: AuthMode.none, isInitialized: true,
     );
   }

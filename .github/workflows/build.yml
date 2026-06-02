@@ -27,18 +27,28 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # Resolve version: tag → "1.2.0+<run>", branch push → "0.0.0+<run>"
+      # Read version name from pubspec.yaml (e.g. "1.2.0" from "1.2.0+3")
+      - name: Read pubspec version
+        id: pubspec
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1 | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Resolve version: tag → pubspec version, branch push → "0.0.0+<run>"
       - name: Resolve version
         id: ver
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            TAG=${GITHUB_REF#refs/tags/v}   # strip leading "v"
-            echo "name=$TAG" >> $GITHUB_OUTPUT
-            echo "full=$TAG+${{ github.run_number }}" >> $GITHUB_OUTPUT
-            echo "artifact=baka-$TAG" >> $GITHUB_OUTPUT
+            TAG=${GITHUB_REF#refs/tags/v}
+            PUBSPEC=${{ steps.pubspec.outputs.version }}
+            # Warn if tag and pubspec mismatch
+            if [[ "$TAG" != "$PUBSPEC" ]]; then
+              echo "::warning::Tag v$TAG does not match pubspec version $PUBSPEC"
+            fi
+            echo "name=$PUBSPEC" >> $GITHUB_OUTPUT
+            echo "artifact=baka-$PUBSPEC" >> $GITHUB_OUTPUT
           else
             echo "name=0.0.0" >> $GITHUB_OUTPUT
-            echo "full=0.0.0+${{ github.run_number }}" >> $GITHUB_OUTPUT
             echo "artifact=baka-dev-${{ github.run_number }}" >> $GITHUB_OUTPUT
           fi
 
