@@ -27,12 +27,17 @@ android {
         jvmTarget = "11"
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("keystore.jks")
-            storePassword = keyProps.getProperty("storePassword") ?: System.getenv("STORE_PASSWORD") ?: ""
-            keyAlias    = keyProps.getProperty("keyAlias")       ?: System.getenv("KEY_ALIAS")       ?: ""
-            keyPassword = keyProps.getProperty("keyPassword")    ?: System.getenv("KEY_PASSWORD")    ?: ""
+    val keystoreFile = file("keystore.jks")
+    val hasKeystore = keystoreFile.exists()
+
+    if (hasKeystore) {
+        signingConfigs {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = keyProps.getProperty("storePassword") ?: System.getenv("STORE_PASSWORD") ?: ""
+                keyAlias    = keyProps.getProperty("keyAlias")       ?: System.getenv("KEY_ALIAS")       ?: ""
+                keyPassword = keyProps.getProperty("keyPassword")    ?: System.getenv("KEY_PASSWORD")    ?: ""
+            }
         }
     }
 
@@ -46,7 +51,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasKeystore)
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
         }
     }
 }
