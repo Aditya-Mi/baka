@@ -86,7 +86,7 @@ jobs:
       # ── ON MAIN PUSH: Shorebird patch (OTA, Dart-only changes) ───────────────
       - name: Shorebird Patch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: shorebird patch android --build-number=${{ github.run_number }}
+        run: shorebird patch android
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         continue-on-error: true   # fails silently if no release exists yet
