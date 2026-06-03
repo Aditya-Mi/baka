@@ -70,7 +70,7 @@ class HashtagController extends TextEditingController {
   static List<String> extractTags(String text) {
     return _completedPattern
         .allMatches(text)
-        .map((m) => m.group(1)!.toLowerCase())
+        .map((m) => m.group(1)!)
         .where((t) => t.isNotEmpty)
         .toSet()
         .toList();

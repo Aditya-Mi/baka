@@ -69,10 +69,14 @@ class EditEntryScreen extends HookConsumerWidget {
         debounce?.cancel();
         debounce = Timer(const Duration(milliseconds: 400), () {
           final extracted = HashtagController.extractTags(bodyCtrl.text);
-          if (extracted.isEmpty) return;
-          final existing = Set<String>.from(tags.value);
-          final added    = extracted.where((x) => !existing.contains(x)).toList();
-          if (added.isNotEmpty) tags.value = [...tags.value, ...added];
+          final body = bodyCtrl.text;
+          final manual = tags.value.where(
+            (t) => !body.contains('#$t'),
+          ).toList();
+          final merged = [...extracted, ...manual.where(
+            (m) => !extracted.any((e) => e.toLowerCase() == m.toLowerCase()),
+          )];
+          if (merged.join() != tags.value.join()) tags.value = merged;
         });
       }
       bodyCtrl.addListener(listener);

@@ -37,8 +37,9 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
   }
 
   void _submitTag(String raw) {
-    final tag = raw.trim().toLowerCase().replaceAll('#', '');
-    if (tag.isNotEmpty && !widget.tags.contains(tag)) {
+    final tag = raw.trim().replaceAll('#', '');
+    if (tag.isNotEmpty &&
+        !widget.tags.any((t) => t.toLowerCase() == tag.toLowerCase())) {
       widget.onChanged([...widget.tags, tag]);
     }
     _ctrl.clear();

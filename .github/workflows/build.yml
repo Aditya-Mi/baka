@@ -68,7 +68,7 @@ jobs:
       # No need for a second flutter build apk step.
       - name: Shorebird Release
         if: startsWith(github.ref, 'refs/tags/v')
-        run: shorebird release android --artifact apk
+        run: shorebird release android --artifact apk --build-number=${{ github.run_number }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -86,7 +86,7 @@ jobs:
       # ── ON MAIN PUSH: Shorebird patch (OTA, Dart-only changes) ───────────────
       - name: Shorebird Patch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: shorebird patch android
+        run: shorebird patch android --build-number=${{ github.run_number }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         continue-on-error: true   # fails silently if no release exists yet

@@ -5,6 +5,78 @@ import 'package:flutter/material.dart';
 import 'package:baka/models/mood.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Flame  (viewBox 0 0 24 24) — streak icon, matches MoodGlyph design language
+// ─────────────────────────────────────────────────────────────────────────────
+
+class FlameIcon extends StatelessWidget {
+  final double width;
+  final double height;
+  final Color color;
+  const FlameIcon({
+    super.key,
+    this.width = 16,
+    this.height = 20,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+        size: Size(width, height),
+        painter: _FlamePainter(color),
+      );
+}
+
+class _FlamePainter extends CustomPainter {
+  final Color color;
+  _FlamePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = math.min(size.width / 24, size.height / 24);
+    canvas
+      ..save()
+      ..translate((size.width - 24 * s) / 2, (size.height - 24 * s) / 2)
+      ..scale(s);
+
+    final stroke = Paint()
+      ..color = color
+      ..strokeWidth = 1.75
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Outer flame
+    final outer = Path()
+      ..moveTo(12, 21)
+      ..cubicTo(6, 21, 3, 17, 3, 13)
+      ..cubicTo(3, 9, 6, 7, 8, 5)
+      ..cubicTo(8, 8, 10, 9, 10, 9)
+      ..cubicTo(10, 6, 12, 3, 14, 2)
+      ..cubicTo(14, 6, 16, 7, 17, 9)
+      ..cubicTo(19, 7, 20, 5, 20, 5)
+      ..cubicTo(21, 8, 21, 11, 21, 13)
+      ..cubicTo(21, 17, 18, 21, 12, 21)
+      ..close();
+    canvas.drawPath(outer, stroke);
+
+    // Inner teardrop — warmth detail
+    final inner = Path()
+      ..moveTo(12, 18)
+      ..cubicTo(9.5, 18, 8, 16, 8, 14)
+      ..cubicTo(8, 12, 10, 11, 12, 10)
+      ..cubicTo(14, 11, 16, 12, 16, 14)
+      ..cubicTo(16, 16, 14.5, 18, 12, 18)
+      ..close();
+    canvas.drawPath(inner, stroke..strokeWidth = 1.25);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_FlamePainter old) => old.color != color;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Quill  (viewBox 0 0 120 120)
 // ─────────────────────────────────────────────────────────────────────────────
 

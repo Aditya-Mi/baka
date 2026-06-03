@@ -66,7 +66,7 @@ class HomeScreen extends HookConsumerWidget {
               onTap: () => context.go('/stats'),
               child: Container(
                 margin: const EdgeInsets.only(right: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: t.primaryContainer,
                   borderRadius: BorderRadius.circular(20),
@@ -74,7 +74,7 @@ class HomeScreen extends HookConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🔥', style: TextStyle(fontSize: 13)),
+                    FlameIcon(width: 13, height: 18, color: t.primary),
                     const SizedBox(width: 3),
                     Text(
                       '$streak',
