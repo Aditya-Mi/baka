@@ -44,6 +44,7 @@ class EditEntryScreen extends HookConsumerWidget {
 
     final mood      = useState<Mood?>(null);
     final tags      = useState<List<String>>([]);
+    final bodyTags  = useState<Set<String>>({});
     final anchor    = useState(const Anchor());
     final hydrated  = useState(false);
     final isSaving  = useState(false);
@@ -55,6 +56,8 @@ class EditEntryScreen extends HookConsumerWidget {
         bodyCtrl.text   = entry.body;
         mood.value      = entry.mood;
         tags.value      = List<String>.from(entry.tags);
+        bodyTags.value  = Set<String>.from(
+            HashtagController.extractTags(entry.body));
         anchor.value    = entry.anchor ?? const Anchor();
         entryDate.value = entry.createdAt;
         hydrated.value  = true;
@@ -68,15 +71,21 @@ class EditEntryScreen extends HookConsumerWidget {
       void listener() {
         debounce?.cancel();
         debounce = Timer(const Duration(milliseconds: 400), () {
-          final extracted = HashtagController.extractTags(bodyCtrl.text);
-          final body = bodyCtrl.text;
-          final manual = tags.value.where(
-            (t) => !body.contains('#$t'),
-          ).toList();
-          final merged = [...extracted, ...manual.where(
-            (m) => !extracted.any((e) => e.toLowerCase() == m.toLowerCase()),
-          )];
-          if (merged.join() != tags.value.join()) tags.value = merged;
+          final newBody = Set<String>.from(
+              HashtagController.extractTags(bodyCtrl.text));
+          final removed = bodyTags.value.difference(newBody);
+          final added   = newBody.difference(bodyTags.value);
+          if (removed.isEmpty && added.isEmpty) return;
+          final current = tags.value.toList()
+            ..removeWhere((t) => removed.any(
+                (r) => r.toLowerCase() == t.toLowerCase()));
+          for (final a in added) {
+            if (!current.any((t) => t.toLowerCase() == a.toLowerCase())) {
+              current.add(a);
+            }
+          }
+          bodyTags.value = newBody;
+          tags.value = current;
         });
       }
       bodyCtrl.addListener(listener);
@@ -186,7 +195,7 @@ class EditEntryScreen extends HookConsumerWidget {
 
           // ── Body ─────────────────────────────────────────────────────────
           Expanded(
-            child: LinedPaperBackground(
+            child: RepaintBoundary(child: LinedPaperBackground(
               ruleColor: ruleColor,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -215,7 +224,7 @@ class EditEntryScreen extends HookConsumerWidget {
                 ),
               ),
             ),
-          ),
+          )),
 
           // ── Anchor bar ──────────────────────────────────────────────────
           AnchorBar(

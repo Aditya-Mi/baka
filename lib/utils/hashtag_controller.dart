@@ -44,6 +44,12 @@ class HashtagController extends TextEditingController {
   TextSpan _buildSpan(String text, TextStyle? style) {
     if (!_pattern.hasMatch(text)) return TextSpan(text: text, style: style);
 
+    // Compute once — reused for every hashtag span in this call.
+    final hlStyle = (style ?? const TextStyle()).copyWith(
+      color: highlightColor,
+      fontWeight: FontWeight.bold,
+    );
+
     final spans  = <InlineSpan>[];
     int   cursor = 0;
 
@@ -51,13 +57,7 @@ class HashtagController extends TextEditingController {
       if (m.start > cursor) {
         spans.add(TextSpan(text: text.substring(cursor, m.start), style: style));
       }
-      spans.add(TextSpan(
-        text: m.group(0),
-        style: (style ?? const TextStyle()).copyWith(
-          color:      highlightColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ));
+      spans.add(TextSpan(text: m.group(0), style: hlStyle));
       cursor = m.end;
     }
     if (cursor < text.length) {
