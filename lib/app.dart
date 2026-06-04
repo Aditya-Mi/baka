@@ -94,7 +94,8 @@ class _AppRoot extends ConsumerStatefulWidget {
 class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver {
   DateTime? _pausedAt;
   late final GoRouter _router;
-  bool _pendingNewEntry = false;
+  bool _pendingNewEntry  = false;
+  bool _updateChecked    = false;
 
   // ThemeData cache — only rebuilt when fontKey actually changes,
   // not on every auth/route rebuild.
@@ -139,12 +140,6 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
   void didChangeDependencies() {
     super.didChangeDependencies();
     ref.read(reminderProvider.notifier).refreshScheduleOnOpen();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Use router's navigator context — lives inside MaterialApp,
-      // so Navigator.of() succeeds where _AppRootState context fails.
-      final navContext = _routerKey.currentContext;
-      if (navContext != null) UpdateService.checkForUpdate(navContext);
-    });
   }
 
   @override
@@ -174,6 +169,14 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
   Widget build(BuildContext context) {
     ref.listen(authProvider, (_, next) {
       _router.refresh();
+      // Check for update once — after auth initialised, router is mounted.
+      if (!_updateChecked && next.isInitialized) {
+        _updateChecked = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final navContext = _routerKey.currentState?.overlay?.context;
+          if (navContext != null) UpdateService.checkForUpdate(navContext);
+        });
+      }
       // Fire pending notification navigation once auth is fully unlocked
       if (_pendingNewEntry && next.isInitialized && !next.isLocked) {
         _pendingNewEntry = false;
