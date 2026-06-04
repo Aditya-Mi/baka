@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/stats/mood_entries_screen.dart';
+import 'package:baka/features/stats/widgets/mood_calendar.dart';
 import 'package:baka/features/stats/widgets/mood_chart.dart';
 import 'package:baka/features/stats/widgets/streak_calendar.dart';
 import 'package:baka/features/stats/widgets/tags_summary.dart';
@@ -133,6 +135,29 @@ class StatsScreen extends HookConsumerWidget {
 
                 // Tags summary
                 TagsSummary(entries: entries),
+                const SizedBox(height: 28),
+
+                // Monthly mood calendar
+                Text('Mood this month', style: AppText.displayS(t.onBackground)),
+                const SizedBox(height: 4),
+                Text('Tap a day to open or write an entry.',
+                    style: AppText.handSm(t.onSurfaceMuted)
+                        .copyWith(fontStyle: FontStyle.italic)),
+                const SizedBox(height: 14),
+                MoodCalendar(
+                  entries: entries,
+                  onDayTap: (date, entry) {
+                    if (entry != null) {
+                      context.push('/entry/${entry.id}');
+                    } else {
+                      final ds =
+                          '${date.year.toString().padLeft(4, '0')}-'
+                          '${date.month.toString().padLeft(2, '0')}-'
+                          '${date.day.toString().padLeft(2, '0')}';
+                      context.push('/new?date=$ds');
+                    }
+                  },
+                ),
               ],
             ),
           );

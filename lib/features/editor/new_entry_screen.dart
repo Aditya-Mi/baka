@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/prompts/writing_prompts.dart';
 import 'package:baka/features/editor/widgets/anchor_bar.dart';
 import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/mood_selector.dart';
@@ -184,7 +185,7 @@ class NewEntryScreen extends HookConsumerWidget {
                     focusedErrorBorder: InputBorder.none,
                     filled:           false,
                     isCollapsed:      true,
-                    hintText: 'Write something…',
+                    hintText: WritingPrompts.todayPrompt(),
                     hintStyle: TextStyle(fontFamily: 'Lora',
                       fontSize: 17, fontStyle: FontStyle.italic,
                       color: t.onSurfaceMuted),

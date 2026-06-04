@@ -18,7 +18,11 @@ class ThemeToggleTile extends ConsumerWidget {
     final outline = t.outline;
     final surface = t.surface;
 
-    final themeMode = ref.watch(themeProvider);
+    final themeMode     = ref.watch(themeProvider);
+    final systemIsDark  = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    // When system mode, highlight whichever the device is currently using.
+    final effectiveDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && systemIsDark);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -52,7 +56,7 @@ class ThemeToggleTile extends ConsumerWidget {
                   children: [
                     _ThemeSegment(
                       label: 'Light',
-                      selected: themeMode == ThemeMode.light,
+                      selected: !effectiveDark,
                       primary: primary,
                       tagBg: tagBg,
                       onBg: onBg,
@@ -62,7 +66,7 @@ class ThemeToggleTile extends ConsumerWidget {
                     ),
                     _ThemeSegment(
                       label: 'Dark',
-                      selected: themeMode == ThemeMode.dark,
+                      selected: effectiveDark,
                       primary: primary,
                       tagBg: tagBg,
                       onBg: onBg,

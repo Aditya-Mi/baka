@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:baka/models/journal_entry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ExportImport {
   static Future<void> exportEntries(List<JournalEntry> entries) async {
@@ -15,12 +16,21 @@ class ExportImport {
     final docsDir = await getApplicationDocumentsDirectory();
     final archive = Archive();
 
+    // ── Preferences snapshot ──────────────────────────────────────────────────
+    final prefs = await SharedPreferences.getInstance();
+    final preferences = {
+      'name':  prefs.getString('user_name') ?? '',
+      'theme': prefs.getString('theme_mode') ?? 'system',
+      'font':  prefs.getString('body_font') ?? 'lora',
+    };
+
     // ── journal.json ──────────────────────────────────────────────────────────
     final payload = {
-      'exportedAt': now.toIso8601String(),
-      'version':    '2',
-      'entryCount': entries.length,
-      'entries':    entries.map((e) => e.toJson()).toList(),
+      'exportedAt':  now.toIso8601String(),
+      'version':     '2',
+      'entryCount':  entries.length,
+      'preferences': preferences,
+      'entries':     entries.map((e) => e.toJson()).toList(),
     };
     final jsonBytes = utf8.encode(const JsonEncoder.withIndent('  ').convert(payload));
     archive.addFile(ArchiveFile('journal.json', jsonBytes.length, jsonBytes));

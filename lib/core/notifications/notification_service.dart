@@ -1,22 +1,12 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:baka/core/prompts/writing_prompts.dart';
 
 const _kNotificationId = 1001;
 const _kChannelId = 'daily_reminder';
 const _kChannelName = 'Daily reminder';
-
-const _reminderBodies = <String>[
-  "A quiet moment for today's thoughts.",
-  'What did today feel like?',
-  'Even one sentence is enough.',
-  'Pour yourself a cup. Tell the page.',
-  "What's worth remembering about today?",
-  'Your story is still being written.',
-  'Five minutes. Just for you.',
-];
 
 class NotificationService {
   static final NotificationService instance = NotificationService._internal();
@@ -78,7 +68,7 @@ class NotificationService {
       localScheduled.millisecondsSinceEpoch,
     );
 
-    final body = _reminderBodies[Random().nextInt(_reminderBodies.length)];
+    final body = WritingPrompts.todayPrompt();
 
     const androidDetails = AndroidNotificationDetails(
       _kChannelId,
