@@ -140,7 +140,10 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
     super.didChangeDependencies();
     ref.read(reminderProvider.notifier).refreshScheduleOnOpen();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) UpdateService.checkForUpdate(context);
+      // Use router's navigator context — lives inside MaterialApp,
+      // so Navigator.of() succeeds where _AppRootState context fails.
+      final navContext = _routerKey.currentContext;
+      if (navContext != null) UpdateService.checkForUpdate(navContext);
     });
   }
 
