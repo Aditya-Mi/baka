@@ -139,7 +139,9 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
   void didChangeDependencies() {
     super.didChangeDependencies();
     ref.read(reminderProvider.notifier).refreshScheduleOnOpen();
-    UpdateService.checkForUpdate(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) UpdateService.checkForUpdate(context);
+    });
   }
 
   @override
