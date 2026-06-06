@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_file/open_file.dart';
+import 'package:open_file/open_file.dart' show OpenFile, ResultType;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -93,6 +94,37 @@ class _UpdateDialogState extends State<_UpdateDialog> {
   double? _progress; // null = idle, 0.0–1.0 = downloading
   String? _error;
 
+  void _showInstallPermissionDialog(BuildContext ctx) {
+    showDialog(
+      context: ctx,
+      builder: (_) => AlertDialog(
+        title: const Text('Permission needed',
+            style: TextStyle(fontFamily: 'PlayfairDisplay',
+                fontSize: 16, fontWeight: FontWeight.w600)),
+        content: const Text(
+          'Allow Baka to install apps.\nSettings → Apps → Baka → Install unknown apps',
+          style: TextStyle(fontFamily: 'Caveat', fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel',
+                style: TextStyle(fontFamily: 'Caveat', fontSize: 15)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings();
+            },
+            child: const Text('Open Settings',
+                style: TextStyle(fontFamily: 'Caveat',
+                    fontSize: 15, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _download() async {
     setState(() { _progress = 0; _error = null; });
     try {
@@ -120,8 +152,26 @@ class _UpdateDialogState extends State<_UpdateDialog> {
       await sink.close();
 
       if (!mounted) return;
+
+      // Check "Install unknown apps" permission (Android 8+)
+      final canInstall = await Permission.requestInstallPackages.isGranted;
+      if (!canInstall && mounted) {
+        Navigator.of(context).pop();
+        _showInstallPermissionDialog(context);
+        return;
+      }
+
       Navigator.of(context).pop();
-      await OpenFile.open(file.path);
+      final result = await OpenFile.open(
+        file.path,
+        type: 'application/vnd.android.package-archive',
+      );
+      if (result.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open installer: ${result.message}',
+              style: const TextStyle(fontFamily: 'Caveat'))),
+        );
+      }
     } catch (e) {
       if (mounted) setState(() { _progress = null; _error = 'Download failed. Try again.'; });
     }
