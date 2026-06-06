@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
 
 class UpdateService {
   static const _gistUrl =
@@ -20,16 +23,15 @@ class UpdateService {
           .timeout(const Duration(seconds: 5));
       if (resp.statusCode != 200) return;
 
-      final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      final latest  = data['latest_version']  as String;
-      final minimum = data['min_version']      as String;
-      final force   = data['force_update']     as bool;
-      final url     = data['download_url']     as String;
-      final message = data['message']          as String;
+      final data    = jsonDecode(resp.body) as Map<String, dynamic>;
+      final latest  = data['latest_version'] as String;
+      final minimum = data['min_version']     as String;
+      final force   = data['force_update']    as bool;
+      final message = data['message']         as String;
+      final url     = 'https://github.com/Aditya-Mi/Baka/releases/download/v$latest/app-release.apk';
 
-      final current = info.version; // e.g. "1.0.0"
-
-      final outdated   = _isOlder(current, latest);
+      final current  = info.version;
+      final outdated = _isOlder(current, latest);
       final mustUpdate = _isOlder(current, minimum);
 
       if (!outdated) return;
@@ -41,46 +43,26 @@ class UpdateService {
         url: url,
         force: force || mustUpdate,
       );
-    } catch (_) {
-      // Network error — silent fail, don't block user
-    }
+    } catch (_) {}
   }
 
   static void _showDialog(
-      BuildContext context, {
-        required String message,
-        required String url,
-        required bool force,
-      }) {
+    BuildContext context, {
+    required String message,
+    required String url,
+    required bool force,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: !force,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Update available',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
-                fontSize: 18, fontWeight: FontWeight.w600)),
-        content: Text(message,
-            style: const TextStyle(fontFamily: 'Caveat', fontSize: 16)),
-        actions: [
-          if (!force)
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Later',
-                  style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
-            ),
-          TextButton(
-            onPressed: () => launchUrl(Uri.parse(url),
-                mode: LaunchMode.externalApplication),
-            child: const Text('Download',
-                style: TextStyle(fontFamily: 'Caveat',
-                    fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
-        ],
+      builder: (ctx) => _UpdateDialog(
+        message: message,
+        url: url,
+        force: force,
       ),
     );
   }
 
-  /// Returns true if [a] is older than [b] (semver: "1.0.0" < "1.1.0")
   static bool _isOlder(String a, String b) {
     final av = a.split('.').map(int.parse).toList();
     final bv = b.split('.').map(int.parse).toList();
@@ -89,5 +71,112 @@ class UpdateService {
       if (av[i] > bv[i]) return false;
     }
     return false;
+  }
+}
+
+class _UpdateDialog extends StatefulWidget {
+  final String message;
+  final String url;
+  final bool force;
+
+  const _UpdateDialog({
+    required this.message,
+    required this.url,
+    required this.force,
+  });
+
+  @override
+  State<_UpdateDialog> createState() => _UpdateDialogState();
+}
+
+class _UpdateDialogState extends State<_UpdateDialog> {
+  double? _progress; // null = idle, 0.0–1.0 = downloading
+  String? _error;
+
+  Future<void> _download() async {
+    setState(() { _progress = 0; _error = null; });
+    try {
+      final request  = http.Request('GET', Uri.parse(widget.url));
+      final response = await http.Client().send(request);
+
+      if (response.statusCode != 200) {
+        setState(() { _progress = null; _error = 'Download failed (${response.statusCode})'; });
+        return;
+      }
+
+      final total    = response.contentLength ?? 0;
+      final dir      = await getTemporaryDirectory();
+      final file     = File('${dir.path}/baka_update.apk');
+      final sink     = file.openWrite();
+      int received   = 0;
+
+      await response.stream.forEach((chunk) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (total > 0 && mounted) {
+          setState(() => _progress = received / total);
+        }
+      });
+      await sink.close();
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (mounted) setState(() { _progress = null; _error = 'Download failed. Try again.'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final downloading = _progress != null;
+
+    return AlertDialog(
+      title: const Text('Update available',
+          style: TextStyle(fontFamily: 'PlayfairDisplay',
+              fontSize: 18, fontWeight: FontWeight.w600)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.message,
+              style: const TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+          if (downloading) ...[
+            const SizedBox(height: 16),
+            LinearProgressIndicator(value: _progress == 0 ? null : _progress),
+            const SizedBox(height: 6),
+            Text(
+              _progress == 0 || _progress == null
+                  ? 'Starting download…'
+                  : '${(_progress! * 100).toInt()}%',
+              style: const TextStyle(fontFamily: 'Caveat', fontSize: 13),
+            ),
+          ],
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!,
+                style: const TextStyle(
+                    fontFamily: 'Caveat', fontSize: 13, color: Colors.red)),
+          ],
+        ],
+      ),
+      actions: [
+        if (!widget.force && !downloading)
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Later',
+                style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+          ),
+        if (!downloading)
+          TextButton(
+            onPressed: _download,
+            child: Text(_error != null ? 'Retry' : 'Download',
+                style: const TextStyle(
+                    fontFamily: 'Caveat',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700)),
+          ),
+      ],
+    );
   }
 }
