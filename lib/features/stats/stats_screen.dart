@@ -8,6 +8,7 @@ import 'package:baka/features/stats/widgets/mood_calendar.dart';
 import 'package:baka/features/stats/widgets/mood_chart.dart';
 import 'package:baka/features/stats/widgets/streak_calendar.dart';
 import 'package:baka/features/stats/widgets/tags_summary.dart';
+import 'package:baka/features/stats/widgets/words_chart.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 
@@ -31,6 +32,7 @@ class StatsScreen extends HookConsumerWidget {
           final longest    = EntriesNotifier.computeLongestStreak(entries);
           final totalWords = entries.fold<int>(0, (s, e) => s + e.wordCount);
           final perDay     = EntriesNotifier.computeEntriesPerDay(entries, 365);
+          final wordsPerDay = EntriesNotifier.computeWordsPerDay(entries, DateTime.now().day);
           final moods      = EntriesNotifier.computeMoodCounts(entries, 90);
 
           return SingleChildScrollView(
@@ -105,6 +107,24 @@ class StatsScreen extends HookConsumerWidget {
                     const SizedBox(width: 6),
                     Text('More', style: AppText.handSm(t.onSurfaceMuted)),
                   ],
+                ),
+                const SizedBox(height: 28),
+
+                // Words per day
+                Text('Words written', style: AppText.displayS(t.onBackground)),
+                const SizedBox(height: 4),
+                Text(
+                  'Daily word count, past 30 days.',
+                  style: AppText.handSm(t.onSurfaceMuted)
+                      .copyWith(fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 14),
+                RepaintBoundary(
+                  child: WordsChart(
+                    wordsPerDay: wordsPerDay,
+                    primary: t.primary,
+                    muted: t.onSurfaceMuted,
+                  ),
                 ),
                 const SizedBox(height: 28),
 

@@ -188,21 +188,20 @@ class _DayContent extends StatelessWidget {
 
     final mood = entry!.mood;
     if (mood == null) {
-      // Entry exists but no mood — dot indicator
-      return Stack(
-        alignment: Alignment.center,
+      // Entry exists but no mood — number above, dot below
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text('$day',
               style: TextStyle(fontFamily: 'Caveat',
                 fontSize: 11, color: t.onBackground)),
-          Positioned(
-            bottom: 2,
-            child: Container(
-              width: 4, height: 4,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: t.outline,
-              ),
+          const SizedBox(height: 1),
+          Container(
+            width: 4, height: 4,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: t.outline,
             ),
           ),
         ],

@@ -13,6 +13,7 @@ import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/weather_icon.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 
 class EntryDetailScreen extends HookConsumerWidget {
@@ -88,7 +89,8 @@ class EntryDetailScreen extends HookConsumerWidget {
 
             // Anchor bar (location + weather)
             if (entry.anchor != null &&
-                (entry.anchor!.hasLocation || entry.anchor!.hasWeather))
+                (entry.anchor!.hasLocation || entry.anchor!.hasWeather ||
+                 entry.anchor!.hasSong))
               _AnchorBar(anchor: entry.anchor!, t: t),
 
             // Tags (read-only)
@@ -229,6 +231,33 @@ class _AnchorBar extends StatelessWidget {
                   fontSize: 15, color: t.onSurfaceMuted),
               ),
             ]),
+          if (anchor.hasSong)
+            GestureDetector(
+              onTap: anchor.songUrl != null
+                  ? () async {
+                      final uri = Uri.tryParse(anchor.songUrl!);
+                      if (uri != null) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  : null,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.music_note_rounded, size: 16,
+                    color: anchor.songUrl != null ? t.primary : t.onSurfaceMuted),
+                const SizedBox(width: 4),
+                Text(
+                  anchor.songArtist != null
+                      ? '${anchor.songName!} · ${anchor.songArtist!}'
+                      : anchor.songName!,
+                  style: TextStyle(
+                    fontFamily: 'Caveat',
+                    fontSize: 15,
+                    color: anchor.songUrl != null ? t.primary : t.onSurfaceMuted,
+                    decoration: anchor.songUrl != null
+                        ? TextDecoration.underline : TextDecoration.none,
+                    decorationColor: t.primary,
+                  ),
+                ),
+              ]),
+            ),
         ],
       ),
     );

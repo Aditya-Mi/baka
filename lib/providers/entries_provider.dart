@@ -143,6 +143,19 @@ class EntriesNotifier extends AsyncNotifier<List<JournalEntry>> {
     return result;
   }
 
+  static Map<DateTime, int> computeWordsPerDay(
+    List<JournalEntry> entries, int pastDays,
+  ) {
+    final result = <DateTime, int>{};
+    final cutoff = DateTime.now().subtract(Duration(days: pastDays));
+    for (final e in entries) {
+      if (e.createdAt.isBefore(cutoff)) continue;
+      final key = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+      result[key] = (result[key] ?? 0) + e.wordCount;
+    }
+    return result;
+  }
+
   static Map<Mood, int> computeMoodCounts(
     List<JournalEntry> entries, int pastDays,
   ) {

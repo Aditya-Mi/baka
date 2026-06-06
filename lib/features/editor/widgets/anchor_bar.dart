@@ -67,7 +67,7 @@ class AnchorBar extends StatelessWidget {
                 initialCondition: anchor.weatherCondition,
                 initialTemp: anchor.weatherTemp,
               );
-              if (result == null) return; // cancelled — keep existing
+              if (result == null) return;
               if (result.isRemove) {
                 onChanged(anchor.copyWith(weather: null, weatherTemp: null));
               } else {
@@ -94,6 +94,107 @@ class AnchorBar extends StatelessWidget {
             ]),
             active: anchor.hasWeather,
             t: t,
+          ),
+
+          // ── Song ──────────────────────────────────────────────────────
+          _Chip(
+            active: anchor.hasSong,
+            t: t,
+            onTap: () async {
+              final nameCtrl   = TextEditingController(text: anchor.songName ?? '');
+              final artistCtrl = TextEditingController(text: anchor.songArtist ?? '');
+              final urlCtrl    = TextEditingController(text: anchor.songUrl ?? '');
+
+              final saved = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Song',
+                      style: TextStyle(fontFamily: 'Lora', fontSize: 16)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: nameCtrl,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Song name *',
+                          labelStyle: TextStyle(fontFamily: 'Caveat'),
+                          hintStyle: TextStyle(fontFamily: 'Caveat'),
+                        ),
+                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: artistCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Artist',
+                          labelStyle: TextStyle(fontFamily: 'Caveat'),
+                        ),
+                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: urlCtrl,
+                        keyboardType: TextInputType.url,
+                        decoration: const InputDecoration(
+                          labelText: 'Spotify / YouTube URL',
+                          labelStyle: TextStyle(fontFamily: 'Caveat'),
+                          hintText: 'https://',
+                          hintStyle: TextStyle(fontFamily: 'Caveat'),
+                        ),
+                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    if (anchor.hasSong)
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Remove',
+                            style: TextStyle(fontFamily: 'Caveat')),
+                      ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Save',
+                          style: TextStyle(fontFamily: 'Caveat')),
+                    ),
+                  ],
+                ),
+              );
+
+              if (saved == null) return;
+              if (!saved) {
+                onChanged(anchor.copyWith(
+                  songName: null, songArtist: null, songUrl: null));
+                return;
+              }
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+              onChanged(anchor.copyWith(
+                songName:   name,
+                songArtist: artistCtrl.text.trim().isEmpty ? null : artistCtrl.text.trim(),
+                songUrl:    urlCtrl.text.trim().isEmpty    ? null : urlCtrl.text.trim(),
+              ));
+            },
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(
+                Icons.music_note_rounded,
+                size: 16,
+                color: anchor.hasSong ? t.primary : t.onSurfaceMuted,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                anchor.hasSong
+                    ? (anchor.songArtist != null
+                        ? '${anchor.songName!} · ${anchor.songArtist!}'
+                        : anchor.songName!)
+                    : 'Song',
+                style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+                    color: anchor.hasSong ? t.primary : t.onSurfaceMuted),
+              ),
+            ]),
           ),
 
           // ── Photo ─────────────────────────────────────────────────────
