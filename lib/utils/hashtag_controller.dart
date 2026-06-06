@@ -13,7 +13,7 @@ class HashtagController extends TextEditingController {
   void invalidate() => notifyListeners();
 
   static final _pattern          = RegExp(r'#\w+');
-  static final _completedPattern = RegExp(r'#(\w+)(?=\s)');
+  static final _completedPattern = RegExp(r'#(\w+)(?=\W|$)');
 
   // Cache — invalidated when text or highlight color changes.
   String? _cachedText;

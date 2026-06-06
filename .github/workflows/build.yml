@@ -25,12 +25,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install Shorebird
-        uses: shorebirdtech/setup-shorebird@v1
-        with:
-          flutter-version: 'stable'
-          cache: true
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -51,26 +45,21 @@ jobs:
               echo "::warning::Tag v$TAG does not match pubspec version $PUBSPEC"
             fi
             echo "name=$PUBSPEC" >> $GITHUB_OUTPUT
-            echo "artifact=baka-$PUBSPEC" >> $GITHUB_OUTPUT
           else
-            echo "name=0.0.0" >> $GITHUB_OUTPUT
-            echo "artifact=baka-dev-${{ github.run_number }}" >> $GITHUB_OUTPUT
+            echo "name=0.0.0-dev.${{ github.run_number }}" >> $GITHUB_OUTPUT
           fi
 
-      # ── Decode keystore (release builds only, skip fork PRs) ─────────────────
+      # ── Decode keystore (release builds only) ────────────────────────────────
       - name: Decode keystore
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
 
-      # ── ON TAG: Shorebird release (builds + signs + uploads to Shorebird) ─────
-      # Shorebird produces the APK at build/app/outputs/flutter-apk/app-release.apk
-      # No need for a second flutter build apk step.
-      - name: Shorebird Release
+      # ── ON TAG: build signed APK + create GitHub Release ─────────────────────
+      - name: Build APK
         if: startsWith(github.ref, 'refs/tags/v')
-        run: shorebird release android --artifact apk
+        run: flutter build apk --release
         env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -80,14 +69,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Baka ${{ steps.ver.outputs.name }}
-          files: build/app/outputs/**/*.apk
+          files: build/app/outputs/flutter-apk/app-release.apk
           generate_release_notes: true
-
-      # ── ON MAIN PUSH: Shorebird patch (OTA, Dart-only changes) ───────────────
-      - name: Shorebird Patch
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: shorebird patch android
-        env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
-        continue-on-error: true   # fails silently if no release exists yet
 
