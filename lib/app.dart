@@ -44,6 +44,7 @@ GoRouter buildRouter() {
         builder: (_, state) => NewEntryScreen(
           source: state.uri.queryParameters['source'],
           date: state.uri.queryParameters['date'],
+          resumeDraftId: state.uri.queryParameters['draftId'],
         ),
       ),
       GoRoute(

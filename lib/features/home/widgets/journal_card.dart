@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
+import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/illustrations.dart';
@@ -19,6 +20,10 @@ class JournalCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t       = context.tokens;
     final tagList = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
+    // True when an unsaved edit-draft exists for this entry.
+    final hasUnsavedEdits = ref.watch(draftsProvider.select((async) =>
+        (async.valueOrNull ?? const [])
+            .any((d) => d.isEdit && d.entryId == entry.id)));
     final baseStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       fontSize: 14.5, height: 1.55, color: t.onSurface,
     ) ?? TextStyle(fontFamily: 'Lora', fontSize: 14.5, height: 1.55, color: t.onSurface);
@@ -58,14 +63,53 @@ class JournalCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        DateFormat('EEE, MMM d').format(entry.createdAt),
-                        style: TextStyle(fontFamily: 'Caveat',
-                          fontSize: 19, color: t.onSurface, height: 1,
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                DateFormat('EEE, MMM d').format(entry.createdAt),
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontFamily: 'Caveat',
+                                  fontSize: 19, color: t.onSurface, height: 1,
+                                ),
+                              ),
+                            ),
+                            if (hasUnsavedEdits) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: t.primaryContainer,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 5, height: 5,
+                                      decoration: BoxDecoration(
+                                        color: t.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text('draft',
+                                        style: TextStyle(fontFamily: 'Caveat',
+                                          fontSize: 12, color: t.primary)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (entry.mood != null)
+                      if (entry.mood != null) ...[
+                        const SizedBox(width: 8),
                         MoodGlyph(mood: entry.mood!, size: 22, color: t.primary),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 8),

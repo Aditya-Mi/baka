@@ -25,11 +25,10 @@ class AnchorBar extends StatelessWidget {
         color: t.background,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 6,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
 
           // ── Location ──────────────────────────────────────────────────
           _Chip(
@@ -58,6 +57,7 @@ class AnchorBar extends StatelessWidget {
             active: anchor.hasLocation,
             t: t,
           ),
+          const SizedBox(width: 10),
 
           // ── Weather ───────────────────────────────────────────────────
           _Chip(
@@ -95,6 +95,7 @@ class AnchorBar extends StatelessWidget {
             active: anchor.hasWeather,
             t: t,
           ),
+          const SizedBox(width: 10),
 
           // ── Song ──────────────────────────────────────────────────────
           _Chip(
@@ -196,6 +197,7 @@ class AnchorBar extends StatelessWidget {
               ),
             ]),
           ),
+          const SizedBox(width: 10),
 
           // ── Photo ─────────────────────────────────────────────────────
           _PhotoChip(
@@ -209,7 +211,8 @@ class AnchorBar extends StatelessWidget {
                 photoPath: result.isEmpty ? null : result));
             },
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
