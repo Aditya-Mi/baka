@@ -13,6 +13,7 @@ import 'package:baka/features/lock/pin_keypad.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/security_option_tile.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class LockScreen extends HookConsumerWidget {
   const LockScreen({super.key});
@@ -267,7 +268,7 @@ class _Branding extends StatelessWidget {
           WordmarkWidget(fontSize: 40, color: primary),
           const SizedBox(height: 6),
           Text('Your private sanctuary.',
-              style: TextStyle(fontFamily: 'Caveat',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 16, color: muted, letterSpacing: 0.2)),
         ],
       );
@@ -420,7 +421,7 @@ class _NameStepState extends State<_NameStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('What should we call you?',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 20),
         TextField(
@@ -428,10 +429,10 @@ class _NameStepState extends State<_NameStep> {
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           cursorColor: t.primary,
-          style: TextStyle(fontFamily: 'Lora', fontSize: 17, color: t.onBackground),
+          style: TextStyle(fontFamily: context.fonts.body, fontSize: 17, color: t.onBackground),
           decoration: InputDecoration(
             hintText: 'Your name',
-            hintStyle: TextStyle(fontFamily: 'Lora', fontSize: 17,
+            hintStyle: TextStyle(fontFamily: context.fonts.body, fontSize: 17,
                 fontStyle: FontStyle.italic, color: t.onSurfaceMuted),
           ),
           onSubmitted: _valid ? (v) => widget.onDone(widget.ctrl.text.trim()) : null,
@@ -483,17 +484,17 @@ class _SecurityStep extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text('Protect your journal?',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 4),
         Text('Choose your lock method. Change anytime in Settings.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
                 color: t.onSurfaceMuted, height: 1.4)),
         if (error != null) ...[
           const SizedBox(height: 12),
           Text(error!,
-              style: TextStyle(fontFamily: 'Lora', fontSize: 13,
+              style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
                   color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center),
         ],
@@ -520,7 +521,7 @@ class _SecurityStep extends StatelessWidget {
           onPressed: loading ? null : onSkip,
           style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
           child: Text('Skip for now',
-              style: TextStyle(fontFamily: 'Caveat', fontSize: 16, color: t.onSurfaceMuted)),
+              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
         ),
       ],
     );
@@ -555,12 +556,12 @@ class _ReminderStep extends HookConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text('Daily reminders?',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 4),
         Text('A gentle nudge to write each day.\nChange anytime in Settings.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
                 color: t.onSurfaceMuted, height: 1.4)),
         const SizedBox(height: 20),
         // Tappable time chip
@@ -586,7 +587,7 @@ class _ReminderStep extends HookConsumerWidget {
                 const SizedBox(width: 8),
                 Text(
                   selectedTime.value.format(context),
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 16, fontWeight: FontWeight.w700, color: t.primary),
                 ),
                 const SizedBox(width: 6),
@@ -616,7 +617,7 @@ class _ReminderStep extends HookConsumerWidget {
           onPressed: loading.value ? null : onDone,
           style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
           child: Text('Skip for now',
-              style: TextStyle(fontFamily: 'Caveat', fontSize: 16, color: t.onSurfaceMuted)),
+              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
         ),
       ],
     );
@@ -651,11 +652,11 @@ class _UnlockControls extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('Welcome back',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 22, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 4),
         Text('Tap to unlock your journal',
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 16, color: t.onSurfaceMuted)),
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
         const SizedBox(height: 32),
 
         // Fingerprint circle — primary colored, clearly tappable
@@ -681,12 +682,12 @@ class _UnlockControls extends StatelessWidget {
 
         const SizedBox(height: 8),
         Text('Tap to unlock',
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 14, color: t.onSurfaceMuted)),
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14, color: t.onSurfaceMuted)),
 
         if (bioError != null) ...[
           const SizedBox(height: 12),
           Text(bioError!,
-              style: TextStyle(fontFamily: 'Lora', fontSize: 13,
+              style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
                   color: Theme.of(context).colorScheme.error),
               textAlign: TextAlign.center),
         ],
@@ -722,7 +723,7 @@ class _FilledPill extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 15),
             child: Center(child: Text(label,
-                style: const TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white))),
           ),
         ),
@@ -752,7 +753,7 @@ class _OutlinedPill extends StatelessWidget {
                 border: Border.all(color: t.primary, width: 1.5),
               ),
               child: Center(child: Text(label,
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 18, fontWeight: FontWeight.w700, color: t.primary))),
             ),
           ),

@@ -1,37 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 import 'package:baka/core/fonts/font_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/widgets/illustrations.dart';
 
-const _kFonts = <String, String>{
-  'lora':             'Lora',
-  'playfairDisplay':  'Playfair Display',
-  'crimsonPro':       'Crimson Pro',
-  'ebGaramond':       'EB Garamond',
-  'caveat':           'Caveat',
-  'libreBaskerville': 'Libre Baskerville',
-};
-
 const _kPreview = 'Today I felt something shift inside me…';
 
+/// Picks the font journal text is written in. This is an override layered on
+/// top of the app font preset — null means "follow the preset".
 class FontPickerSheet extends HookConsumerWidget {
   const FontPickerSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t        = context.tokens;
+    final fonts    = context.fonts;
     final bg       = t.surfaceElev;
     final onBg     = t.onBackground;
     final muted    = t.onSurfaceMuted;
     final primary  = t.primary;
     final outline  = t.outline;
 
+    final preset      = ref.watch(fontThemeProvider);
     final currentFont = ref.watch(fontProvider);
-    final selected    = useState(currentFont);
+    final selected    = useState<String?>(currentFont);
+
+    // null entry = "Match app font", pinned to the top.
+    final entries = <MapEntry<String?, String>>[
+      MapEntry(null, 'Match app font (${preset.label})'),
+      ...kAvailableFonts.entries,
+    ];
 
     return DraggableScrollableSheet(
       expand: false,
@@ -58,12 +59,12 @@ class FontPickerSheet extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Choose your writing font',
-                      style: TextStyle(fontFamily: 'PlayfairDisplay',
+                      style: TextStyle(fontFamily: fonts.display,
                         fontSize: 20, fontWeight: FontWeight.w600, color: onBg,
                       )),
                   const SizedBox(height: 4),
                   Text('Pick the voice your pages will speak in.',
-                      style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: muted)),
+                      style: TextStyle(fontFamily: fonts.accent, fontSize: 15, color: muted)),
                 ],
               ),
             ),
@@ -73,9 +74,9 @@ class FontPickerSheet extends HookConsumerWidget {
             Expanded(
               child: ListView(
                 controller: scrollCtrl,
-                children: _kFonts.entries.map((entry) {
+                children: entries.map((entry) {
                   final isSelected = selected.value == entry.key;
-                  final fontStyle  = _fontStyle(entry.key);
+                  final family = writingFamily(entry.key) ?? preset.body;
                   return InkWell(
                     onTap: () => selected.value = entry.key,
                     child: Padding(
@@ -99,22 +100,26 @@ class FontPickerSheet extends HookConsumerWidget {
                                 : null,
                           ),
                           const SizedBox(width: 14),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(entry.value,
-                                  style: fontStyle(
-                                    fontSize: 17.0,
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected ? primary : onBg,
-                                  )),
-                              const SizedBox(height: 2),
-                              Text(_kPreview,
-                                  style: fontStyle(
-                                    fontSize: 13.0,
-                                    color: muted,
-                                  )),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(entry.value,
+                                    style: TextStyle(
+                                      fontFamily: family,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected ? primary : onBg,
+                                    )),
+                                const SizedBox(height: 2),
+                                Text(_kPreview,
+                                    style: TextStyle(
+                                      fontFamily: family,
+                                      fontSize: 13,
+                                      color: muted,
+                                    )),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -135,7 +140,13 @@ class FontPickerSheet extends HookConsumerWidget {
                     onPressed: selected.value == currentFont
                         ? null
                         : () {
-                            ref.read(fontProvider.notifier).setFont(selected.value);
+                            final notifier = ref.read(fontProvider.notifier);
+                            final key = selected.value;
+                            if (key == null) {
+                              notifier.clearFont();
+                            } else {
+                              notifier.setFont(key);
+                            }
                             Navigator.of(context).pop();
                           },
                     child: const Text('Apply'),
@@ -148,13 +159,4 @@ class FontPickerSheet extends HookConsumerWidget {
       ),
     );
   }
-
-  static Function _fontStyle(String key) => switch (key) {
-        'playfairDisplay'  => GoogleFonts.playfairDisplay,
-        'crimsonPro'       => GoogleFonts.crimsonPro,
-        'ebGaramond'       => GoogleFonts.ebGaramond,
-        'caveat'           => GoogleFonts.caveat,
-        'libreBaskerville' => GoogleFonts.libreBaskerville,
-        _                  => GoogleFonts.lora,
-      };
 }

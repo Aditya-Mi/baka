@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:baka/models/mood.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Flame  (viewBox 0 0 24 24) — streak icon, matches MoodGlyph design language
@@ -687,7 +688,7 @@ class WordmarkWidget extends StatelessWidget {
       children: [
         Text(
           'Baka',
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: kWordmarkFamily,
             fontSize: fontSize,
             fontWeight: FontWeight.w700,
             color: color,

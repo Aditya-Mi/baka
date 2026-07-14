@@ -8,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/providers/search_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class SearchScreen extends HookConsumerWidget {
   const SearchScreen({super.key});
@@ -51,10 +52,10 @@ class SearchScreen extends HookConsumerWidget {
         title: TextField(
           controller: ctrl,
           autofocus: true,
-          style: TextStyle(fontFamily: 'Lora',fontSize: 16, color: onBg),
+          style: TextStyle(fontFamily: context.fonts.body,fontSize: 16, color: onBg),
           decoration: InputDecoration(
             hintText: 'Search entries…',
-            hintStyle: TextStyle(fontFamily: 'Lora',
+            hintStyle: TextStyle(fontFamily: context.fonts.body,
               fontSize: 16, fontStyle: FontStyle.italic, color: muted,
             ),
             border: InputBorder.none,
@@ -76,7 +77,7 @@ class SearchScreen extends HookConsumerWidget {
           ? Center(
               child: Text(
                 'Type to search your pages.',
-                style: TextStyle(fontFamily: 'Lora',
+                style: TextStyle(fontFamily: context.fonts.body,
                   fontSize: 15, fontStyle: FontStyle.italic, color: muted,
                 ),
               ),
@@ -88,7 +89,7 @@ class SearchScreen extends HookConsumerWidget {
                   ? Center(
                       child: Text(
                         'No entries found.',
-                        style: TextStyle(fontFamily: 'Lora',
+                        style: TextStyle(fontFamily: context.fonts.body,
                           fontSize: 15, fontStyle: FontStyle.italic, color: muted,
                         ),
                       ),

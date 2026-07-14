@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Opens the photo picker, copies selected image to app documents,
 /// returns the relative path (e.g. "photos/abc.jpg") or null.
@@ -87,12 +88,12 @@ class _PhotoSheet extends StatelessWidget {
               },
             ),
           Text('Attach a photo',
-              style: TextStyle(fontFamily: 'PlayfairDisplay',
+              style: TextStyle(fontFamily: context.fonts.display,
                 fontSize: 20, fontWeight: FontWeight.w600,
                 color: t.onBackground)),
           const SizedBox(height: 4),
           Text('A visual memory for this entry.',
-              style: TextStyle(fontFamily: 'Caveat',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 15, color: t.onSurfaceMuted)),
           const SizedBox(height: 24),
           _Option(
@@ -149,7 +150,7 @@ class _Option extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: color, size: 22),
       title: Text(label,
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 18, fontWeight: FontWeight.w600, color: color)),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 0),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Word/char counter bar — uses [ValueListenableBuilder] so only this widget
 /// rebuilds on text changes, not the entire editor screen.
@@ -37,11 +38,11 @@ class WordCounterBar extends StatelessWidget {
               child: Row(
                 children: [
                   Text('$words words',
-                      style: TextStyle(fontFamily: 'CourierPrime',
+                      style: TextStyle(fontFamily: context.fonts.mono,
                         fontSize: 12, color: muted)),
                   const SizedBox(width: 16),
                   Text('$chars chars',
-                      style: TextStyle(fontFamily: 'CourierPrime',
+                      style: TextStyle(fontFamily: context.fonts.mono,
                         fontSize: 12, color: muted)),
                 ],
               ),

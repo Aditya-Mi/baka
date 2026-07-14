@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:baka/core/prompts/writing_prompts.dart';
@@ -19,6 +20,15 @@ class NotificationService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
+    // Set the device's actual timezone so daily repeats fire at the correct
+    // LOCAL time. Without this tz.local is UTC and reminders fire offset by
+    // the UTC offset (e.g. a 21:00 IST reminder would fire at 02:30).
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (_) {
+      // Leave tz.local as UTC if lookup fails.
+    }
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
@@ -56,17 +66,12 @@ class NotificationService {
     try {
     await cancelDailyReminder();
 
-    // Use DateTime.now() (already local time) to avoid IANA timezone lookup.
-    // millisecondsSinceEpoch correctly encodes the UTC epoch for the local time.
-    final now = DateTime.now();
-    var localScheduled = DateTime(now.year, now.month, now.day, at.hour, at.minute);
-    if (localScheduled.isBefore(now)) {
-      localScheduled = localScheduled.add(const Duration(days: 1));
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+        tz.local, now.year, now.month, now.day, at.hour, at.minute);
+    if (!scheduled.isAfter(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
     }
-    final scheduled = tz.TZDateTime.fromMillisecondsSinceEpoch(
-      tz.local,
-      localScheduled.millisecondsSinceEpoch,
-    );
 
     final body = WritingPrompts.todayPrompt();
 

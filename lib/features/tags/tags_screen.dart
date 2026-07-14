@@ -7,6 +7,7 @@ import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class TagsScreen extends HookConsumerWidget {
   final String? filterTag;
@@ -33,7 +34,7 @@ class TagsScreen extends HookConsumerWidget {
         ),
         title: Text(
           filterTag != null ? '#$filterTag' : 'Tags',
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 28, fontWeight: FontWeight.w700, color: t.primary),
         ),
       ),
@@ -48,7 +49,7 @@ class TagsScreen extends HookConsumerWidget {
             return filtered.isEmpty
                 ? Center(
                     child: Text('No entries tagged #$filterTag.',
-                        style: TextStyle(fontFamily: 'Lora',
+                        style: TextStyle(fontFamily: context.fonts.body,
                           fontSize: 15, fontStyle: FontStyle.italic,
                           color: t.onSurfaceMuted)),
                   )
@@ -73,7 +74,7 @@ class TagsScreen extends HookConsumerWidget {
           if (tagCounts.isEmpty) {
             return Center(
               child: Text('No tags yet.',
-                  style: TextStyle(fontFamily: 'Lora',
+                  style: TextStyle(fontFamily: context.fonts.body,
                     fontSize: 15, fontStyle: FontStyle.italic,
                     color: t.onSurfaceMuted)),
             );
@@ -138,7 +139,7 @@ class TagsScreen extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Change color for #${tag.name}',
-                style: TextStyle(fontFamily: 'PlayfairDisplay',
+                style: TextStyle(fontFamily: context.fonts.display,
                   fontSize: 18, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             const SizedBox(height: 20),
@@ -223,12 +224,12 @@ class _TagChip extends StatelessWidget {
             ),
             const SizedBox(width: 7),
             Text('#$name',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 16, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             const SizedBox(width: 6),
             Text('$count',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 13, color: t.onSurfaceMuted)),
           ],
         ),

@@ -7,6 +7,7 @@ import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/tag_chip.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Horizontal tag row with inline add-tag input.
 class TagInputField extends ConsumerStatefulWidget {
@@ -82,12 +83,12 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
               child: TextField(
                 controller: _ctrl,
                 focusNode: _focus,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 14, fontWeight: FontWeight.w500, color: onBg,
                 ),
                 decoration: InputDecoration(
                   hintText: 'tag name',
-                  hintStyle: TextStyle(fontFamily: 'Caveat',fontSize: 14, color: muted),
+                  hintStyle: TextStyle(fontFamily: context.fonts.accent,fontSize: 14, color: muted),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   filled: true,
@@ -105,7 +106,7 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
                     borderSide: BorderSide(color: primary, width: 1),
                   ),
                   prefixText: '#',
-                  prefixStyle: TextStyle(fontFamily: 'Caveat',
+                  prefixStyle: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 14, fontWeight: FontWeight.w500, color: primary,
                   ),
                 ),
@@ -136,7 +137,7 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
                 ),
                 child: Text(
                   '+ add tag',
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 13, fontWeight: FontWeight.w500, color: muted,
                   ),
                 ),

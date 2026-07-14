@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/widgets/weather_icon.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class WeatherResult {
   final WeatherCondition condition;
@@ -85,7 +86,7 @@ class _WeatherSheetState extends State<_WeatherSheet> {
             ),
             const SizedBox(height: 20),
             Text("What's the weather?",
-                style: TextStyle(fontFamily: 'PlayfairDisplay',
+                style: TextStyle(fontFamily: context.fonts.display,
                   fontSize: 20, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             const SizedBox(height: 20),
@@ -116,7 +117,7 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                             color: selected ? t.primary : t.onSurfaceMuted),
                         const SizedBox(height: 4),
                         Text(c.label,
-                            style: TextStyle(fontFamily: 'Caveat',
+                            style: TextStyle(fontFamily: context.fonts.accent,
                               fontSize: 11,
                               color: selected ? t.primary : t.onSurfaceMuted)),
                       ],
@@ -137,15 +138,15 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                       FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}')),
                     ],
                     cursorColor: t.primary,
-                    style: TextStyle(fontFamily: 'Lora',
+                    style: TextStyle(fontFamily: context.fonts.body,
                       fontSize: 16, color: t.onBackground),
                     decoration: InputDecoration(
                       hintText: 'Temperature (optional)',
-                      hintStyle: TextStyle(fontFamily: 'Lora',
+                      hintStyle: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 16, fontStyle: FontStyle.italic,
                         color: t.onSurfaceMuted),
                       suffixText: '°C',
-                      suffixStyle: TextStyle(fontFamily: 'Lora',
+                      suffixStyle: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 16, color: t.onSurfaceMuted),
                     ),
                   ),
@@ -160,16 +161,16 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                     onPressed: () => Navigator.of(context).pop(const WeatherResult.remove()),
                     style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error),
-                    child: const Text('Remove',
-                        style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+                    child: Text('Remove',
+                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                       foregroundColor: t.onSurfaceMuted),
-                  child: const Text('Cancel',
-                      style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+                  child: Text('Cancel',
+                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
                 ),
                 const SizedBox(width: 8),
                 Material(
@@ -178,10 +179,10 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(50),
                     onTap: _condition == null ? null : _submit,
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: Text('Set',
-                          style: TextStyle(fontFamily: 'Caveat',
+                          style: TextStyle(fontFamily: context.fonts.accent,
                             fontSize: 16, fontWeight: FontWeight.w700,
                             color: Colors.white)),
                     ),

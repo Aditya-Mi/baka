@@ -10,28 +10,38 @@ import 'package:uuid/uuid.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/prompts/writing_prompts.dart';
 import 'package:baka/features/editor/widgets/anchor_bar.dart';
+import 'package:baka/features/editor/widgets/editor_meta.dart';
 import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/mood_selector.dart';
 import 'package:baka/features/editor/widgets/tag_input_field.dart';
 import 'package:baka/models/anchor.dart';
+import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/features/editor/widgets/word_counter_bar.dart';
 import 'package:baka/utils/hashtag_controller.dart';
+import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class NewEntryScreen extends HookConsumerWidget {
   final String? source;
   final String? date;
+  final String? resumeDraftId;
 
-  const NewEntryScreen({super.key, this.source, this.date});
+  const NewEntryScreen({super.key, this.source, this.date, this.resumeDraftId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t        = context.tokens;
     final ruleColor = t.rule;
+
+    // Draft session id — reuse the resumed one, else mint a fresh uuid.
+    final sessionId = useMemoized(
+        () => resumeDraftId ?? const Uuid().v4(), const []);
 
     final initialDate = useMemoized(() => _parseDate(date), const []);
     final entryDate   = useState(initialDate);
@@ -51,10 +61,78 @@ class NewEntryScreen extends HookConsumerWidget {
     final anchor   = useState(const Anchor());
     final isSaving = useState(false);
 
+    // Body focus drives the collapsible metadata header.
+    final bodyFocus   = useFocusNode();
+    final bodyFocused = useState(false);
+    useEffect(() {
+      void l() => bodyFocused.value = bodyFocus.hasFocus;
+      bodyFocus.addListener(l);
+      return () => bodyFocus.removeListener(l);
+    }, [bodyFocus]);
+
+    // ── Draft autosave ─────────────────────────────────────────────────────
+    final debounce = useRef<Timer?>(null);
+    final hydrated = useState(false);
+
+    Draft buildDraft() => Draft(
+          id:        sessionId,
+          entryDate: entryDate.value,
+          body:      bodyCtrl.text,
+          mood:      mood.value,
+          tags:      tags.value,
+          anchor:    anchor.value.isEmpty ? null : anchor.value,
+          savedAt:   DateTime.now(),
+        );
+
+    void flushDraft() {
+      debounce.value?.cancel();
+      if (!hydrated.value || isSaving.value) return;
+      ref.read(draftsProvider.notifier).save(buildDraft());
+    }
+
+    void scheduleSave() {
+      if (!hydrated.value) return;
+      debounce.value?.cancel();
+      debounce.value = Timer(const Duration(milliseconds: 700), () {
+        if (isSaving.value) return;
+        ref.read(draftsProvider.notifier).save(buildDraft());
+      });
+    }
+
+    // Hydrate once from a resumed draft, then enable autosave.
+    useEffect(() {
+      if (resumeDraftId != null) {
+        final d = ref.read(draftsProvider.notifier).byId(resumeDraftId!);
+        if (d != null) {
+          bodyCtrl.text   = d.body;
+          mood.value      = d.mood;
+          tags.value      = List<String>.from(d.tags);
+          bodyTags.value  = Set<String>.from(
+              HashtagController.extractTags(d.body));
+          anchor.value    = d.anchor ?? const Anchor();
+          entryDate.value = d.entryDate;
+        }
+      }
+      hydrated.value = true;
+      return null;
+    }, const []);
+
+    // Persist on background/kill and on dispose.
+    useEffect(() {
+      final observer = LifecycleObserver(flushDraft);
+      WidgetsBinding.instance.addObserver(observer);
+      return () {
+        WidgetsBinding.instance.removeObserver(observer);
+        debounce.value?.cancel();
+        flushDraft();
+      };
+    }, const []);
+
     // Debounced tag extraction — does NOT touch parent state on every keystroke.
     useEffect(() {
       Timer? debounce;
       void listener() {
+        scheduleSave();
         debounce?.cancel();
         debounce = Timer(const Duration(milliseconds: 400), () {
           final newBody = Set<String>.from(
@@ -81,9 +159,17 @@ class NewEntryScreen extends HookConsumerWidget {
       };
     }, [bodyCtrl]);
 
+    // Autosave when date/time changes.
+    useEffect(() {
+      void l() => scheduleSave();
+      entryDate.addListener(l);
+      return () => entryDate.removeListener(l);
+    }, [entryDate]);
+
     Future<void> save() async {
       if (bodyCtrl.text.trim().isEmpty || isSaving.value) return;
       isSaving.value = true;
+      debounce.value?.cancel();
       try {
         await ref.read(entriesProvider.notifier).add(JournalEntry(
           id:        const Uuid().v4(),
@@ -95,6 +181,7 @@ class NewEntryScreen extends HookConsumerWidget {
           wordCount: countWords(bodyCtrl.text),
           anchor:    anchor.value.isEmpty ? null : anchor.value,
         ));
+        await ref.read(draftsProvider.notifier).clear(sessionId);
         if (context.mounted) context.pop();
       } finally {
         isSaving.value = false;
@@ -127,10 +214,10 @@ class NewEntryScreen extends HookConsumerWidget {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(50),
                           onTap: canSave ? save : null,
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                             child: Text('Save',
-                                style: TextStyle(fontFamily: 'Caveat',
+                                style: TextStyle(fontFamily: context.fonts.accent,
                                   fontSize: 17, fontWeight: FontWeight.w700,
                                   color: Colors.white)),
                           ),
@@ -143,23 +230,30 @@ class NewEntryScreen extends HookConsumerWidget {
       ),
       body: Column(
         children: [
-          // ── Date / time ─────────────────────────────────────────────────
-          _DateRow(entryDate: entryDate),
-
-          Divider(color: t.outline, height: 1),
-
-          // ── Mood ────────────────────────────────────────────────────────
-          MoodSelector(
-            selected: mood.value,
-            onChanged: (m) => mood.value = m,
-          ),
-
-          Divider(color: t.outline, height: 1),
-
-          // ── Tags ────────────────────────────────────────────────────────
-          TagInputField(
-            tags: tags.value,
-            onChanged: (updated) => tags.value = updated,
+          // ── Collapsible metadata (date / mood / tags) ───────────────────
+          ValueListenableBuilder<DateTime>(
+            valueListenable: entryDate,
+            builder: (_, dateVal, __) => EditorMeta(
+              collapsed: bodyFocused.value,
+              onTapSummary: () => bodyFocus.unfocus(),
+              dateLabel: DateFormat('EEE, MMM d').format(dateVal),
+              timeLabel: DateFormat.jm().format(dateVal),
+              mood: mood.value,
+              tagCount: tags.value.length,
+              expanded: [
+                _DateRow(entryDate: entryDate),
+                Divider(color: t.outline, height: 1),
+                MoodSelector(
+                  selected: mood.value,
+                  onChanged: (m) { mood.value = m; scheduleSave(); },
+                ),
+                Divider(color: t.outline, height: 1),
+                TagInputField(
+                  tags: tags.value,
+                  onChanged: (updated) { tags.value = updated; scheduleSave(); },
+                ),
+              ],
+            ),
           ),
 
           // ── Body ────────────────────────────────────────────────────────
@@ -170,6 +264,7 @@ class NewEntryScreen extends HookConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: TextField(
                   controller: bodyCtrl,
+                  focusNode: bodyFocus,
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
@@ -186,7 +281,7 @@ class NewEntryScreen extends HookConsumerWidget {
                     filled:           false,
                     isCollapsed:      true,
                     hintText: WritingPrompts.todayPrompt(),
-                    hintStyle: TextStyle(fontFamily: 'Lora',
+                    hintStyle: TextStyle(fontFamily: context.fonts.body,
                       fontSize: 17, fontStyle: FontStyle.italic,
                       color: t.onSurfaceMuted),
                   ),
@@ -199,7 +294,7 @@ class NewEntryScreen extends HookConsumerWidget {
           // ── Anchor bar ──────────────────────────────────────────────────
           AnchorBar(
             anchor: anchor.value,
-            onChanged: (a) => anchor.value = a,
+            onChanged: (a) { anchor.value = a; scheduleSave(); },
           ),
 
           // ── Counter — isolated leaf, zero parent rebuild on typing ───────
@@ -250,7 +345,7 @@ class _DateRow extends StatelessWidget {
               onTap: () => pickTime(ctx, entryDate),
             ),
             Text('tap time to change',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 14, color: t.onSurfaceMuted,
                   fontStyle: FontStyle.italic)),
           ],
@@ -260,8 +355,6 @@ class _DateRow extends StatelessWidget {
   }
 
 }
-
-// ── Word/char counter — rebuilds ONLY on text change, not on mood/tag/etc ────
 
 // ── Date chip ─────────────────────────────────────────────────────────────────
 
@@ -290,7 +383,7 @@ class _DateChip extends StatelessWidget {
             Icon(icon, size: 15, color: t.primary),
             const SizedBox(width: 7),
             Text(label,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 18, color: t.primary, height: 1)),
           ],
         ),

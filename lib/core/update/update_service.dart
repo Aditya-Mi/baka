@@ -7,6 +7,7 @@ import 'package:open_file/open_file.dart' show OpenFile, ResultType;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class UpdateService {
   static const _gistUrl =
@@ -98,26 +99,26 @@ class _UpdateDialogState extends State<_UpdateDialog> {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Permission needed',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+        title: Text('Permission needed',
+            style: TextStyle(fontFamily: context.fonts.display,
                 fontSize: 16, fontWeight: FontWeight.w600)),
-        content: const Text(
+        content: Text(
           'Allow Baka to install apps.\nSettings → Apps → Baka → Install unknown apps',
-          style: TextStyle(fontFamily: 'Caveat', fontSize: 15),
+          style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 15)),
+            child: Text('Cancel',
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               openAppSettings();
             },
-            child: const Text('Open Settings',
-                style: TextStyle(fontFamily: 'Caveat',
+            child: Text('Open Settings',
+                style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 15, fontWeight: FontWeight.w700)),
           ),
         ],
@@ -169,7 +170,7 @@ class _UpdateDialogState extends State<_UpdateDialog> {
       if (result.type != ResultType.done && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not open installer: ${result.message}',
-              style: const TextStyle(fontFamily: 'Caveat'))),
+              style: TextStyle(fontFamily: context.fonts.accent))),
         );
       }
     } catch (e) {
@@ -182,15 +183,15 @@ class _UpdateDialogState extends State<_UpdateDialog> {
     final downloading = _progress != null;
 
     return AlertDialog(
-      title: const Text('Update available',
-          style: TextStyle(fontFamily: 'PlayfairDisplay',
+      title: Text('Update available',
+          style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 18, fontWeight: FontWeight.w600)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(widget.message,
-              style: const TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
           if (downloading) ...[
             const SizedBox(height: 16),
             LinearProgressIndicator(value: _progress == 0 ? null : _progress),
@@ -199,14 +200,14 @@ class _UpdateDialogState extends State<_UpdateDialog> {
               _progress == 0 || _progress == null
                   ? 'Starting download…'
                   : '${(_progress! * 100).toInt()}%',
-              style: const TextStyle(fontFamily: 'Caveat', fontSize: 13),
+              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13),
             ),
           ],
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!,
-                style: const TextStyle(
-                    fontFamily: 'Caveat', fontSize: 13, color: Colors.red)),
+                style: TextStyle(
+                    fontFamily: context.fonts.accent, fontSize: 13, color: Colors.red)),
           ],
         ],
       ),
@@ -214,15 +215,15 @@ class _UpdateDialogState extends State<_UpdateDialog> {
         if (!widget.force && !downloading)
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Later',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+            child: Text('Later',
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
           ),
         if (!downloading)
           TextButton(
             onPressed: _download,
             child: Text(_error != null ? 'Retry' : 'Download',
-                style: const TextStyle(
-                    fontFamily: 'Caveat',
+                style: TextStyle(
+                    fontFamily: context.fonts.accent,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
           ),

@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class WordsChart extends StatefulWidget {
   final Map<DateTime, int> wordsPerDay;
@@ -65,6 +66,7 @@ class _WordsChartState extends State<WordsChart> {
                   selectedIndex: _selectedIndex,
                   primary: widget.primary,
                   muted: widget.muted,
+                  accentFamily: context.fonts.accent,
                 ),
                 size: Size.infinite,
               ),
@@ -75,7 +77,7 @@ class _WordsChartState extends State<WordsChart> {
         Text(
           'avg $avgPerDay words/day · wrote $daysWritten of $n days this month',
           style: TextStyle(
-            fontFamily: 'Caveat',
+            fontFamily: context.fonts.accent,
             fontSize: 13,
             color: widget.muted,
             fontStyle: FontStyle.italic,
@@ -99,12 +101,16 @@ class _LinePainter extends CustomPainter {
   final Color primary;
   final Color muted;
 
+  /// A painter has no BuildContext, so the resolved family is passed in.
+  final String accentFamily;
+
   const _LinePainter({
     required this.points,
     required this.maxWords,
     required this.selectedIndex,
     required this.primary,
     required this.muted,
+    required this.accentFamily,
   });
 
   @override
@@ -207,7 +213,7 @@ class _LinePainter extends CustomPainter {
         text: TextSpan(
           text: label,
           style: TextStyle(
-            fontFamily: 'Caveat',
+            fontFamily: accentFamily,
             fontSize: 12,
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -242,5 +248,6 @@ class _LinePainter extends CustomPainter {
       old.points != points ||
       old.maxWords != maxWords ||
       old.selectedIndex != selectedIndex ||
-      old.primary != primary;
+      old.primary != primary ||
+      old.accentFamily != accentFamily;
 }

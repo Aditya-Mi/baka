@@ -60,6 +60,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
   }
 
   Future<void> refreshScheduleOnOpen() async {
+    await _loadFromPrefs();
     if (state.enabled) {
       await NotificationService.instance.scheduleDailyReminder(state.time);
     }

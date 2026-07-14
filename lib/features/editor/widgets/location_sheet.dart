@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Bottom sheet for setting a location label.
 /// Returns the label string, or null if user dismisses.
@@ -61,12 +62,12 @@ class _LocationSheetState extends State<_LocationSheet> {
             ),
             const SizedBox(height: 20),
             Text('Where are you?',
-                style: TextStyle(fontFamily: 'PlayfairDisplay',
+                style: TextStyle(fontFamily: context.fonts.display,
                   fontSize: 20, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             const SizedBox(height: 4),
             Text('Type a place name or address.',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 15, color: t.onSurfaceMuted)),
             const SizedBox(height: 20),
             TextField(
@@ -74,11 +75,11 @@ class _LocationSheetState extends State<_LocationSheet> {
               autofocus: true,
               textCapitalization: TextCapitalization.words,
               cursorColor: t.primary,
-              style: TextStyle(fontFamily: 'Lora',
+              style: TextStyle(fontFamily: context.fonts.body,
                 fontSize: 16, color: t.onBackground),
               decoration: InputDecoration(
                 hintText: 'e.g. Café Blue, Mumbai',
-                hintStyle: TextStyle(fontFamily: 'Lora',
+                hintStyle: TextStyle(fontFamily: context.fonts.body,
                   fontSize: 16, fontStyle: FontStyle.italic,
                   color: t.onSurfaceMuted),
                 prefixIcon: Icon(Icons.location_on_outlined,
@@ -94,16 +95,16 @@ class _LocationSheetState extends State<_LocationSheet> {
                     onPressed: () => Navigator.of(context).pop(''),
                     style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error),
-                    child: const Text('Remove',
-                        style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+                    child: Text('Remove',
+                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(null),
                   style: TextButton.styleFrom(
                       foregroundColor: t.onSurfaceMuted),
-                  child: const Text('Cancel',
-                      style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+                  child: Text('Cancel',
+                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
                 ),
                 const SizedBox(width: 8),
                 _SaveBtn(onTap: _submit, t: t),
@@ -133,10 +134,10 @@ class _SaveBtn extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: onTap,
-          child: const Padding(
+          child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Text('Set',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 16, fontWeight: FontWeight.w700,
                   color: Colors.white)),
           ),

@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/providers/user_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class NamePromptDialog extends HookConsumerWidget {
   const NamePromptDialog({super.key});
@@ -28,7 +29,7 @@ class NamePromptDialog extends HookConsumerWidget {
     return AlertDialog(
       title: Text(
         'What should we call you?',
-        style: TextStyle(fontFamily: 'PlayfairDisplay',
+        style: TextStyle(fontFamily: context.fonts.display,
           fontSize: 19, fontWeight: FontWeight.w600, color: onBg,
         ),
       ),
@@ -38,17 +39,17 @@ class NamePromptDialog extends HookConsumerWidget {
         children: [
           Text(
             'Your name shows as a greeting on the home screen.',
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: muted),
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15, color: muted),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: ctrl,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
-            style: TextStyle(fontFamily: 'Lora', fontSize: 16, color: onBg),
+            style: TextStyle(fontFamily: context.fonts.body, fontSize: 16, color: onBg),
             decoration: InputDecoration(
               hintText: 'Your name',
-              hintStyle: TextStyle(fontFamily: 'Lora',
+              hintStyle: TextStyle(fontFamily: context.fonts.body,
                 fontSize: 16, fontStyle: FontStyle.italic, color: muted,
               ),
             ),
@@ -60,13 +61,13 @@ class NamePromptDialog extends HookConsumerWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           style: TextButton.styleFrom(foregroundColor: muted),
-          child: const Text('Skip', style: TextStyle(fontFamily: 'Lora', fontSize: 14)),
+          child: Text('Skip', style: TextStyle(fontFamily: context.fonts.body, fontSize: 14)),
         ),
         ElevatedButton(
           onPressed: save,
-          child: const Text(
+          child: Text(
             "Let's go",
-            style: TextStyle(fontFamily: 'Lora', fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(fontFamily: context.fonts.body, fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
       ],

@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/theme/theme_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class ThemeToggleTile extends ConsumerWidget {
   const ThemeToggleTile({super.key});
@@ -35,12 +36,12 @@ class ThemeToggleTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Theme',
-                      style: TextStyle(fontFamily: 'Lora',
+                      style: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 15, fontWeight: FontWeight.w500, color: onBg,
                       )),
                   const SizedBox(height: 2),
                   Text('Candlelight or parchment.',
-                      style: TextStyle(fontFamily: 'Caveat',fontSize: 13, color: muted)),
+                      style: TextStyle(fontFamily: context.fonts.accent,fontSize: 13, color: muted)),
                 ],
               ),
               const Spacer(),
@@ -125,7 +126,7 @@ class _ThemeSegment extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(fontFamily: 'Caveat',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: selected ? primary : muted,
