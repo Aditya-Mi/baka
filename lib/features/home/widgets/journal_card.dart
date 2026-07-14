@@ -10,6 +10,7 @@ import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/tag_chip.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class JournalCard extends ConsumerWidget {
   final JournalEntry entry;
@@ -26,7 +27,7 @@ class JournalCard extends ConsumerWidget {
             .any((d) => d.isEdit && d.entryId == entry.id)));
     final baseStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       fontSize: 14.5, height: 1.55, color: t.onSurface,
-    ) ?? TextStyle(fontFamily: 'Lora', fontSize: 14.5, height: 1.55, color: t.onSurface);
+    ) ?? TextStyle(fontFamily: context.fonts.body, fontSize: 14.5, height: 1.55, color: t.onSurface);
 
     return Material(
       color: t.surface,
@@ -71,7 +72,7 @@ class JournalCard extends ConsumerWidget {
                               child: Text(
                                 DateFormat('EEE, MMM d').format(entry.createdAt),
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontFamily: 'Caveat',
+                                style: TextStyle(fontFamily: context.fonts.accent,
                                   fontSize: 19, color: t.onSurface, height: 1,
                                 ),
                               ),
@@ -97,7 +98,7 @@ class JournalCard extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 5),
                                     Text('draft',
-                                        style: TextStyle(fontFamily: 'Caveat',
+                                        style: TextStyle(fontFamily: context.fonts.accent,
                                           fontSize: 12, color: t.primary)),
                                   ],
                                 ),

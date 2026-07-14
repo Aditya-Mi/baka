@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class SecurityOptionTile extends StatelessWidget {
   final IconData icon;
@@ -52,10 +53,10 @@ class SecurityOptionTile extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(label,
-                      style: TextStyle(fontFamily: 'Caveat',
+                      style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 17, fontWeight: FontWeight.w700, color: labelColor)),
                   Text(subtitle,
-                      style: TextStyle(fontFamily: 'Caveat', fontSize: 13, color: subColor)),
+                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13, color: subColor)),
                 ]),
               ),
               if (filled) const Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),

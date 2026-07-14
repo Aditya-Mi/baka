@@ -8,12 +8,14 @@ import 'package:baka/features/lock/pin_keypad.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_provider.dart';
 import 'package:baka/features/settings/widgets/font_picker_sheet.dart';
+import 'package:baka/features/settings/widgets/font_theme_sheet.dart';
 import 'package:baka/features/settings/widgets/reminder_settings_tile.dart';
 import 'package:baka/features/settings/widgets/export_import_tile.dart';
 import 'package:baka/features/settings/widgets/theme_toggle_tile.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/security_option_tile.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class SettingsScreen extends HookConsumerWidget {
   const SettingsScreen({super.key});
@@ -27,6 +29,7 @@ class SettingsScreen extends HookConsumerWidget {
     final primary = t.primary;
 
     final fontKey = ref.watch(fontProvider);
+    final preset  = ref.watch(fontThemeProvider);
     final auth    = ref.watch(authProvider);
     final name    = ref.watch(userProvider);
 
@@ -43,7 +46,7 @@ class SettingsScreen extends HookConsumerWidget {
         title: Text(
           'Settings',
           style: TextStyle(
-            fontFamily: 'Caveat',
+            fontFamily: context.fonts.accent,
             fontSize: 28, fontWeight: FontWeight.w700, color: t.primary,
           ),
         ),
@@ -67,8 +70,24 @@ class SettingsScreen extends HookConsumerWidget {
           const ThemeToggleTile(),
           _Divider(color: outline),
           _Row(
+            title: 'App font',
+            value: preset.label,
+            valueColor: primary,
+            trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
+            onTap: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: t.surfaceElev,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) => const FontThemeSheet(),
+            ),
+          ),
+          _Divider(color: outline),
+          _Row(
             title: 'Writing font',
-            value: _fontDisplayName(fontKey),
+            value: _fontDisplayName(fontKey, preset),
             valueColor: primary,
             trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
             onTap: () => showModalBottomSheet<void>(
@@ -93,7 +112,7 @@ class SettingsScreen extends HookConsumerWidget {
             child: Row(
               children: [
                 Text('Lock with biometrics',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 18, fontWeight: FontWeight.w600, color: onBg)),
                 const Spacer(),
                 Switch(
@@ -127,11 +146,11 @@ class SettingsScreen extends HookConsumerWidget {
             child: Row(
               children: [
                 Text('Version',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 18, fontWeight: FontWeight.w600, color: onBg)),
                 const Spacer(),
                 Text(versionStr,
-                    style: TextStyle(fontFamily: 'CourierPrime',
+                    style: TextStyle(fontFamily: context.fonts.mono,
                       fontSize: 12, letterSpacing: 0.5, color: muted)),
               ],
             ),
@@ -141,7 +160,7 @@ class SettingsScreen extends HookConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
             child: Text(
               'Made for your thoughts.',
-              style: TextStyle(fontFamily: 'Lora',
+              style: TextStyle(fontFamily: context.fonts.body,
                 fontSize: 14, fontStyle: FontStyle.italic, color: muted),
             ),
           ),
@@ -170,7 +189,7 @@ class SettingsScreen extends HookConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Your name',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 19, fontWeight: FontWeight.w600, color: t.onBackground,
             )),
         content: TextField(
@@ -178,10 +197,10 @@ class SettingsScreen extends HookConsumerWidget {
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           cursorColor: t.primary,
-          style: TextStyle(fontFamily: 'Lora', fontSize: 16, color: t.onBackground),
+          style: TextStyle(fontFamily: context.fonts.body, fontSize: 16, color: t.onBackground),
           decoration: InputDecoration(
             hintText: 'Your name',
-            hintStyle: TextStyle(fontFamily: 'Lora',
+            hintStyle: TextStyle(fontFamily: context.fonts.body,
               fontSize: 16, fontStyle: FontStyle.italic, color: t.onSurfaceMuted),
           ),
           onSubmitted: (_) {
@@ -193,29 +212,24 @@ class SettingsScreen extends HookConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
-            child: const Text('Cancel', style: TextStyle(fontFamily: 'Caveat', fontSize: 16)),
+            child: Text('Cancel', style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
           ),
           ElevatedButton(
             onPressed: () {
               ref.read(userProvider.notifier).setName(ctrl.text);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Save',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 16, fontWeight: FontWeight.w700)),
+            child: Text('Save',
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
     );
   }
 
-  static String _fontDisplayName(String key) => switch (key) {
-        'playfairDisplay'  => 'Playfair Display',
-        'crimsonPro'       => 'Crimson Pro',
-        'ebGaramond'       => 'EB Garamond',
-        'caveat'           => 'Caveat',
-        'libreBaskerville' => 'Libre Baskerville',
-        _                  => 'Lora',
-      };
+  /// A null key means the writing font is following the app font preset.
+  static String _fontDisplayName(String? key, FontPreset preset) =>
+      key == null ? 'Match app font' : kAvailableFonts[key] ?? preset.body;
 }
 
 // ── Section header ────────────────────────────────────────────────────────────
@@ -232,7 +246,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontFamily: 'PlayfairDisplay',
+          fontFamily: context.fonts.display,
           fontSize: 20, fontWeight: FontWeight.w600,
           height: 1.3, color: t.primary,
         ),
@@ -268,13 +282,13 @@ class _Row extends StatelessWidget {
         child: Row(
           children: [
             Text(title,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 18, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             const Spacer(),
             if (value != null) ...[
               Text(value!,
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 16, color: valueColor ?? t.onSurfaceMuted)),
               const SizedBox(width: 6),
             ],
@@ -363,14 +377,14 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
             decoration: BoxDecoration(color: t.outline.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(2))),
         const SizedBox(height: 20),
-        Text('Security method', style: TextStyle(fontFamily: 'PlayfairDisplay',
+        Text('Security method', style: TextStyle(fontFamily: context.fonts.display,
             fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 4),
         Text('Choose how to unlock your journal.',
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: t.onSurfaceMuted)),
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15, color: t.onSurfaceMuted)),
         const SizedBox(height: 20),
         if (_error != null) ...[
-          Text(_error!, style: TextStyle(fontFamily: 'Lora', fontSize: 13,
+          Text(_error!, style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
               color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
           const SizedBox(height: 10),
         ],

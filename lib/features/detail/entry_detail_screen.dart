@@ -15,6 +15,7 @@ import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class EntryDetailScreen extends HookConsumerWidget {
   final String id;
@@ -69,7 +70,7 @@ class EntryDetailScreen extends HookConsumerWidget {
                 children: [
                   Text(
                     DateFormat('EEEE, MMMM d').format(entry.createdAt),
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 16, fontWeight: FontWeight.w500, color: onBg,
                     ),
                   ),
@@ -79,7 +80,7 @@ class EntryDetailScreen extends HookConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     DateFormat.jm().format(entry.createdAt),
-                    style: TextStyle(fontFamily: 'Caveat', fontSize: 14, color: muted),
+                    style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14, color: muted),
                   ),
                 ],
               ),
@@ -153,12 +154,12 @@ class EntryDetailScreen extends HookConsumerWidget {
                     children: [
                       Text(
                         '${entry.wordCount} words',
-                        style: TextStyle(fontFamily: 'CourierPrime', fontSize: 12, color: muted),
+                        style: TextStyle(fontFamily: context.fonts.mono, fontSize: 12, color: muted),
                       ),
                       const SizedBox(width: 16),
                       Text(
                         '${entry.body.length} chars',
-                        style: TextStyle(fontFamily: 'CourierPrime', fontSize: 12, color: muted),
+                        style: TextStyle(fontFamily: context.fonts.mono, fontSize: 12, color: muted),
                       ),
                     ],
                   ),
@@ -216,7 +217,7 @@ class _AnchorBar extends StatelessWidget {
               Icon(Icons.location_on_outlined, size: 16, color: t.onSurfaceMuted),
               const SizedBox(width: 4),
               Text(anchor.location!,
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 15, color: t.onSurfaceMuted)),
             ]),
           if (anchor.hasWeather)
@@ -227,7 +228,7 @@ class _AnchorBar extends StatelessWidget {
                 anchor.weatherTemp != null
                     ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
                     : anchor.weatherCondition!.label,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 15, color: t.onSurfaceMuted),
               ),
             ]),
@@ -248,7 +249,7 @@ class _AnchorBar extends StatelessWidget {
                       ? '${anchor.songName!} · ${anchor.songArtist!}'
                       : anchor.songName!,
                   style: TextStyle(
-                    fontFamily: 'Caveat',
+                    fontFamily: context.fonts.accent,
                     fontSize: 15,
                     color: anchor.songUrl != null ? t.primary : t.onSurfaceMuted,
                     decoration: anchor.songUrl != null
@@ -302,7 +303,7 @@ class _PhotoViewState extends State<_PhotoView> {
                         color: widget.t.onSurfaceMuted),
                     const SizedBox(width: 6),
                     Text('Photo',
-                        style: TextStyle(fontFamily: 'Caveat',
+                        style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 15, color: widget.t.onSurfaceMuted)),
                     const Spacer(),
                     Icon(

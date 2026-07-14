@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Tokens extracted directly from design mockups:
 ///   Light _ Aged Paper.html  /  Dark _ Midnight Ink.html
@@ -185,64 +185,69 @@ extension BakaContext on BuildContext {
   BakaTokens get tokens => Theme.of(this).extension<BakaTokens>()!;
 }
 
-/// Named text styles — uses bundled local fonts.
+/// Named text styles. Families resolve through the active font preset, so a
+/// `hand*` style is whatever the preset nominates as its accent face — not
+/// necessarily a handwriting font.
 class AppText {
-  static TextStyle displayL(Color c) => TextStyle(
-        fontFamily: 'PlayfairDisplay',
+  static TextStyle displayL(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.display,
         fontSize: 36, fontWeight: FontWeight.w600, height: 1.1,
         letterSpacing: -0.5, color: c,
       );
-  static TextStyle displayM(Color c) => TextStyle(
-        fontFamily: 'PlayfairDisplay',
+  static TextStyle displayM(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.display,
         fontSize: 28, fontWeight: FontWeight.w600, height: 1.2,
         letterSpacing: -0.3, color: c,
       );
-  static TextStyle displayS(Color c) => TextStyle(
-        fontFamily: 'PlayfairDisplay',
+  static TextStyle displayS(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.display,
         fontSize: 20, fontWeight: FontWeight.w600, height: 1.3, color: c,
       );
 
-  static TextStyle handLg(Color c) => TextStyle(
-        fontFamily: 'Caveat',
+  static TextStyle handLg(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.accent,
         fontSize: 22, color: c, height: 1.2,
       );
-  static TextStyle hand(Color c) => TextStyle(
-        fontFamily: 'Caveat',
+  static TextStyle hand(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.accent,
         fontSize: 18, color: c, height: 1.25,
       );
-  static TextStyle handSm(Color c) => TextStyle(
-        fontFamily: 'Caveat',
+  static TextStyle handSm(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.accent,
         fontSize: 15, color: c, height: 1.3,
       );
 
-  static TextStyle body(Color c) => TextStyle(
-        fontFamily: 'Lora',
+  static TextStyle body(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.body,
         fontSize: 16, height: 1.55, color: c,
       );
-  static TextStyle bodySm(Color c) => TextStyle(
-        fontFamily: 'Lora',
+  static TextStyle bodySm(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.body,
         fontSize: 14.5, height: 1.55, color: c,
       );
-  static TextStyle bodyItalic(Color c) => TextStyle(
-        fontFamily: 'Lora',
+  static TextStyle bodyItalic(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.body,
         fontSize: 16, height: 1.55, color: c, fontStyle: FontStyle.italic,
       );
 
-  static TextStyle mono(Color c) => TextStyle(
-        fontFamily: 'CourierPrime',
+  static TextStyle mono(BuildContext x, Color c) => TextStyle(
+        fontFamily: x.fonts.mono,
         fontSize: 12, letterSpacing: 0.5, color: c,
       );
 
-  static TextStyle wordmark(Color c, double size) => TextStyle(
-        fontFamily: 'Caveat',
+  /// Oversized decorative headline in the accent face. Not the logo — the
+  /// logo is [WordmarkWidget], which pins [kWordmarkFamily] on purpose.
+  static TextStyle handXl(BuildContext x, Color c, double size) => TextStyle(
+        fontFamily: x.fonts.accent,
         fontSize: size, fontWeight: FontWeight.w700, height: 0.9, color: c,
       );
 }
 
 class AppTheme {
-  static ThemeData light({required String fontKey}) {
+  static ThemeData light({required FontPreset preset, String? writingFont}) {
+    final f = BakaFonts.of(preset, writingFont: writingFont);
     final textTheme = _buildTextTheme(
-      fontKey: fontKey,
+      f,
       onBackground: AppColors.lightOnBackground,
       muted: AppColors.lightMuted,
     );
@@ -270,13 +275,13 @@ class AppTheme {
       cardColor: AppColors.lightCard,
       dividerColor: AppColors.lightOutline,
       textTheme: textTheme,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.lightBackground,
         foregroundColor: AppColors.lightOnBackground,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(fontFamily: 'PlayfairDisplay',
+        titleTextStyle: TextStyle(fontFamily: f.display,
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: AppColors.lightOnBackground,
@@ -325,7 +330,7 @@ class AppTheme {
         backgroundColor: AppColors.lightCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titleTextStyle: const TextStyle(fontFamily: 'PlayfairDisplay',
+        titleTextStyle: TextStyle(fontFamily: f.display,
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.lightOnBackground,
@@ -344,7 +349,7 @@ class AppTheme {
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w600, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -353,19 +358,19 @@ class AppTheme {
           side: const BorderSide(color: AppColors.lightOutline),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.lightPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.lightSurface,
-        labelStyle: const TextStyle(fontFamily: 'Caveat', fontSize: 13, color: AppColors.lightOnSurface),
+        labelStyle: TextStyle(fontFamily: f.accent, fontSize: 13, color: AppColors.lightOnSurface),
         side: const BorderSide(color: AppColors.lightOutline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -375,7 +380,7 @@ class AppTheme {
         foregroundColor: AppColors.lightOnPrimary,
         elevation: 2,
       ),
-      extensions: [BakaTokens.light],
+      extensions: [BakaTokens.light, f],
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.lightSurfaceElev,
         indicatorColor: AppColors.lightPrimaryContainer,
@@ -387,11 +392,11 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((s) {
           if (s.contains(WidgetState.selected)) {
-            return const TextStyle(fontFamily: 'Caveat',
+            return TextStyle(fontFamily: f.accent,
               fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.lightPrimary,
             );
           }
-          return const TextStyle(fontFamily: 'Caveat', fontSize: 12, color: AppColors.lightMuted);
+          return TextStyle(fontFamily: f.accent, fontSize: 12, color: AppColors.lightMuted);
         }),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -400,9 +405,10 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark({required String fontKey}) {
+  static ThemeData dark({required FontPreset preset, String? writingFont}) {
+    final f = BakaFonts.of(preset, writingFont: writingFont);
     final textTheme = _buildTextTheme(
-      fontKey: fontKey,
+      f,
       onBackground: AppColors.darkOnBackground,
       muted: AppColors.darkMuted,
     );
@@ -430,13 +436,13 @@ class AppTheme {
       cardColor: AppColors.darkCard,
       dividerColor: AppColors.darkOutline,
       textTheme: textTheme,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkBackground,
         foregroundColor: AppColors.darkOnBackground,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(fontFamily: 'PlayfairDisplay',
+        titleTextStyle: TextStyle(fontFamily: f.display,
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: AppColors.darkOnBackground,
@@ -485,7 +491,7 @@ class AppTheme {
         backgroundColor: AppColors.darkCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titleTextStyle: const TextStyle(fontFamily: 'PlayfairDisplay',
+        titleTextStyle: TextStyle(fontFamily: f.display,
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.darkOnBackground,
@@ -504,7 +510,7 @@ class AppTheme {
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w600, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -513,19 +519,19 @@ class AppTheme {
           side: const BorderSide(color: AppColors.darkOutline),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.darkPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontFamily: 'Lora', fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.darkSurface,
-        labelStyle: const TextStyle(fontFamily: 'Caveat', fontSize: 13, color: AppColors.darkOnSurface),
+        labelStyle: TextStyle(fontFamily: f.accent, fontSize: 13, color: AppColors.darkOnSurface),
         side: const BorderSide(color: AppColors.darkOutline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -535,7 +541,7 @@ class AppTheme {
         foregroundColor: AppColors.darkOnPrimary,
         elevation: 2,
       ),
-      extensions: [BakaTokens.dark],
+      extensions: [BakaTokens.dark, f],
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.darkSurfaceElev,
         indicatorColor: AppColors.darkPrimaryContainer,
@@ -547,11 +553,11 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((s) {
           if (s.contains(WidgetState.selected)) {
-            return const TextStyle(fontFamily: 'Caveat',
+            return TextStyle(fontFamily: f.accent,
               fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.darkPrimary,
             );
           }
-          return const TextStyle(fontFamily: 'Caveat', fontSize: 12, color: AppColors.darkMuted);
+          return TextStyle(fontFamily: f.accent, fontSize: 12, color: AppColors.darkMuted);
         }),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -562,53 +568,22 @@ class AppTheme {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  /// Returns the font family name for the body text theme.
-  /// Local fonts use the declared family name; network fonts use GoogleFonts.
-  static String _resolveBodyFontFamily(String key) {
-    return switch (key) {
-      'playfairDisplay'  => 'PlayfairDisplay',
-      'caveat'           => 'Caveat',
-      // These 3 are not bundled — GoogleFonts handles them via network/cache.
-      'crimsonPro'       => 'CrimsonPro',
-      'ebGaramond'       => 'EBGaramond',
-      'libreBaskerville' => 'LibreBaskerville',
-      _                  => 'Lora',
-    };
-  }
-
-  /// Returns a TextStyle builder for fonts NOT bundled locally (network fonts).
-  static Function? _networkBodyFont(String key) {
-    return switch (key) {
-      'crimsonPro'       => GoogleFonts.crimsonPro,
-      'ebGaramond'       => GoogleFonts.ebGaramond,
-      'libreBaskerville' => GoogleFonts.libreBaskerville,
-      _                  => null, // local font — use TextStyle directly
-    };
-  }
-
-  static TextTheme _buildTextTheme({
-    required String fontKey,
+  static TextTheme _buildTextTheme(
+    BakaFonts f, {
     required Color onBackground,
     required Color muted,
   }) {
-    final bodyFamily = _resolveBodyFontFamily(fontKey);
-    final networkFont = _networkBodyFont(fontKey);
-
-    TextStyle body(double size, FontWeight weight, Color color) {
-      if (networkFont != null) {
-        return networkFont(fontSize: size, fontWeight: weight, color: color) as TextStyle;
-      }
-      return TextStyle(fontFamily: bodyFamily, fontSize: size, fontWeight: weight, color: color);
-    }
+    TextStyle body(double size, FontWeight weight, Color color) =>
+        TextStyle(fontFamily: f.body, fontSize: size, fontWeight: weight, color: color);
 
     return TextTheme(
-      displayLarge:   TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 40, fontWeight: FontWeight.w700, color: onBackground),
-      displayMedium:  TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 34, fontWeight: FontWeight.w700, color: onBackground),
-      displaySmall:   TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 28, fontWeight: FontWeight.w600, color: onBackground),
-      headlineLarge:  TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 26, fontWeight: FontWeight.w600, color: onBackground),
-      headlineMedium: TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 22, fontWeight: FontWeight.w600, color: onBackground),
-      headlineSmall:  TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 18, fontWeight: FontWeight.w600, color: onBackground),
-      titleLarge:     TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 20, fontWeight: FontWeight.w600, color: onBackground),
+      displayLarge:   TextStyle(fontFamily: f.display, fontSize: 40, fontWeight: FontWeight.w700, color: onBackground),
+      displayMedium:  TextStyle(fontFamily: f.display, fontSize: 34, fontWeight: FontWeight.w700, color: onBackground),
+      displaySmall:   TextStyle(fontFamily: f.display, fontSize: 28, fontWeight: FontWeight.w600, color: onBackground),
+      headlineLarge:  TextStyle(fontFamily: f.display, fontSize: 26, fontWeight: FontWeight.w600, color: onBackground),
+      headlineMedium: TextStyle(fontFamily: f.display, fontSize: 22, fontWeight: FontWeight.w600, color: onBackground),
+      headlineSmall:  TextStyle(fontFamily: f.display, fontSize: 18, fontWeight: FontWeight.w600, color: onBackground),
+      titleLarge:     TextStyle(fontFamily: f.display, fontSize: 20, fontWeight: FontWeight.w600, color: onBackground),
       titleMedium: body(16, FontWeight.w600, onBackground),
       titleSmall:  body(14, FontWeight.w600, onBackground),
       bodyLarge:   body(18, FontWeight.w400, onBackground),

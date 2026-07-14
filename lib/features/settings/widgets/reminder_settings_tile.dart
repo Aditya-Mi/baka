@@ -6,6 +6,7 @@ import 'package:baka/core/notifications/notification_service.dart';
 import 'package:baka/core/notifications/reminder_provider.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class ReminderSettingsTile extends ConsumerWidget {
   const ReminderSettingsTile({super.key});
@@ -40,12 +41,12 @@ class ReminderSettingsTile extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Daily reminder',
-                        style: TextStyle(fontFamily: 'Lora',
+                        style: TextStyle(fontFamily: context.fonts.body,
                           fontSize: 15, fontWeight: FontWeight.w500, color: onBg,
                         )),
                     const SizedBox(height: 2),
                     Text('A gentle nudge to capture your thoughts.',
-                        style: TextStyle(fontFamily: 'Caveat',fontSize: 13, color: muted)),
+                        style: TextStyle(fontFamily: context.fonts.accent,fontSize: 13, color: muted)),
                   ],
                 ),
               ),
@@ -85,12 +86,12 @@ class ReminderSettingsTile extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text('Remind me at',
-                                style: TextStyle(fontFamily: 'Lora',
+                                style: TextStyle(fontFamily: context.fonts.body,
                                   fontSize: 15, fontWeight: FontWeight.w500, color: onBg,
                                 )),
                             const Spacer(),
                             Text(timeStr,
-                                style: TextStyle(fontFamily: 'Lora',
+                                style: TextStyle(fontFamily: context.fonts.body,
                                   fontSize: 15, fontWeight: FontWeight.w600, color: primary,
                                 )),
                             const SizedBox(width: 4),
@@ -110,13 +111,13 @@ class ReminderSettingsTile extends ConsumerWidget {
                         children: [
                           Text(
                             '"What did today feel like?"',
-                            style: TextStyle(fontFamily: 'Lora',
+                            style: TextStyle(fontFamily: context.fonts.body,
                               fontSize: 14, fontStyle: FontStyle.italic, color: onBg,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text('Preview · changes daily',
-                              style: TextStyle(fontFamily: 'Caveat',fontSize: 12, color: muted)),
+                              style: TextStyle(fontFamily: context.fonts.accent,fontSize: 12, color: muted)),
                         ],
                       ),
                     ),

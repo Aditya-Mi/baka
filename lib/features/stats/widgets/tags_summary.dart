@@ -6,6 +6,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class TagsSummary extends ConsumerWidget {
   final List<JournalEntry> entries;
@@ -42,10 +43,10 @@ class TagsSummary extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Your tags', style: AppText.displayS(t.onBackground)),
+                  Text('Your tags', style: AppText.displayS(context, t.onBackground)),
                   const SizedBox(height: 2),
                   Text('Most used topics.',
-                      style: AppText.handSm(t.onSurfaceMuted)
+                      style: AppText.handSm(context, t.onSurfaceMuted)
                           .copyWith(fontStyle: FontStyle.italic)),
                 ],
               ),
@@ -53,7 +54,7 @@ class TagsSummary extends ConsumerWidget {
             GestureDetector(
               onTap: () => context.push('/tags'),
               child: Text('See all →',
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 16, color: t.primary,
                     fontWeight: FontWeight.w700)),
             ),
@@ -90,12 +91,12 @@ class TagsSummary extends ConsumerWidget {
                     ),
                     const SizedBox(width: 7),
                     Text('#${entry.key}',
-                        style: TextStyle(fontFamily: 'Caveat',
+                        style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 15, fontWeight: FontWeight.w600,
                           color: t.onBackground)),
                     const SizedBox(width: 6),
                     Text('${entry.value}',
-                        style: TextStyle(fontFamily: 'Caveat',
+                        style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 13, color: t.onSurfaceMuted)),
                   ],
                 ),

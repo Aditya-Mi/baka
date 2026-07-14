@@ -8,6 +8,7 @@ import 'package:baka/core/update/update_service.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/theme/theme_provider.dart';
 import 'package:baka/core/fonts/font_provider.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 import 'package:baka/features/lock/lock_screen.dart';
 import 'package:baka/features/home/home_screen.dart';
 import 'package:baka/features/editor/new_entry_screen.dart';
@@ -98,23 +99,24 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
   bool _pendingNewEntry  = false;
   bool _updateChecked    = false;
 
-  // ThemeData cache — only rebuilt when fontKey actually changes,
+  // ThemeData cache — only rebuilt when the font selection actually changes,
   // not on every auth/route rebuild.
   String?   _cachedFontKey;
   ThemeData? _lightTheme;
   ThemeData? _darkTheme;
 
-  ThemeData _light(String fontKey) {
-    if (_cachedFontKey != fontKey || _lightTheme == null) {
-      _cachedFontKey = fontKey;
-      _lightTheme = AppTheme.light(fontKey: fontKey);
-      _darkTheme  = AppTheme.dark(fontKey: fontKey);
+  ThemeData _light(FontPreset preset, String? writingFont) {
+    final key = '${preset.id}|${writingFont ?? ''}';
+    if (_cachedFontKey != key || _lightTheme == null) {
+      _cachedFontKey = key;
+      _lightTheme = AppTheme.light(preset: preset, writingFont: writingFont);
+      _darkTheme  = AppTheme.dark(preset: preset, writingFont: writingFont);
     }
     return _lightTheme!;
   }
 
-  ThemeData _dark(String fontKey) {
-    _light(fontKey); // ensures both are built together
+  ThemeData _dark(FontPreset preset, String? writingFont) {
+    _light(preset, writingFont); // ensures both are built together
     return _darkTheme!;
   }
 
@@ -187,12 +189,13 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
       }
     });
 
-    final auth      = ref.watch(authProvider);
-    final themeMode = ref.watch(themeProvider);
-    final fontKey   = ref.watch(fontProvider);
+    final auth        = ref.watch(authProvider);
+    final themeMode   = ref.watch(themeProvider);
+    final preset      = ref.watch(fontThemeProvider);
+    final writingFont = writingFamily(ref.watch(fontProvider));
 
-    final light = _light(fontKey);
-    final dark  = _dark(fontKey);
+    final light = _light(preset, writingFont);
+    final dark  = _dark(preset, writingFont);
 
     // Blank screen while auth state loads from storage — prevents lock screen flash.
     // The Offstage widget pre-warms font metrics for all key font/weight combos
@@ -219,12 +222,25 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
       darkTheme: dark,
       themeMode: themeMode,
       routerConfig: _router,
+      // Applied here rather than in the TextTheme so the preset's optical
+      // correction also reaches the font sizes set inline on widgets.
+      builder: (ctx, child) {
+        final mq = MediaQuery.of(ctx);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: PresetTextScaler(base: mq.textScaler, factor: preset.scale),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }
 
 /// Renders key font+weight combinations off-screen during the auth init gap.
 /// Pre-computes glyph metrics so first navigation to each screen is instant.
+/// Warms whichever families the active preset resolves to — a preset whose
+/// fonts aren't warmed here pays a metric hitch on first paint instead.
 class _FontWarmup extends StatelessWidget {
   const _FontWarmup();
 
@@ -234,27 +250,30 @@ class _FontWarmup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final f = context.fonts;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Caveat — used in almost every widget
-        Text('warm', style: _s('Caveat', 14)),
-        Text('warm', style: _s('Caveat', 16)),
-        Text('warm', style: _s('Caveat', 18)),
-        Text('warm', style: _s('Caveat', 28, FontWeight.w700)),
-        Text('warm', style: _s('Caveat', 30, FontWeight.w700)),
-        Text('warm', style: _s('Caveat', 40, FontWeight.w700)),
-        // PlayfairDisplay — headers, AppBar titles
-        Text('warm', style: _s('PlayfairDisplay', 18, FontWeight.w600)),
-        Text('warm', style: _s('PlayfairDisplay', 20, FontWeight.w600)),
-        Text('warm', style: _s('PlayfairDisplay', 22, FontWeight.w600)),
-        // Lora — body text in editor and detail
-        Text('warm', style: _s('Lora', 16)),
-        Text('warm', style: _s('Lora', 17)),
-        const Text('warm', style: TextStyle(
-            fontFamily: 'Lora', fontSize: 17, fontStyle: FontStyle.italic)),
-        // CourierPrime — counters
-        Text('warm', style: _s('CourierPrime', 12)),
+        // Accent — used in almost every widget
+        Text('warm', style: _s(f.accent, 14)),
+        Text('warm', style: _s(f.accent, 16)),
+        Text('warm', style: _s(f.accent, 18)),
+        Text('warm', style: _s(f.accent, 28, FontWeight.w700)),
+        Text('warm', style: _s(f.accent, 30, FontWeight.w700)),
+        Text('warm', style: _s(f.accent, 40, FontWeight.w700)),
+        // Display — headers, AppBar titles
+        Text('warm', style: _s(f.display, 18, FontWeight.w600)),
+        Text('warm', style: _s(f.display, 20, FontWeight.w600)),
+        Text('warm', style: _s(f.display, 22, FontWeight.w600)),
+        // Body — text in editor and detail
+        Text('warm', style: _s(f.body, 16)),
+        Text('warm', style: _s(f.body, 17)),
+        Text('warm', style: TextStyle(
+            fontFamily: f.body, fontSize: 17, fontStyle: FontStyle.italic)),
+        // Mono — counters
+        Text('warm', style: _s(f.mono, 12)),
+        // The wordmark never follows the preset, so warm it unconditionally.
+        Text('warm', style: _s(kWordmarkFamily, 40, FontWeight.w700)),
       ],
     );
   }

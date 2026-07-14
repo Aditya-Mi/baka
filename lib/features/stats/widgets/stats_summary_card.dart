@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class StatsSummaryCard extends StatelessWidget {
   final int longest;
@@ -64,17 +65,17 @@ class _Col extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(value, style: TextStyle(fontFamily: 'Lora',
+              Text(value, style: TextStyle(fontFamily: context.fonts.body,
                 fontSize: 28, fontWeight: FontWeight.w700, color: onBg, height: 1.0,
               )),
               if (unit.isNotEmpty) ...[
                 const SizedBox(width: 3),
-                Text(unit, style: TextStyle(fontFamily: 'Caveat', fontSize: 13, color: muted)),
+                Text(unit, style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13, color: muted)),
               ],
             ],
           ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontFamily: 'Caveat',
+          Text(label, style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 13, fontWeight: FontWeight.w500, color: muted,
           )),
         ],

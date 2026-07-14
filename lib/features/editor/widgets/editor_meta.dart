@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Collapsible editor metadata. Shows the full date/mood/tag [expanded] widgets,
 /// or a slim one-line summary when [collapsed] (i.e. the body field is focused),
@@ -52,7 +53,7 @@ class EditorMeta extends StatelessWidget {
                     Flexible(
                       child: Text('$dateLabel · $timeLabel',
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontFamily: 'Caveat',
+                          style: TextStyle(fontFamily: context.fonts.accent,
                               fontSize: 15, color: t.onSurfaceMuted)),
                     ),
                     const Spacer(),
@@ -62,7 +63,7 @@ class EditorMeta extends StatelessWidget {
                     ],
                     if (tagCount > 0)
                       Text('#$tagCount',
-                          style: TextStyle(fontFamily: 'Caveat',
+                          style: TextStyle(fontFamily: context.fonts.accent,
                               fontSize: 15, color: t.primary)),
                     const SizedBox(width: 6),
                     Icon(Icons.keyboard_arrow_down_rounded,

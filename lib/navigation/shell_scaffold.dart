@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class ShellScaffold extends ConsumerWidget {
   final Widget child;
@@ -35,23 +36,23 @@ class ShellScaffold extends ConsumerWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text('Exit Baka?',
-                style: TextStyle(fontFamily: 'PlayfairDisplay',
+                style: TextStyle(fontFamily: context.fonts.display,
                   fontSize: 18, fontWeight: FontWeight.w600,
                   color: t.onBackground)),
             content: Text('Your journal will be waiting.',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 16, color: t.onSurfaceMuted)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
                 child: Text('Stay',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 16, color: t.onSurfaceMuted)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: Text('Exit',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 16, color: t.primary,
                       fontWeight: FontWeight.w700)),
               ),
@@ -70,8 +71,8 @@ class ShellScaffold extends ConsumerWidget {
           elevation: 2,
           shape: const StadiumBorder(),
           icon: const QuillIcon(size: 20, color: Colors.white),
-          label: const Text('Write',
-              style: TextStyle(fontFamily: 'Caveat',
+          label: Text('Write',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

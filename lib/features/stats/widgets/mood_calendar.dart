@@ -5,6 +5,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class MoodCalendar extends StatefulWidget {
   final List<JournalEntry> entries;
@@ -77,7 +78,7 @@ class _MoodCalendarState extends State<MoodCalendar> {
               child: Center(
                 child: Text(
                   DateFormat('MMMM yyyy').format(_month),
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 18, fontWeight: FontWeight.w700,
                     color: t.onBackground),
                 ),
@@ -101,7 +102,7 @@ class _MoodCalendarState extends State<MoodCalendar> {
           children: dayLabels.map((l) => Expanded(
             child: Center(
               child: Text(l,
-                  style: TextStyle(fontFamily: 'Caveat',
+                  style: TextStyle(fontFamily: context.fonts.accent,
                     fontSize: 12, color: t.onSurfaceMuted)),
             ),
           )).toList(),
@@ -175,14 +176,14 @@ class _DayContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isFuture) {
       return Text('$day',
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 13, color: t.outline));
     }
 
     if (entry == null) {
       // No entry — show day number, muted
       return Text('$day',
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 13, color: t.onSurfaceMuted));
     }
 
@@ -194,7 +195,7 @@ class _DayContent extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text('$day',
-              style: TextStyle(fontFamily: 'Caveat',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 11, color: t.onBackground)),
           const SizedBox(height: 1),
           Container(
@@ -214,7 +215,7 @@ class _DayContent extends StatelessWidget {
       children: [
         MoodGlyph(mood: mood, size: 16, color: t.primary),
         Text('$day',
-            style: TextStyle(fontFamily: 'Caveat',
+            style: TextStyle(fontFamily: context.fonts.accent,
               fontSize: 10, color: t.primary)),
       ],
     );

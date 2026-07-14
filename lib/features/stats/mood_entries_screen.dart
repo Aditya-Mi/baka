@@ -7,6 +7,7 @@ import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class MoodEntriesScreen extends ConsumerWidget {
   final Mood mood;
@@ -31,7 +32,7 @@ class MoodEntriesScreen extends ConsumerWidget {
             MoodGlyph(mood: mood, size: 22, color: t.primary),
             const SizedBox(width: 10),
             Text(mood.label,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 28, fontWeight: FontWeight.w700,
                   color: t.primary)),
           ],
@@ -53,7 +54,7 @@ class MoodEntriesScreen extends ConsumerWidget {
                   MoodGlyph(mood: mood, size: 48, color: t.onSurfaceMuted),
                   const SizedBox(height: 16),
                   Text('No entries with this mood.',
-                      style: TextStyle(fontFamily: 'Lora',
+                      style: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 15, fontStyle: FontStyle.italic,
                         color: t.onSurfaceMuted)),
                 ],

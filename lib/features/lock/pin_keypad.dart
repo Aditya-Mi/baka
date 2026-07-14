@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Compact PIN entry widget — title, subtitle, 4 dots, keypad.
 /// Parent is responsible for layout (centering, back button, etc.).
@@ -48,12 +49,12 @@ class _PinKeypadState extends State<PinKeypad> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(widget.title,
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 22, fontWeight: FontWeight.w600, color: t.onBackground)),
         const SizedBox(height: 6),
         Text(widget.subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Caveat', fontSize: 15, color: t.onSurfaceMuted)),
+            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15, color: t.onSurfaceMuted)),
         const SizedBox(height: 32),
         // Dots
         Row(
@@ -116,7 +117,7 @@ class _PinKeypadState extends State<PinKeypad> {
         onTap: () => _tap(n),
         t: t,
         child: Text('$n',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 26, fontWeight: FontWeight.w400, color: t.onBackground)),
       );
 

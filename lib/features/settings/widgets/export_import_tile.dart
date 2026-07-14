@@ -5,6 +5,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/utils/export_import.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class ExportImportTile extends ConsumerWidget {
   const ExportImportTile({super.key});
@@ -39,7 +40,7 @@ class ExportImportTile extends ConsumerWidget {
                 AppIcon(AppIconData.share, size: 20, color: onBg),
                 const SizedBox(width: 12),
                 Text('Export journal',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 16, fontWeight: FontWeight.w600, color: onBg,
                     )),
                 const Spacer(),
@@ -59,7 +60,7 @@ class ExportImportTile extends ConsumerWidget {
                 AppIcon(AppIconData.download, size: 20, color: onBg),
                 const SizedBox(width: 12),
                 Text('Import journal',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 16, fontWeight: FontWeight.w600, color: onBg,
                     )),
                 const Spacer(),

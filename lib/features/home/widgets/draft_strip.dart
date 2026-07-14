@@ -7,6 +7,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Home-screen strip listing unsaved drafts. Tapping a card resumes the
 /// draft; the ✕ discards it.
@@ -23,7 +24,7 @@ class DraftStrip extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
           child: Text('DRAFTS',
-              style: TextStyle(fontFamily: 'Caveat',
+              style: TextStyle(fontFamily: context.fonts.accent,
                 fontSize: 15, color: t.onSurfaceMuted, letterSpacing: 0.5)),
         ),
         ...drafts.map((d) => Padding(
@@ -88,12 +89,12 @@ class _DraftCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(label,
-                              style: TextStyle(fontFamily: 'Caveat',
+                              style: TextStyle(fontFamily: context.fonts.accent,
                                 fontSize: 13, color: t.primary)),
                         ),
                         const SizedBox(width: 8),
                         Text(_relTime(draft.savedAt),
-                            style: TextStyle(fontFamily: 'Caveat',
+                            style: TextStyle(fontFamily: context.fonts.accent,
                               fontSize: 13, color: t.onSurfaceMuted)),
                       ],
                     ),
@@ -102,7 +103,7 @@ class _DraftCard extends StatelessWidget {
                       snippet.isEmpty ? 'Empty draft' : snippet,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontFamily: 'Lora',
+                      style: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 14, color: t.onBackground),
                     ),
                   ],

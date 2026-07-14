@@ -13,6 +13,7 @@ import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class HomeScreen extends HookConsumerWidget {
   const HomeScreen({super.key});
@@ -40,7 +41,7 @@ class HomeScreen extends HookConsumerWidget {
                 children: [
                   Text(
                     '${_greeting()}, ',
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 28, fontWeight: FontWeight.w700,
                       color: t.primary, height: 0.95,
                     ),
@@ -49,7 +50,7 @@ class HomeScreen extends HookConsumerWidget {
                     child: Text(
                       name,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontFamily: 'PlayfairDisplay',
+                      style: TextStyle(fontFamily: context.fonts.display,
                         fontSize: 18, fontWeight: FontWeight.w600,
                         color: t.onBackground,
                       ),
@@ -59,7 +60,7 @@ class HomeScreen extends HookConsumerWidget {
               )
             : Text(
                 _greeting(),
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 28, fontWeight: FontWeight.w700,
                   color: t.primary,
                 ),
@@ -82,7 +83,7 @@ class HomeScreen extends HookConsumerWidget {
                     const SizedBox(width: 3),
                     Text(
                       '$streak',
-                      style: TextStyle(fontFamily: 'Caveat',
+                      style: TextStyle(fontFamily: context.fonts.accent,
                         fontSize: 14, fontWeight: FontWeight.w700,
                         color: t.primary,
                       ),
@@ -175,14 +176,14 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             'Your story begins here.',
-            style: TextStyle(fontFamily: 'PlayfairDisplay',
+            style: TextStyle(fontFamily: context.fonts.display,
               fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tap Write to add your first entry.',
-            style: TextStyle(fontFamily: 'Caveat',fontSize: 16, color: t.onSurfaceMuted),
+            style: TextStyle(fontFamily: context.fonts.accent,fontSize: 16, color: t.onSurfaceMuted),
           ),
         ],
       ),
@@ -248,7 +249,7 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
           child: Text(
             label,
-            style: TextStyle(fontFamily: 'Caveat',
+            style: TextStyle(fontFamily: context.fonts.accent,
               fontSize: 15, fontWeight: FontWeight.w600,
               color: t.onSurfaceMuted, letterSpacing: 0.5,
             ),

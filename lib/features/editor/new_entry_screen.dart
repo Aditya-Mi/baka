@@ -25,6 +25,7 @@ import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class NewEntryScreen extends HookConsumerWidget {
   final String? source;
@@ -213,10 +214,10 @@ class NewEntryScreen extends HookConsumerWidget {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(50),
                           onTap: canSave ? save : null,
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                             child: Text('Save',
-                                style: TextStyle(fontFamily: 'Caveat',
+                                style: TextStyle(fontFamily: context.fonts.accent,
                                   fontSize: 17, fontWeight: FontWeight.w700,
                                   color: Colors.white)),
                           ),
@@ -280,7 +281,7 @@ class NewEntryScreen extends HookConsumerWidget {
                     filled:           false,
                     isCollapsed:      true,
                     hintText: WritingPrompts.todayPrompt(),
-                    hintStyle: TextStyle(fontFamily: 'Lora',
+                    hintStyle: TextStyle(fontFamily: context.fonts.body,
                       fontSize: 17, fontStyle: FontStyle.italic,
                       color: t.onSurfaceMuted),
                   ),
@@ -344,7 +345,7 @@ class _DateRow extends StatelessWidget {
               onTap: () => pickTime(ctx, entryDate),
             ),
             Text('tap time to change',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 14, color: t.onSurfaceMuted,
                   fontStyle: FontStyle.italic)),
           ],
@@ -382,7 +383,7 @@ class _DateChip extends StatelessWidget {
             Icon(icon, size: 15, color: t.primary),
             const SizedBox(width: 7),
             Text(label,
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 18, color: t.primary, height: 1)),
           ],
         ),

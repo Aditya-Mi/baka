@@ -4,6 +4,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// "THIS WEEK" row — one dot per weekday, showing that day's mood glyph.
 class MoodStreakWidget extends StatelessWidget {
@@ -33,7 +34,7 @@ class MoodStreakWidget extends StatelessWidget {
         children: [
           Text(
             'THIS WEEK',
-            style: TextStyle(fontFamily: 'Caveat',
+            style: TextStyle(fontFamily: context.fonts.accent,
               fontSize: 15, color: t.onSurfaceMuted,
               letterSpacing: 0.5, height: 1.3,
             ),
@@ -96,7 +97,7 @@ class _StreakDay extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           letter,
-          style: TextStyle(fontFamily: 'Caveat',
+          style: TextStyle(fontFamily: context.fonts.accent,
             fontSize: 13, color: labelColor, height: 1.3,
           ),
         ),

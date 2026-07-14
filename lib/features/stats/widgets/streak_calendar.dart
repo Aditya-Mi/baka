@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class StreakCalendar extends StatefulWidget {
   final Map<DateTime, int> entriesPerDay;
@@ -102,7 +103,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                         ? null
                         : Text(label,
                             style: TextStyle(
-                              fontFamily: 'Caveat',
+                              fontFamily: context.fonts.accent,
                               fontSize: 10, color: muted,
                             )),
                   );
@@ -121,7 +122,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                   child: Center(
                     child: Text(dayLabels[i],
                         style: TextStyle(
-                          fontFamily: 'Caveat',
+                          fontFamily: context.fonts.accent,
                           fontSize: 9, color: muted,
                         )),
                   ),

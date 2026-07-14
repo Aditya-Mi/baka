@@ -9,6 +9,7 @@ import 'package:baka/widgets/weather_icon.dart';
 import 'location_sheet.dart';
 import 'photo_sheet.dart';
 import 'weather_sheet.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class AnchorBar extends StatelessWidget {
   final Anchor anchor;
@@ -50,7 +51,7 @@ class AnchorBar extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 anchor.hasLocation ? anchor.location! : 'Location',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
                     color: anchor.hasLocation ? t.primary : t.onSurfaceMuted),
               ),
             ]),
@@ -88,7 +89,7 @@ class AnchorBar extends StatelessWidget {
                         ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
                         : anchor.weatherCondition!.label)
                     : 'Weather',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
                     color: anchor.hasWeather ? t.primary : t.onSurfaceMuted),
               ),
             ]),
@@ -109,8 +110,8 @@ class AnchorBar extends StatelessWidget {
               final saved = await showDialog<bool>(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: const Text('Song',
-                      style: TextStyle(fontFamily: 'Lora', fontSize: 16)),
+                  title: Text('Song',
+                      style: TextStyle(fontFamily: context.fonts.body, fontSize: 16)),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -118,34 +119,34 @@ class AnchorBar extends StatelessWidget {
                         controller: nameCtrl,
                         autofocus: true,
                         textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Song name *',
-                          labelStyle: TextStyle(fontFamily: 'Caveat'),
-                          hintStyle: TextStyle(fontFamily: 'Caveat'),
+                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
+                          hintStyle: TextStyle(fontFamily: context.fonts.accent),
                         ),
-                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
                       ),
                       const SizedBox(height: 10),
                       TextField(
                         controller: artistCtrl,
                         textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Artist',
-                          labelStyle: TextStyle(fontFamily: 'Caveat'),
+                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
                         ),
-                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
                       ),
                       const SizedBox(height: 10),
                       TextField(
                         controller: urlCtrl,
                         keyboardType: TextInputType.url,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Spotify / YouTube URL',
-                          labelStyle: TextStyle(fontFamily: 'Caveat'),
+                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
                           hintText: 'https://',
-                          hintStyle: TextStyle(fontFamily: 'Caveat'),
+                          hintStyle: TextStyle(fontFamily: context.fonts.accent),
                         ),
-                        style: const TextStyle(fontFamily: 'Caveat', fontSize: 15),
+                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
                       ),
                     ],
                   ),
@@ -153,13 +154,13 @@ class AnchorBar extends StatelessWidget {
                     if (anchor.hasSong)
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Remove',
-                            style: TextStyle(fontFamily: 'Caveat')),
+                        child: Text('Remove',
+                            style: TextStyle(fontFamily: context.fonts.accent)),
                       ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Save',
-                          style: TextStyle(fontFamily: 'Caveat')),
+                      child: Text('Save',
+                          style: TextStyle(fontFamily: context.fonts.accent)),
                     ),
                   ],
                 ),
@@ -192,7 +193,7 @@ class AnchorBar extends StatelessWidget {
                         ? '${anchor.songName!} · ${anchor.songArtist!}'
                         : anchor.songName!)
                     : 'Song',
-                style: TextStyle(fontFamily: 'Caveat', fontSize: 14,
+                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
                     color: anchor.hasSong ? t.primary : t.onSurfaceMuted),
               ),
             ]),
@@ -266,7 +267,7 @@ class _PhotoChip extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.image_outlined, size: 16, color: t.onSurfaceMuted),
           const SizedBox(width: 5),
-          Text('Photo', style: TextStyle(fontFamily: 'Caveat',
+          Text('Photo', style: TextStyle(fontFamily: context.fonts.accent,
               fontSize: 14, color: t.onSurfaceMuted)),
         ]),
       );
@@ -296,7 +297,7 @@ class _PhotoChip extends StatelessWidget {
               else
                 Icon(Icons.image_rounded, size: 16, color: t.primary),
               const SizedBox(width: 5),
-              Text('Photo', style: TextStyle(fontFamily: 'Caveat',
+              Text('Photo', style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 14, color: t.primary)),
             ]),
           ),

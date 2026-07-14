@@ -24,6 +24,7 @@ import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class EditEntryScreen extends HookConsumerWidget {
   final String id;
@@ -270,10 +271,10 @@ class EditEntryScreen extends HookConsumerWidget {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(50),
                           onTap: canSave ? save : null,
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                             child: Text('Save',
-                                style: TextStyle(fontFamily: 'Caveat',
+                                style: TextStyle(fontFamily: context.fonts.accent,
                                   fontSize: 17, fontWeight: FontWeight.w700,
                                   color: Colors.white)),
                           ),
@@ -344,7 +345,7 @@ class EditEntryScreen extends HookConsumerWidget {
                     filled:             false,
                     isCollapsed:        true,
                     hintText: 'Write something…',
-                    hintStyle: TextStyle(fontFamily: 'Lora',
+                    hintStyle: TextStyle(fontFamily: context.fonts.body,
                       fontSize: 17, fontStyle: FontStyle.italic,
                       color: t.onSurfaceMuted),
                   ),
@@ -389,7 +390,7 @@ class _StampRow extends StatelessWidget {
         child: Row(
           children: [
             Text(DateFormat('EEEE, MMMM d').format(date),
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 16, fontWeight: FontWeight.w500,
                   color: t.onBackground)),
             const Spacer(),
@@ -397,7 +398,7 @@ class _StampRow extends StatelessWidget {
               onTap: () => pickTime(ctx, entryDate),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text(DateFormat.jm().format(date),
-                    style: TextStyle(fontFamily: 'Caveat',
+                    style: TextStyle(fontFamily: context.fonts.accent,
                       fontSize: 14, fontWeight: FontWeight.w500,
                       color: t.primary)),
                 const SizedBox(width: 2),
@@ -431,13 +432,13 @@ class _RestoredBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text('Restored unsaved changes',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 15, color: t.onBackground)),
           ),
           TextButton(
             onPressed: onDiscard,
             child: Text('Discard',
-                style: TextStyle(fontFamily: 'Caveat',
+                style: TextStyle(fontFamily: context.fonts.accent,
                   fontSize: 15, fontWeight: FontWeight.w700, color: t.primary)),
           ),
           IconButton(

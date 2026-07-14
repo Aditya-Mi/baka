@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class TagChip extends StatelessWidget {
   final String tag;
@@ -35,7 +36,7 @@ class TagChip extends StatelessWidget {
           Text(
             '#$tag',
             style: TextStyle(
-              fontFamily: 'Caveat',
+              fontFamily: context.fonts.accent,
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: textColor,

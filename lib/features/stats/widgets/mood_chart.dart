@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class MoodChart extends StatelessWidget {
   final Map<Mood, int> moodCounts;
@@ -42,7 +43,7 @@ class MoodChart extends StatelessWidget {
                 SizedBox(
                   width: 92,
                   child: Text(e.key.label,
-                      style: TextStyle(fontFamily: 'Caveat',
+                      style: TextStyle(fontFamily: context.fonts.accent,
                         fontSize: 18, color: onBg)),
                 ),
                 Expanded(
@@ -71,7 +72,7 @@ class MoodChart extends StatelessWidget {
                   width: 26,
                   child: Text('${e.value}',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontFamily: 'CourierPrime',
+                      style: TextStyle(fontFamily: context.fonts.mono,
                         fontSize: 12, letterSpacing: 0.5, color: muted)),
                 ),
                 if (onMoodTap != null) ...[

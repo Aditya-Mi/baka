@@ -11,6 +11,7 @@ import 'package:baka/features/stats/widgets/tags_summary.dart';
 import 'package:baka/features/stats/widgets/words_chart.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 class StatsScreen extends HookConsumerWidget {
   const StatsScreen({super.key});
@@ -49,16 +50,16 @@ class StatsScreen extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Your streak',
-                              style: AppText.wordmark(t.primary, 42)),
+                              style: AppText.handXl(context, t.primary, 42)),
                           const SizedBox(height: 2),
                           Text('Past year of pages',
-                              style: AppText.handSm(t.onSurfaceMuted)),
+                              style: AppText.handSm(context, t.onSurfaceMuted)),
                         ],
                       ),
                     ),
                     Text(
                       '${DateTime.now().year}',
-                      style: AppText.mono(t.onSurfaceMuted),
+                      style: AppText.mono(context, t.onSurfaceMuted),
                     ),
                   ],
                 ),
@@ -74,11 +75,11 @@ class StatsScreen extends HookConsumerWidget {
                 const SizedBox(height: 22),
 
                 // Heatmap
-                Text('Your year', style: AppText.displayS(t.onBackground)),
+                Text('Your year', style: AppText.displayS(context, t.onBackground)),
                 const SizedBox(height: 4),
                 Text(
                   'Each square is a day. Darker means more writing.',
-                  style: AppText.handSm(t.onSurfaceMuted)
+                  style: AppText.handSm(context, t.onSurfaceMuted)
                       .copyWith(fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 14),
@@ -92,7 +93,7 @@ class StatsScreen extends HookConsumerWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Text('Less', style: AppText.handSm(t.onSurfaceMuted)),
+                    Text('Less', style: AppText.handSm(context, t.onSurfaceMuted)),
                     const SizedBox(width: 6),
                     ...List.generate(5, (i) {
                       return Container(
@@ -105,17 +106,17 @@ class StatsScreen extends HookConsumerWidget {
                       );
                     }),
                     const SizedBox(width: 6),
-                    Text('More', style: AppText.handSm(t.onSurfaceMuted)),
+                    Text('More', style: AppText.handSm(context, t.onSurfaceMuted)),
                   ],
                 ),
                 const SizedBox(height: 28),
 
                 // Words per day
-                Text('Words written', style: AppText.displayS(t.onBackground)),
+                Text('Words written', style: AppText.displayS(context, t.onBackground)),
                 const SizedBox(height: 4),
                 Text(
                   'Daily word count, past 30 days.',
-                  style: AppText.handSm(t.onSurfaceMuted)
+                  style: AppText.handSm(context, t.onSurfaceMuted)
                       .copyWith(fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 14),
@@ -131,11 +132,11 @@ class StatsScreen extends HookConsumerWidget {
                 // Mood mix
                 if (moods.isNotEmpty) ...[
                   Text("How you've felt",
-                      style: AppText.displayS(t.onBackground)),
+                      style: AppText.displayS(context, t.onBackground)),
                   const SizedBox(height: 4),
                   Text(
                     'Top moods, past three months.',
-                    style: AppText.handSm(t.onSurfaceMuted)
+                    style: AppText.handSm(context, t.onSurfaceMuted)
                         .copyWith(fontStyle: FontStyle.italic),
                   ),
                   const SizedBox(height: 20),
@@ -158,10 +159,10 @@ class StatsScreen extends HookConsumerWidget {
                 const SizedBox(height: 28),
 
                 // Monthly mood calendar
-                Text('Mood this month', style: AppText.displayS(t.onBackground)),
+                Text('Mood this month', style: AppText.displayS(context, t.onBackground)),
                 const SizedBox(height: 4),
                 Text('Tap a day to open or write an entry.',
-                    style: AppText.handSm(t.onSurfaceMuted)
+                    style: AppText.handSm(context, t.onSurfaceMuted)
                         .copyWith(fontStyle: FontStyle.italic)),
                 const SizedBox(height: 14),
                 MoodCalendar(
@@ -238,13 +239,13 @@ class _HeroCard extends StatelessWidget {
                 children: [
                   Text(
                     '$streak',
-                    style: TextStyle(fontFamily: 'PlayfairDisplay',
+                    style: TextStyle(fontFamily: context.fonts.display,
                       fontSize: 64, fontWeight: FontWeight.w600,
                       color: t.primary, letterSpacing: -1, height: 1,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text('day streak', style: AppText.handLg(t.onSurface)),
+                  Text('day streak', style: AppText.handLg(context, t.onSurface)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -252,7 +253,7 @@ class _HeroCard extends StatelessWidget {
                 width: 240,
                 child: Text(
                   '"${_motivational(streak)}"',
-                  style: AppText.handSm(t.onSurfaceMuted)
+                  style: AppText.handSm(context, t.onSurfaceMuted)
                       .copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
@@ -306,7 +307,7 @@ class _Stat extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: TextStyle(fontFamily: 'PlayfairDisplay',
+                style: TextStyle(fontFamily: context.fonts.display,
                   fontSize: 22, fontWeight: FontWeight.w600,
                   color: t.onSurface, letterSpacing: -0.3,
                 ),
@@ -315,7 +316,7 @@ class _Stat extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   suffix!,
-                  style: AppText.handSm(t.onSurfaceMuted)
+                  style: AppText.handSm(context, t.onSurfaceMuted)
                       .copyWith(fontSize: 13),
                 ),
               ],
@@ -323,7 +324,7 @@ class _Stat extends StatelessWidget {
           ),
           const SizedBox(height: 1),
           Text(label,
-              style: AppText.handSm(t.onSurfaceMuted).copyWith(fontSize: 14)),
+              style: AppText.handSm(context, t.onSurfaceMuted).copyWith(fontSize: 14)),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/core/fonts/font_theme.dart';
 
 /// Inline mood selector — header row expands/collapses a grid in-place.
 /// No bottom sheet.
@@ -38,7 +39,7 @@ class _MoodSelectorState extends State<MoodSelector> {
                   Expanded(
                     child: Text(
                       'How does today feel?',
-                      style: TextStyle(fontFamily: 'Lora',
+                      style: TextStyle(fontFamily: context.fonts.body,
                         fontSize: 15, fontStyle: FontStyle.italic,
                         color: t.onSurfaceMuted,
                       ),
@@ -55,14 +56,14 @@ class _MoodSelectorState extends State<MoodSelector> {
                     children: [
                       Text(
                         widget.selected!.label,
-                        style: TextStyle(fontFamily: 'Caveat',
+                        style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 17, fontWeight: FontWeight.w600,
                           color: t.onBackground,
                         ),
                       ),
                       Text(
                         'tap to change',
-                        style: TextStyle(fontFamily: 'Caveat',
+                        style: TextStyle(fontFamily: context.fonts.accent,
                           fontSize: 12, color: t.onSurfaceMuted,
                         ),
                       ),
@@ -123,7 +124,7 @@ class _MoodSelectorState extends State<MoodSelector> {
                               const SizedBox(width: 5),
                               Text(
                                 mood.label,
-                                style: TextStyle(fontFamily: 'Caveat',
+                                style: TextStyle(fontFamily: context.fonts.accent,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: isSelected ? t.primary : t.onBackground,
