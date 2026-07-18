@@ -3,15 +3,17 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
+import 'package:baka/models/voice_capture.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
   DatabaseHelper._internal();
 
   static const _dbName    = 'baka_journal.db';
-  static const _dbVersion = 3; // bumped for anchors column
+  static const _dbVersion = 4; // bumped for voice_captures table
   static const tableEntries  = 'entries';
   static const tableTagsMeta = 'tags_meta';
+  static const tableCaptures = 'voice_captures';
 
   Database? _db;
 
@@ -57,6 +59,25 @@ class DatabaseHelper {
         color  TEXT NOT NULL
       )
     ''');
+    await _createCapturesTable(db);
+  }
+
+  Future<void> _createCapturesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableCaptures (
+        id           TEXT PRIMARY KEY,
+        created_at   TEXT NOT NULL,
+        audio_path   TEXT NOT NULL,
+        duration_ms  INTEGER NOT NULL DEFAULT 0,
+        status       TEXT NOT NULL DEFAULT 'savedAudio',
+        transcript   TEXT,
+        entry_id     TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_captures_created_at
+      ON $tableCaptures(created_at DESC)
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -72,6 +93,9 @@ class DatabaseHelper {
       await db.execute(
         "ALTER TABLE $tableEntries ADD COLUMN anchors TEXT NOT NULL DEFAULT ''",
       );
+    }
+    if (oldVersion < 4) {
+      await _createCapturesTable(db);
     }
   }
 
@@ -139,6 +163,39 @@ class DatabaseHelper {
       orderBy:   'created_at DESC',
     );
     return maps.map(JournalEntry.fromMap).toList();
+  }
+
+  // ── Voice captures CRUD ──────────────────────────────────────────────────────
+
+  Future<List<VoiceCapture>> getAllCaptures() async {
+    final db   = await database;
+    final maps = await db.query(tableCaptures, orderBy: 'created_at DESC');
+    return maps.map(VoiceCapture.fromMap).toList();
+  }
+
+  Future<bool> captureExists(String id) async {
+    final db   = await database;
+    final maps = await db.query(tableCaptures,
+        columns: ['id'], where: 'id = ?', whereArgs: [id], limit: 1);
+    return maps.isNotEmpty;
+  }
+
+  /// Inserts a capture, ignoring if the id already exists (idempotent import).
+  Future<void> insertCaptureIfAbsent(VoiceCapture capture) async {
+    final db = await database;
+    await db.insert(tableCaptures, capture.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> updateCapture(VoiceCapture capture) async {
+    final db = await database;
+    await db.update(tableCaptures, capture.toMap(),
+        where: 'id = ?', whereArgs: [capture.id]);
+  }
+
+  Future<void> deleteCapture(String id) async {
+    final db = await database;
+    await db.delete(tableCaptures, where: 'id = ?', whereArgs: [id]);
   }
 
   // ── Tags meta CRUD ───────────────────────────────────────────────────────────
