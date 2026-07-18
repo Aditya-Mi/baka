@@ -1,7 +1,7 @@
 name: baka
 description: A personal journal app with local-only storage.
 publish_to: 'none'
-version: 1.5.0+1  # build number overridden by CI (github.run_number)
+version: 1.6.0+1  # build number overridden by CI (github.run_number)
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -34,6 +34,7 @@ dependencies:
   url_launcher: ^6.2.0
   open_file: ^3.3.2
   permission_handler: ^11.3.1
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:

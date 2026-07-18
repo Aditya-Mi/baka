@@ -18,6 +18,8 @@ import 'package:baka/features/search/search_screen.dart';
 import 'package:baka/features/tags/tags_screen.dart';
 import 'package:baka/features/settings/settings_screen.dart';
 import 'package:baka/features/stats/stats_screen.dart';
+import 'package:baka/features/capture/voice_inbox_screen.dart';
+import 'package:baka/providers/captures_provider.dart';
 import 'package:baka/navigation/shell_scaffold.dart';
 
 final _routerKey = GlobalKey<NavigatorState>();
@@ -57,6 +59,7 @@ GoRouter buildRouter() {
         builder: (_, state) => EntryDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+      GoRoute(path: '/inbox',  builder: (_, __) => const VoiceInboxScreen()),
       GoRoute(path: '/tags',   builder: (_, __) => const TagsScreen()),
       GoRoute(
         path: '/tags/:tag',
@@ -137,6 +140,11 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
     if (widget.coldLaunchPayload == 'open_new_entry') {
       _pendingNewEntry = true;
     }
+
+    // Import any voice captures the native widget dropped while app was closed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(capturesProvider.notifier).importPending();
+    });
   }
 
   @override
@@ -165,6 +173,8 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
       _pausedAt = null;
       // Reschedule on resume too (rotates body)
       ref.read(reminderProvider.notifier).refreshScheduleOnOpen();
+      // Pull in captures recorded via the widget while app was backgrounded.
+      ref.read(capturesProvider.notifier).importPending();
     }
   }
 
