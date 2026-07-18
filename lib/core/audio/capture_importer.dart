@@ -76,11 +76,17 @@ class CaptureImporter {
         ? DateTime.tryParse(createdAtRaw)?.toLocal() ?? DateTime.now()
         : DateTime.now();
 
+    final waveRaw = raw['waveform'];
+    final waveform = waveRaw is List
+        ? waveRaw.map((e) => (e as num).toDouble()).toList()
+        : const <double>[];
+
     return VoiceCapture(
       id: id,
       createdAt: createdAt,
       audioPath: audioPath,
       durationMs: (raw['durationMs'] as num?)?.toInt() ?? 0,
+      waveform: waveform,
     );
   }
 

@@ -6,6 +6,8 @@
 /// beside it in later phases via [status].
 library;
 
+import 'dart:convert';
+
 /// Processing state machine for a capture. Phase 1 only ever reaches
 /// [savedAudio]; later phases advance through transcription and analysis.
 enum CaptureStatus {
@@ -32,6 +34,11 @@ class VoiceCapture {
   final String? transcript;
   final String? entryId;
 
+  /// Normalized amplitude samples (0..1), captured live while recording and
+  /// downsampled to a fixed bar count. Drives the inbox waveform. Empty if the
+  /// capture predates waveform support.
+  final List<double> waveform;
+
   const VoiceCapture({
     required this.id,
     required this.createdAt,
@@ -40,6 +47,7 @@ class VoiceCapture {
     this.status = CaptureStatus.savedAudio,
     this.transcript,
     this.entryId,
+    this.waveform = const [],
   });
 
   VoiceCapture copyWith({
@@ -48,6 +56,7 @@ class VoiceCapture {
     String? audioPath,
     int? durationMs,
     CaptureStatus? status,
+    List<double>? waveform,
     Object? transcript = _sentinel,
     Object? entryId = _sentinel,
   }) =>
@@ -57,6 +66,7 @@ class VoiceCapture {
         audioPath:  audioPath  ?? this.audioPath,
         durationMs: durationMs ?? this.durationMs,
         status:     status     ?? this.status,
+        waveform:   waveform   ?? this.waveform,
         transcript: transcript == _sentinel ? this.transcript : transcript as String?,
         entryId:    entryId    == _sentinel ? this.entryId    : entryId as String?,
       );
@@ -71,6 +81,7 @@ class VoiceCapture {
         'status':      status.name,
         'transcript':  transcript,
         'entry_id':    entryId,
+        'waveform':    jsonEncode(waveform),
       };
 
   factory VoiceCapture.fromMap(Map<String, dynamic> map) => VoiceCapture(
@@ -81,7 +92,18 @@ class VoiceCapture {
         status:     CaptureStatus.fromName(map['status'] as String?),
         transcript: map['transcript']  as String?,
         entryId:    map['entry_id']    as String?,
+        waveform:   _decodeWaveform(map['waveform'] as String?),
       );
+
+  static List<double> _decodeWaveform(String? raw) {
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = jsonDecode(raw) as List;
+      return list.map((e) => (e as num).toDouble()).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
 
   @override
   bool operator ==(Object other) =>

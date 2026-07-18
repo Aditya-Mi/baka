@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Voice capture widget + overlay (dark — Midnight Ink) -->
+    <color name="baka_bg">#1A1208</color>
+    <color name="baka_surface">#251A0F</color>
+    <color name="baka_card">#2E2114</color>
+    <color name="baka_primary">#D4784A</color>
+    <color name="baka_primary_container">#3D2010</color>
+    <color name="baka_on_primary">#FFFFFF</color>
+    <color name="baka_on_surface">#D4C4B0</color>
+    <color name="baka_on_surface_muted">#8CD4C4B0</color>
+    <color name="baka_outline">#3A2A1A</color>
+    <color name="baka_stop">#E57373</color>
+</resources>

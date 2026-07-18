@@ -13,6 +13,9 @@ abstract final class AppColors {
   static const lightPrimary         = Color(0xFFC4622D); // --primary  (terracotta)
   static const lightPrimaryContainer= Color(0xFFF0D5C0); // --primary-container
   static const lightSecondary       = Color(0xFF8A9E7E); // --secondary (sage green)
+  static const lightOnPrimaryContainer   = Color(0xFF8A4419); // status chip text
+  static const lightSecondaryContainer   = Color(0xFFDDE4D3); // "Ready" chip bg
+  static const lightOnSecondaryContainer = Color(0xFF4A5A3C); // "Ready" chip text
   static const lightOnBackground    = Color(0xFF2C1A0E); // --on-background
   static const lightOnSurface       = Color(0xFF3D2314); // --on-surface
   static const lightOnPrimary       = Color(0xFFFFFFFF); // --on-primary
@@ -34,6 +37,9 @@ abstract final class AppColors {
   static const darkPrimary          = Color(0xFFD4784A); // --primary (warm terracotta)
   static const darkPrimaryContainer = Color(0xFF3D2010); // --primary-container
   static const darkSecondary        = Color(0xFF7A9170); // --secondary (sage)
+  static const darkOnPrimaryContainer   = Color(0xFFE7B48C); // status chip text
+  static const darkSecondaryContainer   = Color(0xFF2A3226); // "Ready" chip bg
+  static const darkOnSecondaryContainer = Color(0xFFAEC29C); // "Ready" chip text
   static const darkOnBackground     = Color(0xFFE8DDD0); // --on-background
   static const darkOnSurface        = Color(0xFFD4C4B0); // --on-surface
   static const darkOnPrimary        = Color(0xFFFFFFFF); // --on-primary
@@ -69,7 +75,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
   final Color onSurfaceMuted;
   final Color primary;
   final Color primaryContainer;
+  final Color onPrimaryContainer;
   final Color secondary;
+  final Color secondaryContainer;
+  final Color onSecondaryContainer;
   final Color outline;
   final Color outlineSoft;
   final Color rule;
@@ -84,7 +93,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     required this.onSurfaceMuted,
     required this.primary,
     required this.primaryContainer,
+    required this.onPrimaryContainer,
     required this.secondary,
+    required this.secondaryContainer,
+    required this.onSecondaryContainer,
     required this.outline,
     required this.outlineSoft,
     required this.rule,
@@ -100,7 +112,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurfaceMuted:  AppColors.lightMuted,
     primary:         AppColors.lightPrimary,
     primaryContainer:AppColors.lightPrimaryContainer,
+    onPrimaryContainer:   AppColors.lightOnPrimaryContainer,
     secondary:       AppColors.lightSecondary,
+    secondaryContainer:   AppColors.lightSecondaryContainer,
+    onSecondaryContainer: AppColors.lightOnSecondaryContainer,
     outline:         AppColors.lightOutline,
     outlineSoft:     AppColors.lightOutlineSoft,
     rule:            AppColors.lightRule,
@@ -122,7 +137,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurfaceMuted:  AppColors.darkMuted,
     primary:         AppColors.darkPrimary,
     primaryContainer:AppColors.darkPrimaryContainer,
+    onPrimaryContainer:   AppColors.darkOnPrimaryContainer,
     secondary:       AppColors.darkSecondary,
+    secondaryContainer:   AppColors.darkSecondaryContainer,
+    onSecondaryContainer: AppColors.darkOnSecondaryContainer,
     outline:         AppColors.darkOutline,
     outlineSoft:     AppColors.darkOutlineSoft,
     rule:            AppColors.darkRule,
@@ -139,7 +157,8 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
   BakaTokens copyWith({
     Color? background, Color? surface, Color? surfaceElev,
     Color? onBackground, Color? onSurface, Color? onSurfaceMuted,
-    Color? primary, Color? primaryContainer, Color? secondary,
+    Color? primary, Color? primaryContainer, Color? onPrimaryContainer,
+    Color? secondary, Color? secondaryContainer, Color? onSecondaryContainer,
     Color? outline, Color? outlineSoft, Color? rule, List<Color>? heatmap,
   }) => BakaTokens(
     background:       background       ?? this.background,
@@ -150,7 +169,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurfaceMuted:   onSurfaceMuted   ?? this.onSurfaceMuted,
     primary:          primary          ?? this.primary,
     primaryContainer: primaryContainer ?? this.primaryContainer,
+    onPrimaryContainer:   onPrimaryContainer   ?? this.onPrimaryContainer,
     secondary:        secondary        ?? this.secondary,
+    secondaryContainer:   secondaryContainer   ?? this.secondaryContainer,
+    onSecondaryContainer: onSecondaryContainer ?? this.onSecondaryContainer,
     outline:          outline          ?? this.outline,
     outlineSoft:      outlineSoft      ?? this.outlineSoft,
     rule:             rule             ?? this.rule,
@@ -169,7 +191,10 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
       onSurfaceMuted:   Color.lerp(onSurfaceMuted,    other.onSurfaceMuted,   t)!,
       primary:          Color.lerp(primary,           other.primary,          t)!,
       primaryContainer: Color.lerp(primaryContainer,  other.primaryContainer, t)!,
+      onPrimaryContainer:   Color.lerp(onPrimaryContainer,   other.onPrimaryContainer,   t)!,
       secondary:        Color.lerp(secondary,         other.secondary,        t)!,
+      secondaryContainer:   Color.lerp(secondaryContainer,   other.secondaryContainer,   t)!,
+      onSecondaryContainer: Color.lerp(onSecondaryContainer, other.onSecondaryContainer, t)!,
       outline:          Color.lerp(outline,           other.outline,          t)!,
       outlineSoft:      Color.lerp(outlineSoft,       other.outlineSoft,      t)!,
       rule:             Color.lerp(rule,              other.rule,             t)!,

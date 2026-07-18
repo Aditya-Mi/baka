@@ -10,7 +10,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const _dbName    = 'baka_journal.db';
-  static const _dbVersion = 4; // bumped for voice_captures table
+  static const _dbVersion = 5; // bumped for voice_captures.waveform column
   static const tableEntries  = 'entries';
   static const tableTagsMeta = 'tags_meta';
   static const tableCaptures = 'voice_captures';
@@ -71,7 +71,8 @@ class DatabaseHelper {
         duration_ms  INTEGER NOT NULL DEFAULT 0,
         status       TEXT NOT NULL DEFAULT 'savedAudio',
         transcript   TEXT,
-        entry_id     TEXT
+        entry_id     TEXT,
+        waveform     TEXT
       )
     ''');
     await db.execute('''
@@ -96,6 +97,15 @@ class DatabaseHelper {
     }
     if (oldVersion < 4) {
       await _createCapturesTable(db);
+    }
+    if (oldVersion < 5) {
+      // Only alter if the table already existed at v4 (fresh v4→v5 upgrade).
+      // A <4 upgrade just created the table above, already with the column.
+      if (oldVersion >= 4) {
+        await db.execute(
+          "ALTER TABLE $tableCaptures ADD COLUMN waveform TEXT",
+        );
+      }
     }
   }
 
