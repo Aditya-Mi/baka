@@ -26,6 +26,18 @@
             android:textColor="@color/baka_on_surface"
             android:textSize="34sp"
             android:textStyle="bold" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="28dp"
+            android:src="@drawable/widget_wave"
+            android:tint="@color/baka_primary"
+            android:contentDescription="@null" />
     </LinearLayout>
 
     <LinearLayout

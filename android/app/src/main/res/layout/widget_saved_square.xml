@@ -9,20 +9,28 @@
     android:padding="12dp">
 
     <ImageView
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/mic_circle"
-        android:padding="12dp"
-        android:src="@drawable/ic_mic"
-        android:contentDescription="Record thought" />
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/sage_circle"
+        android:padding="10dp"
+        android:src="@drawable/ic_check"
+        android:contentDescription="Saved" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:fontFamily="@font/caveat"
-        android:text="Record thought"
+        android:text="Saved to inbox"
         android:textColor="@color/baka_on_surface"
         android:textSize="18sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="fades to idle"
+        android:textColor="@color/baka_on_surface_muted"
+        android:textSize="11sp" />
 </LinearLayout>

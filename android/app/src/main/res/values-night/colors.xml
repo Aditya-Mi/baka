@@ -11,4 +11,5 @@
     <color name="baka_on_surface_muted">#8CD4C4B0</color>
     <color name="baka_outline">#3A2A1A</color>
     <color name="baka_stop">#E57373</color>
+    <color name="baka_secondary">#7A9170</color>
 </resources>

@@ -4,10 +4,12 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 import 'package:baka/features/capture/widgets/waveform.dart';
+import 'package:baka/features/capture/widgets/permission_priming_sheet.dart';
 import 'package:baka/models/voice_capture.dart';
 import 'package:baka/providers/captures_provider.dart';
 
@@ -27,6 +29,8 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   bool _importing = false;
+  bool _micGranted = true;
+  bool _primeShown = false;
 
   @override
   void initState() {
@@ -45,14 +49,32 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
     _player.onDurationChanged.listen((d) {
       if (mounted) setState(() => _duration = d);
     });
-    // Pick up any captures the native widget dropped since last scan.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _import());
+    // Pick up any captures the native widget dropped since last scan, then
+    // prime the microphone permission if it hasn't been granted yet.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _import();
+      await _checkPermission(prime: true);
+    });
   }
 
   Future<void> _import() async {
     if (mounted) setState(() => _importing = true);
     await ref.read(capturesProvider.notifier).importPending();
     if (mounted) setState(() => _importing = false);
+  }
+
+  Future<void> _checkPermission({bool prime = false}) async {
+    final granted = await Permission.microphone.isGranted;
+    if (mounted) setState(() => _micGranted = granted);
+    if (!granted && prime && !_primeShown && mounted) {
+      _primeShown = true;
+      await _openPriming();
+    }
+  }
+
+  Future<void> _openPriming() async {
+    final granted = await showPermissionPrimingSheet(context);
+    if (mounted) setState(() => _micGranted = granted);
   }
 
   @override
@@ -151,6 +173,11 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
                 padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
                 child: _ProcessingBanner(label: 'Importing voice notes…'),
               ),
+            if (!_micGranted)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: _MicCta(onTap: _openPriming),
+              ),
             Expanded(
               child: list.isEmpty
                   ? _EmptyState(t: t)
@@ -209,6 +236,42 @@ class _ProcessingBanner extends StatelessWidget {
                     color: t.onPrimaryContainer)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Microphone CTA ───────────────────────────────────────────────────────────
+
+class _MicCta extends StatelessWidget {
+  final VoidCallback onTap;
+  const _MicCta({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Material(
+      color: t.primaryContainer,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.mic_off_rounded, size: 20, color: t.onPrimaryContainer),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('Microphone off — tap to enable recording',
+                    style: TextStyle(fontFamily: context.fonts.body,
+                        fontSize: 14, fontWeight: FontWeight.w500,
+                        color: t.onPrimaryContainer)),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 20, color: t.onPrimaryContainer),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="24dp"
+    android:viewportWidth="57"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/baka_outline"
+        android:pathData="M0,8 h2 v8 h-2 Z M5,5 h2 v14 h-2 Z M10,2 h2 v20 h-2 Z M15,7 h2 v10 h-2 Z M20,0 h2 v24 h-2 Z M25,4 h2 v16 h-2 Z M30,6 h2 v12 h-2 Z M35,1 h2 v22 h-2 Z M40,7.5 h2 v9 h-2 Z M45,3 h2 v18 h-2 Z M50,5.5 h2 v13 h-2 Z M55,8.5 h2 v7 h-2 Z" />
+</vector>

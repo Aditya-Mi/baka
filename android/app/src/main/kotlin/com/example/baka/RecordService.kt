@@ -53,6 +53,13 @@ class RecordService : Service() {
         @Volatile
         var isRecording = false
             private set
+
+        @Volatile
+        private var activeChronoBase = 0L
+
+        /** Chronometer base while recording (elapsedRealtime), else 0. Lets a
+         *  (re)bound widget resume the live timer. */
+        fun chronoBaseOrZero(): Long = if (isRecording) activeChronoBase else 0L
     }
 
     private var recorder: MediaRecorder? = null
@@ -88,8 +95,11 @@ class RecordService : Service() {
 
     private fun start() {
         if (isRecording) return
+        // Cancel a pending saved→idle widget reset from a previous recording.
+        handler.removeCallbacksAndMessages(null)
         createChannel()
         chronoBase = SystemClock.elapsedRealtime()
+        activeChronoBase = chronoBase
         startForegroundCompat()
 
         val id = UUID.randomUUID().toString()
@@ -120,6 +130,7 @@ class RecordService : Service() {
         isRecording = true
         amplitudes.clear()
         handler.post(ampTicker)
+        RecordWidgetProvider.updateState(this, RecordWidgetProvider.STATE_RECORDING, chronoBase)
     }
 
     private fun stopAndSave() {
@@ -127,11 +138,23 @@ class RecordService : Service() {
         val duration = stopRecorder()
         val file = audioFile
         val id = captureId
+        handler.removeCallbacks(ampTicker)
+        amplitudes.clear()
+        stopForegroundCompat()
+
         if (duration >= 0 && file != null && id != null) {
             writeSidecar(id, duration, waveform)
             toast("Saved to inbox")
+            // Flash "Saved to inbox" on the widget, then fade to idle.
+            RecordWidgetProvider.updateState(this, RecordWidgetProvider.STATE_SAVED, 0)
+            handler.postDelayed({
+                RecordWidgetProvider.updateState(this, RecordWidgetProvider.STATE_IDLE, 0)
+                stopSelf()
+            }, 1500)
+        } else {
+            RecordWidgetProvider.updateState(this, RecordWidgetProvider.STATE_IDLE, 0)
+            stopSelf()
         }
-        cleanup()
     }
 
     private fun discard() {
@@ -171,6 +194,7 @@ class RecordService : Service() {
         handler.removeCallbacks(ampTicker)
         amplitudes.clear()
         stopForegroundCompat()
+        RecordWidgetProvider.updateState(this, RecordWidgetProvider.STATE_IDLE, 0)
         stopSelf()
     }
 
