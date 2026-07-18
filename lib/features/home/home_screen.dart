@@ -9,6 +9,7 @@ import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/features/home/widgets/mood_streak_widget.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
+import 'package:baka/providers/captures_provider.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/user_provider.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends HookConsumerWidget {
     final entries = ref.watch(entriesProvider);
     final name   = ref.watch(userProvider);
     final drafts = ref.watch(draftsProvider).valueOrNull ?? const <Draft>[];
+    final inboxCount = ref.watch(unprocessedCapturesCountProvider);
 
     final streak = entries.valueOrNull != null
         ? EntriesNotifier.computeCurrentStreak(entries.valueOrNull!)
@@ -92,6 +94,18 @@ class HomeScreen extends HookConsumerWidget {
                 ),
               ),
             ),
+          IconButton(
+            icon: inboxCount > 0
+                ? Badge(
+                    label: Text('$inboxCount'),
+                    backgroundColor: t.primary,
+                    textColor: Colors.white,
+                    child: Icon(Icons.mic_none_rounded, size: 22, color: t.onBackground),
+                  )
+                : Icon(Icons.mic_none_rounded, size: 22, color: t.onBackground),
+            onPressed: () => context.push('/inbox'),
+            tooltip: 'Voice Inbox',
+          ),
           IconButton(
             icon: AppIcon(AppIconData.search, size: 22, color: t.onBackground),
             onPressed: () => context.push('/search'),
