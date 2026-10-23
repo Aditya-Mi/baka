@@ -47,6 +47,8 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Used to protect your private journal</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo to attach to your journal entry</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo to attach to your journal entry</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

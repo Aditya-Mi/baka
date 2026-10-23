@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -31,18 +32,30 @@ class _PhotoSheet extends StatelessWidget {
     return '${docs.path}/$rel';
   }
 
-  Future<String?> _pickAndCopy() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (image == null) return null;
+  Future<String?> _pickImage(ImageSource source) async {
+    final image = await ImagePicker().pickImage(source: source);
+    return image == null ? null : _copyToPhotos(image.path);
+  }
 
+  /// System document picker: surfaces Drive, Google Photos, Downloads, etc.
+  Future<String?> _pickFromFiles() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'heic', 'gif'],
+    );
+    final path = result?.files.single.path;
+    return path == null ? null : _copyToPhotos(path);
+  }
+
+  Future<String> _copyToPhotos(String srcPath) async {
     final docsDir = await getApplicationDocumentsDirectory();
     final photosDir = Directory(p.join(docsDir.path, 'photos'));
     await photosDir.create(recursive: true);
 
-    final ext      = p.extension(image.path);
+    final ext      = p.extension(srcPath);
     final fileName = '${const Uuid().v4()}$ext';
     final destPath = p.join(photosDir.path, fileName);
-    await File(image.path).copy(destPath);
+    await File(srcPath).copy(destPath);
 
     return 'photos/$fileName';
   }
@@ -101,7 +114,27 @@ class _PhotoSheet extends StatelessWidget {
             label: 'Choose from gallery',
             t: t,
             onTap: () async {
-              final path = await _pickAndCopy();
+              final path = await _pickImage(ImageSource.gallery);
+              if (context.mounted) Navigator.of(context).pop(path);
+            },
+          ),
+          const SizedBox(height: 12),
+          _Option(
+            icon: Icons.photo_camera_outlined,
+            label: 'Take photo',
+            t: t,
+            onTap: () async {
+              final path = await _pickImage(ImageSource.camera);
+              if (context.mounted) Navigator.of(context).pop(path);
+            },
+          ),
+          const SizedBox(height: 12),
+          _Option(
+            icon: Icons.folder_open_outlined,
+            label: 'Browse files',
+            t: t,
+            onTap: () async {
+              final path = await _pickFromFiles();
               if (context.mounted) Navigator.of(context).pop(path);
             },
           ),
