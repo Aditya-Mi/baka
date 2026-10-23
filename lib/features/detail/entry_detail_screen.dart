@@ -392,7 +392,8 @@ class _PageLinesPainter extends CustomPainter {
 
 // ── Song preview (10s clip) ──────────────────────────────────────────────────
 
-/// Small play button that streams a 10s iTunes preview of the entry's song.
+/// Small play button that streams the entry song's 30s iTunes preview,
+/// skipping the first few seconds (previews often open on a quiet intro).
 /// While playing, a mini waveform fills in primary as the clip progresses —
 /// same play-button + waveform language as the Voice Inbox capture card.
 class _SongPreview extends StatefulWidget {
@@ -409,10 +410,10 @@ class _SongPreview extends StatefulWidget {
 }
 
 class _SongPreviewState extends State<_SongPreview> {
-  static const _clipLength = Duration(seconds: 10);
+  static const _startAt = Duration(seconds: 4);
   final _player = AudioPlayer();
-  StreamSubscription<Duration>? _positionSub;
-  Timer? _stopTimer;
+  final _subs = <StreamSubscription<Object?>>[];
+  Duration _duration = const Duration(seconds: 30);
   bool _loading = false;
   bool _playing = false;
   double _progress = 0;
@@ -420,23 +421,30 @@ class _SongPreviewState extends State<_SongPreview> {
   @override
   void initState() {
     super.initState();
-    _positionSub = _player.onPositionChanged.listen((p) {
-      if (!mounted || !_playing) return;
-      setState(() => _progress =
-          p.inMilliseconds / _clipLength.inMilliseconds);
-    });
+    _subs.addAll([
+      _player.onDurationChanged.listen((d) {
+        if (d > _startAt) _duration = d;
+      }),
+      _player.onPositionChanged.listen((p) {
+        if (!mounted || !_playing) return;
+        final played = (p - _startAt).inMilliseconds;
+        final total  = (_duration - _startAt).inMilliseconds;
+        setState(() => _progress = played / total);
+      }),
+      _player.onPlayerComplete.listen((_) => _stop()),
+    ]);
   }
 
   @override
   void dispose() {
-    _stopTimer?.cancel();
-    _positionSub?.cancel();
+    for (final s in _subs) {
+      s.cancel();
+    }
     _player.dispose();
     super.dispose();
   }
 
   Future<void> _stop() async {
-    _stopTimer?.cancel();
     await _player.stop();
     if (mounted) setState(() { _playing = false; _progress = 0; });
   }
@@ -454,7 +462,7 @@ class _SongPreviewState extends State<_SongPreview> {
       return;
     }
     try {
-      await _player.play(UrlSource(preview));
+      await _player.play(UrlSource(preview), position: _startAt);
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -462,7 +470,6 @@ class _SongPreviewState extends State<_SongPreview> {
           const SnackBar(content: Text('Couldn\'t play preview')));
       return;
     }
-    _stopTimer = Timer(_clipLength, _stop);
     if (mounted) setState(() { _loading = false; _playing = true; });
   }
 
@@ -512,7 +519,7 @@ class _SongPreviewState extends State<_SongPreview> {
       ),
       if (!active) ...[
         const SizedBox(width: 6),
-        Text('10s preview',
+        Text('Preview',
             style: TextStyle(fontFamily: context.fonts.accent,
               fontSize: 14, color: t.onSurfaceMuted)),
       ],
