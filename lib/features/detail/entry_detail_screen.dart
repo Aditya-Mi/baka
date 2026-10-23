@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -6,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/features/capture/widgets/waveform.dart';
+import 'package:baka/utils/song_preview.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/tag_chip.dart';
 import 'package:baka/models/tag.dart';
@@ -236,7 +241,7 @@ class _AnchorBar extends StatelessWidget {
             GestureDetector(
               onTap: anchor.songUrl != null
                   ? () async {
-                      final uri = Uri.tryParse(anchor.songUrl!);
+                      final uri = Uri.tryParse(normalizeSongUrl(anchor.songUrl!));
                       if (uri != null) await launchUrl(uri, mode: LaunchMode.externalApplication);
                     }
                   : null,
@@ -258,6 +263,13 @@ class _AnchorBar extends StatelessWidget {
                   ),
                 ),
               ]),
+            ),
+          if (anchor.hasSong)
+            _SongPreview(
+              name: anchor.songName!,
+              artist: anchor.songArtist,
+              url: anchor.songUrl,
+              t: t,
             ),
         ],
       ),
@@ -376,4 +388,134 @@ class _PageLinesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PageLinesPainter old) => old.color != color;
+}
+
+// ── Song preview (10s clip) ──────────────────────────────────────────────────
+
+/// Small play button that streams a 10s iTunes preview of the entry's song.
+/// While playing, a mini waveform fills in primary as the clip progresses —
+/// same play-button + waveform language as the Voice Inbox capture card.
+class _SongPreview extends StatefulWidget {
+  final String name;
+  final String? artist;
+  final String? url;
+  final BakaTokens t;
+  const _SongPreview({
+    required this.name, this.artist, this.url, required this.t,
+  });
+
+  @override
+  State<_SongPreview> createState() => _SongPreviewState();
+}
+
+class _SongPreviewState extends State<_SongPreview> {
+  static const _clipLength = Duration(seconds: 10);
+  final _player = AudioPlayer();
+  StreamSubscription<Duration>? _positionSub;
+  Timer? _stopTimer;
+  bool _loading = false;
+  bool _playing = false;
+  double _progress = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _positionSub = _player.onPositionChanged.listen((p) {
+      if (!mounted || !_playing) return;
+      setState(() => _progress =
+          p.inMilliseconds / _clipLength.inMilliseconds);
+    });
+  }
+
+  @override
+  void dispose() {
+    _stopTimer?.cancel();
+    _positionSub?.cancel();
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _stop() async {
+    _stopTimer?.cancel();
+    await _player.stop();
+    if (mounted) setState(() { _playing = false; _progress = 0; });
+  }
+
+  Future<void> _toggle() async {
+    if (_playing) return _stop();
+    setState(() => _loading = true);
+    final preview = await SongPreview.resolve(
+        name: widget.name, artist: widget.artist, url: widget.url);
+    if (!mounted) return;
+    if (preview == null) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No preview found for this song')));
+      return;
+    }
+    try {
+      await _player.play(UrlSource(preview));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Couldn\'t play preview')));
+      return;
+    }
+    _stopTimer = Timer(_clipLength, _stop);
+    if (mounted) setState(() { _loading = false; _playing = true; });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.t;
+    final active = _playing || _loading;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Material(
+        color: t.primary,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: _loading ? null : _toggle,
+          child: SizedBox(
+            width: 28, height: 28,
+            child: _loading
+                ? const Padding(
+                    padding: EdgeInsets.all(7),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : Icon(
+                    _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                    size: 18, color: Colors.white,
+                  ),
+          ),
+        ),
+      ),
+      AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: active
+            ? Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: SizedBox(
+                  width: 110, height: 16,
+                  child: Waveform(
+                    samples: const [],
+                    progress: _progress,
+                    barColor: t.outline,
+                    playedColor: t.primary,
+                  ),
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
+      if (!active) ...[
+        const SizedBox(width: 6),
+        Text('10s preview',
+            style: TextStyle(fontFamily: context.fonts.accent,
+              fontSize: 14, color: t.onSurfaceMuted)),
+      ],
+    ]);
+  }
 }

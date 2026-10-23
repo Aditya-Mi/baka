@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/anchor.dart';
+import 'package:baka/utils/song_preview.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'location_sheet.dart';
 import 'photo_sheet.dart';
@@ -141,7 +142,7 @@ class AnchorBar extends StatelessWidget {
                         controller: urlCtrl,
                         keyboardType: TextInputType.url,
                         decoration: InputDecoration(
-                          labelText: 'Spotify / YouTube URL',
+                          labelText: 'Spotify / YouTube / Apple Music URL',
                           labelStyle: TextStyle(fontFamily: context.fonts.accent),
                           hintText: 'https://',
                           hintStyle: TextStyle(fontFamily: context.fonts.accent),
@@ -174,10 +175,11 @@ class AnchorBar extends StatelessWidget {
               }
               final name = nameCtrl.text.trim();
               if (name.isEmpty) return;
+              final url = urlCtrl.text.trim();
               onChanged(anchor.copyWith(
                 songName:   name,
                 songArtist: artistCtrl.text.trim().isEmpty ? null : artistCtrl.text.trim(),
-                songUrl:    urlCtrl.text.trim().isEmpty    ? null : urlCtrl.text.trim(),
+                songUrl:    url.isEmpty ? null : normalizeSongUrl(url),
               ));
             },
             child: Row(mainAxisSize: MainAxisSize.min, children: [
