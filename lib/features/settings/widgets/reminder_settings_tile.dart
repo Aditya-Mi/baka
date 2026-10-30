@@ -54,7 +54,14 @@ class ReminderSettingsTile extends ConsumerWidget {
                 value: reminder.enabled,
                 onChanged: (v) async {
                   if (v) {
-                    await NotificationService.instance.requestPermissions();
+                    final granted = await NotificationService.instance.requestPermissions();
+                    if (!granted) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Allow notifications in system settings to get reminders')));
+                      }
+                      return;
+                    }
                   }
                   notifier.setEnabled(v);
                 },

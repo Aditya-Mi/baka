@@ -62,7 +62,8 @@ class NotificationService {
     return false;
   }
 
-  Future<void> scheduleDailyReminder(TimeOfDay at) async {
+  /// Returns false if the reminder couldn't be scheduled.
+  Future<bool> scheduleDailyReminder(TimeOfDay at) async {
     try {
     await cancelDailyReminder();
 
@@ -96,8 +97,10 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'open_new_entry',
     );
-    } catch (_) {
-      // Permission denied or unavailable — silently skip scheduling.
+    return true;
+    } catch (e) {
+      debugPrint('Reminder scheduling failed: $e');
+      return false;
     }
   }
 
