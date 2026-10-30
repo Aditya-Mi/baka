@@ -63,8 +63,12 @@ class SettingsRow extends StatelessWidget {
               ),
               if (value != null) ...[
                 const SizedBox(width: 12),
+                // Capped, not Flexible: a Flexible splits the free space with
+                // the title and leaves values ragged instead of flush right.
                 // Long names / font names truncate instead of overflowing.
-                Flexible(
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.sizeOf(context).width * 0.4),
                   child: Text(value!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

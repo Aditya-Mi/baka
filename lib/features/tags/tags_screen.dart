@@ -238,9 +238,10 @@ class _TagChip extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
+          // No alignment: inside a Wrap it would stretch every chip to the
+          // full row width.
           height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: chipBg,
             borderRadius: BorderRadius.circular(20),
