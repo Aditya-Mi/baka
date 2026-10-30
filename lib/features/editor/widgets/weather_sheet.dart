@@ -86,41 +86,46 @@ class _WeatherSheetState extends State<_WeatherSheet> {
             ),
             const SizedBox(height: 20),
             Text("What's the weather?",
-                style: TextStyle(fontFamily: context.fonts.display,
-                  fontSize: 20, fontWeight: FontWeight.w600,
-                  color: t.onBackground)),
+                style: AppText.heading(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.onBackground,
+                  )),
             const SizedBox(height: 20),
             // Icon grid
             Wrap(
               spacing: 12, runSpacing: 12,
               children: WeatherCondition.values.map((c) {
                 final selected = c == _condition;
-                return GestureDetector(
-                  onTap: () => setState(() => _condition = c),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? t.primary.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: selected ? t.primary : t.outline,
-                        width: selected ? 1.5 : 1,
+                return Semantics(
+                  button: true,
+                  selected: selected,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _condition = c),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? t.primary.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selected ? t.primary : t.outline,
+                          width: selected ? 1.5 : 1,
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        WeatherIcon(c,
-                            size: 28,
-                            color: selected ? t.primary : t.onSurfaceMuted),
-                        const SizedBox(height: 4),
-                        Text(c.label,
-                            style: TextStyle(fontFamily: context.fonts.accent,
-                              fontSize: 11,
-                              color: selected ? t.primary : t.onSurfaceMuted)),
-                      ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          WeatherIcon(c,
+                              size: 28,
+                              color: selected ? t.primary : t.onSurfaceMuted),
+                          const SizedBox(height: 4),
+                          Text(c.label,
+                              style: TextStyle(fontFamily: context.fonts.accent,
+                                fontSize: 11,
+                                color: selected ? t.primary : t.onSurfaceMuted)),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -138,16 +143,19 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                       FilteringTextInputFormatter.allow(RegExp(r'^-?\d{0,3}')),
                     ],
                     cursorColor: t.primary,
-                    style: TextStyle(fontFamily: context.fonts.body,
-                      fontSize: 16, color: t.onBackground),
+                    style: AppText.rowTitle(context).copyWith(
+                        color: t.onBackground,
+                      ),
                     decoration: InputDecoration(
                       hintText: 'Temperature (optional)',
-                      hintStyle: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 16, fontStyle: FontStyle.italic,
-                        color: t.onSurfaceMuted),
+                      hintStyle: AppText.rowTitle(context).copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: t.onSurfaceMuted,
+                        ),
                       suffixText: '°C',
-                      suffixStyle: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 16, color: t.onSurfaceMuted),
+                      suffixStyle: AppText.rowTitle(context).copyWith(
+                          color: t.onSurfaceMuted,
+                        ),
                     ),
                   ),
                 ),
@@ -162,7 +170,7 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                     style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error),
                     child: Text('Remove',
-                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+                        style: AppText.caption(context)),
                   ),
                 const Spacer(),
                 TextButton(
@@ -170,7 +178,7 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                   style: TextButton.styleFrom(
                       foregroundColor: t.onSurfaceMuted),
                   child: Text('Cancel',
-                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+                      style: AppText.caption(context)),
                 ),
                 const SizedBox(width: 8),
                 Material(
@@ -182,9 +190,10 @@ class _WeatherSheetState extends State<_WeatherSheet> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: Text('Set',
-                          style: TextStyle(fontFamily: context.fonts.accent,
-                            fontSize: 16, fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                          style: AppText.caption(context).copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            )),
                     ),
                   ),
                 ),

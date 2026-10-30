@@ -6,7 +6,6 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class TagsSummary extends ConsumerWidget {
   final List<JournalEntry> entries;
@@ -24,7 +23,8 @@ class TagsSummary extends ConsumerWidget {
     final counts = <String, int>{};
     for (final e in entries) {
       for (final tag in e.tags) {
-        counts[tag] = (counts[tag] ?? 0) + 1;
+        final key = tag.toLowerCase();
+        counts[key] = (counts[key] ?? 0) + 1;
       }
     }
     if (counts.isEmpty) return const SizedBox.shrink();
@@ -40,23 +40,23 @@ class TagsSummary extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Your tags', style: AppText.displayS(context, t.onBackground)),
-                  const SizedBox(height: 2),
-                  Text('Most used topics.',
-                      style: AppText.handSm(context, t.onSurfaceMuted)
-                          .copyWith(fontStyle: FontStyle.italic)),
-                ],
-              ),
+              child: Text('Your tags',
+                  style: AppText.heading(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: t.onBackground,
+                    )),
             ),
-            GestureDetector(
-              onTap: () => context.push('/tags'),
+            TextButton(
+              onPressed: () => context.push('/tags'),
+              style: TextButton.styleFrom(
+                foregroundColor: t.primaryText,
+                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
               child: Text('See all →',
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 16, color: t.primary,
-                    fontWeight: FontWeight.w700)),
+                  style: AppText.label(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                    )),
             ),
           ],
         ),
@@ -91,13 +91,15 @@ class TagsSummary extends ConsumerWidget {
                     ),
                     const SizedBox(width: 7),
                     Text('#${entry.key}',
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 15, fontWeight: FontWeight.w600,
-                          color: t.onBackground)),
+                        style: AppText.caption(context).copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: t.onBackground,
+                          )),
                     const SizedBox(width: 6),
                     Text('${entry.value}',
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 13, color: t.onSurfaceMuted)),
+                        style: AppText.captionSm(context).copyWith(
+                            color: t.onSurfaceMuted,
+                          )),
                   ],
                 ),
               ),

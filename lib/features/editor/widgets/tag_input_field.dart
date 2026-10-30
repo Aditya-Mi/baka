@@ -7,7 +7,6 @@ import 'package:baka/models/tag.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/tag_chip.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Horizontal tag row with inline add-tag input.
 class TagInputField extends ConsumerStatefulWidget {
@@ -61,11 +60,12 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
     final onBg    = t.onBackground;
     final tagList = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    return Container(
+      width: double.infinity, // full width so the chips sit on the left edge
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
+        spacing: 8,
+        runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // Existing tags
@@ -83,12 +83,15 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
               child: TextField(
                 controller: _ctrl,
                 focusNode: _focus,
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 14, fontWeight: FontWeight.w500, color: onBg,
-                ),
+                style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: onBg,
+                  ),
                 decoration: InputDecoration(
                   hintText: 'tag name',
-                  hintStyle: TextStyle(fontFamily: context.fonts.accent,fontSize: 14, color: muted),
+                  hintStyle: AppText.caption(context).copyWith(
+                      color: muted,
+                    ),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   filled: true,
@@ -106,9 +109,10 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
                     borderSide: BorderSide(color: primary, width: 1),
                   ),
                   prefixText: '#',
-                  prefixStyle: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 14, fontWeight: FontWeight.w500, color: primary,
-                  ),
+                  prefixStyle: AppText.caption(context).copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: context.tokens.primaryText,
+                    ),
                 ),
                 textInputAction: TextInputAction.done,
                 onSubmitted: _submitTag,
@@ -126,19 +130,29 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
               ),
             )
           else
-            // "+ add tag" button
-            GestureDetector(
-              onTap: _startEditing,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: outline, width: 1),
-                ),
-                child: Text(
-                  '+ add tag',
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 13, fontWeight: FontWeight.w500, color: muted,
+            // "Add tag" button
+            Material(
+              color: Colors.transparent,
+              shape: StadiumBorder(side: BorderSide(color: outline)),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: _startEditing,
+                child: Container(
+                  height: 32,
+                  padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded, size: 16, color: muted),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Add tag',
+                        style: AppText.meta(context).copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: muted,
+                          ),
+                      ),
+                    ],
                   ),
                 ),
               ),

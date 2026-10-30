@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 
 class WordsChart extends StatefulWidget {
@@ -46,6 +48,31 @@ class _WordsChartState extends State<WordsChart> {
     final totalWords  = _points.fold(0, (s, p) => s + p.words);
     final daysWritten = _points.where((p) => p.words > 0).length;
     final avgPerDay   = (totalWords / n).round();
+    final t           = context.tokens;
+    final axisStyle   = AppText.micro(context).copyWith(
+        color: widget.muted,
+      );
+
+    // Nothing written this month: a calm note instead of a flat line.
+    if (maxWords == 0) {
+      return Container(
+        height: 120,
+        width: double.infinity,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: t.outlineSoft)),
+        ),
+        child: Text(
+          'No words yet this month.\nYour next entry starts the line.',
+          textAlign: TextAlign.center,
+          style: AppText.label(context).copyWith(
+              height: 1.5,
+              color: widget.muted,
+            ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,22 +93,34 @@ class _WordsChartState extends State<WordsChart> {
                   selectedIndex: _selectedIndex,
                   primary: widget.primary,
                   muted: widget.muted,
-                  accentFamily: context.fonts.accent,
+                  background: t.background,
+                  labelBg: t.primaryContainer,
+                  labelFg: t.onPrimaryContainer,
+                  bodyFamily: context.fonts.body,
                 ),
                 size: Size.infinite,
               ),
             ),
           );
         }),
+        const SizedBox(height: 6),
+        // Date axis: first day, middle, today
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (n > 1)
+              Text(DateFormat('MMM d').format(_points.first.date), style: axisStyle),
+            if (n > 2)
+              Text(DateFormat('MMM d').format(_points[n ~/ 2].date), style: axisStyle),
+            Text('Today', style: axisStyle),
+          ],
+        ),
         const SizedBox(height: 10),
         Text(
-          'avg $avgPerDay words/day · wrote $daysWritten of $n days this month',
-          style: TextStyle(
-            fontFamily: context.fonts.accent,
-            fontSize: 13,
-            color: widget.muted,
-            fontStyle: FontStyle.italic,
-          ),
+          'Wrote on $daysWritten of $n days · $avgPerDay ${avgPerDay == 1 ? 'word' : 'words'} a day on average',
+          style: AppText.meta(context).copyWith(
+              color: widget.muted,
+            ),
         ),
       ],
     );
@@ -100,9 +139,12 @@ class _LinePainter extends CustomPainter {
   final int? selectedIndex;
   final Color primary;
   final Color muted;
+  final Color background;
+  final Color labelBg;
+  final Color labelFg;
 
   /// A painter has no BuildContext, so the resolved family is passed in.
-  final String accentFamily;
+  final String bodyFamily;
 
   const _LinePainter({
     required this.points,
@@ -110,7 +152,10 @@ class _LinePainter extends CustomPainter {
     required this.selectedIndex,
     required this.primary,
     required this.muted,
-    required this.accentFamily,
+    required this.background,
+    required this.labelBg,
+    required this.labelFg,
+    required this.bodyFamily,
   });
 
   @override
@@ -128,9 +173,12 @@ class _LinePainter extends CustomPainter {
     }
 
     final n = points.length;
+    // Leave headroom so the peak dot and its label never clip.
+    const top = 8.0;
+    final h = size.height - top;
     Offset offsetAt(int i) {
       final x = n == 1 ? size.width / 2 : i / (n - 1) * size.width;
-      final y = size.height - (points[i].words / maxWords) * size.height;
+      final y = size.height - (points[i].words / maxWords) * h;
       return Offset(x, y);
     }
 
@@ -155,7 +203,7 @@ class _LinePainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            primary.withValues(alpha: 0.22),
+            primary.withValues(alpha: 0.25),
             primary.withValues(alpha: 0.0),
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -180,11 +228,21 @@ class _LinePainter extends CustomPainter {
       if (isToday) {
         canvas.drawCircle(o, 6, Paint()..color = primary.withValues(alpha: 0.25));
         canvas.drawCircle(o, 4, Paint()..color = primary);
-        canvas.drawCircle(o, 2.2, Paint()..color = Colors.white.withValues(alpha: 0.95));
+        canvas.drawCircle(o, 2.2, Paint()..color = background);
       } else {
         canvas.drawCircle(o, 3, Paint()..color = primary);
-        canvas.drawCircle(o, 1.8, Paint()..color = Colors.white.withValues(alpha: 0.9));
+        canvas.drawCircle(o, 1.8, Paint()..color = background);
       }
+    }
+
+    // With nothing selected, label the best day so a lone spike reads as a
+    // real day rather than a glitch.
+    if (selectedIndex == null) {
+      var peak = 0;
+      for (int i = 1; i < n; i++) {
+        if (points[i].words > points[peak].words) peak = i;
+      }
+      _drawLabel(canvas, size, offsetAt(peak), points[peak]);
     }
 
     // Selected point + tooltip
@@ -205,42 +263,42 @@ class _LinePainter extends CustomPainter {
       // Highlighted dot
       canvas.drawCircle(o, 6, Paint()..color = primary.withValues(alpha: 0.25));
       canvas.drawCircle(o, 4, Paint()..color = primary);
-      canvas.drawCircle(o, 2.2, Paint()..color = Colors.white.withValues(alpha: 0.95));
-
-      // Tooltip bubble
-      final label = '${DateFormat('d MMM').format(pt.date)} · ${pt.words} words';
-      final tp = TextPainter(
-        text: TextSpan(
-          text: label,
-          style: TextStyle(
-            fontFamily: accentFamily,
-            fontSize: 12,
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textDirection: ui.TextDirection.ltr,
-      )..layout();
-
-      const pad    = 6.0;
-      const radius = 6.0;
-      final bw     = tp.width + pad * 2;
-      final bh     = tp.height + pad * 2;
-
-      // Position bubble above dot, clamp to canvas edges
-      double bx = o.dx - bw / 2;
-      bx = bx.clamp(0.0, size.width - bw).toDouble();
-      final by = (o.dy - bh - 10).clamp(0.0, size.height - bh).toDouble();
-
-      final bubbleRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(bx, by, bw, bh),
-        const Radius.circular(radius),
-      );
-
-      canvas.drawRRect(bubbleRect,
-          Paint()..color = primary.withValues(alpha: 0.92));
-      tp.paint(canvas, Offset(bx + pad, by + pad));
+      canvas.drawCircle(o, 2.2, Paint()..color = background);
+      _drawLabel(canvas, size, o, pt);
     }
+  }
+
+  /// Small pill ("Oct 23 · 172 words") beside a point, clamped to the canvas.
+  void _drawLabel(Canvas canvas, Size size, Offset o, _Point pt) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '${DateFormat('MMM d').format(pt.date)} · ${pt.words} words',
+        style: TextStyle(
+          fontFamily: bodyFamily,
+          fontSize: 11,
+          color: labelFg,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: ui.TextDirection.ltr,
+    )..layout();
+
+    const padH = 6.0;
+    const padV = 3.0;
+    final bw = tp.width + padH * 2;
+    final bh = tp.height + padV * 2;
+
+    // Prefer the left of the point (peaks tend to sit near "today"), else right.
+    double bx = o.dx - bw - 10;
+    if (bx < 0) bx = o.dx + 10;
+    bx = bx.clamp(0.0, size.width - bw).toDouble();
+    final by = (o.dy - bh / 2).clamp(0.0, size.height - bh).toDouble();
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, bw, bh), const Radius.circular(6)),
+      Paint()..color = labelBg,
+    );
+    tp.paint(canvas, Offset(bx + padH, by + padV));
   }
 
   @override
@@ -249,5 +307,6 @@ class _LinePainter extends CustomPainter {
       old.maxWords != maxWords ||
       old.selectedIndex != selectedIndex ||
       old.primary != primary ||
-      old.accentFamily != accentFamily;
+      old.background != background ||
+      old.bodyFamily != bodyFamily;
 }

@@ -8,7 +8,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/providers/search_provider.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class SearchScreen extends HookConsumerWidget {
   const SearchScreen({super.key});
@@ -41,71 +40,139 @@ class SearchScreen extends HookConsumerWidget {
     // Clear on dispose
     useEffect(() => () => ref.read(searchProvider.notifier).clear(), const []);
 
+    // Rebuild on every keystroke so the clear button appears immediately
+    // (the search itself stays debounced above).
+    useListenable(ctrl);
+
+    void retry() => ref.read(searchProvider.notifier).search(ctrl.text);
+
+    Widget message(String text) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: AppText.bodyPreview(context).copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: muted,
+                ),
+            ),
+          ),
+        );
+
+    final query = searchState.query.trim();
+
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
+        toolbarHeight: 72,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: onBg),
           onPressed: () => context.pop(),
+          tooltip: 'Back',
         ),
-        title: TextField(
-          controller: ctrl,
-          autofocus: true,
-          style: TextStyle(fontFamily: context.fonts.body,fontSize: 16, color: onBg),
-          decoration: InputDecoration(
-            hintText: 'Search entries…',
-            hintStyle: TextStyle(fontFamily: context.fonts.body,
-              fontSize: 16, fontStyle: FontStyle.italic, color: muted,
-            ),
-            border: InputBorder.none,
-            filled: false,
-          ),
-        ),
-        actions: [
-          if (ctrl.text.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.close_rounded, color: muted),
-              onPressed: () {
-                ctrl.clear();
-                ref.read(searchProvider.notifier).clear();
-              },
-            ),
-        ],
-      ),
-      body: searchState.query.isEmpty
-          ? Center(
-              child: Text(
-                'Type to search your pages.',
-                style: TextStyle(fontFamily: context.fonts.body,
-                  fontSize: 15, fontStyle: FontStyle.italic, color: muted,
+        title: Padding(
+          padding: const EdgeInsets.only(right: 20),
+          child: SizedBox(
+            height: 48,
+            child: TextField(
+              controller: ctrl,
+              autofocus: true,
+              textInputAction: TextInputAction.search,
+              style: AppText.rowTitle(context).copyWith(
+                  color: onBg,
+                ),
+              decoration: InputDecoration(
+                hintText: 'Search entries…',
+                hintStyle: AppText.rowTitle(context).copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: muted,
+                  ),
+                filled: true,
+                fillColor: t.surfaceElev,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                prefixIcon: Icon(Icons.search_rounded, size: 20, color: muted),
+                suffixIcon: ctrl.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: Icon(Icons.close_rounded, size: 20, color: muted),
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          ctrl.clear();
+                          ref.read(searchProvider.notifier).clear();
+                        },
+                      ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: t.outline, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: t.primary, width: 1.5),
                 ),
               ),
-            )
+            ),
+          ),
+        ),
+      ),
+      body: query.isEmpty
+          ? message('Type to search your pages.')
           : searchState.results.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error:   (e, _) => Center(child: Text('Error: $e')),
+              error:   (_, __) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Search didn't work this time.",
+                        style: AppText.bodyPreview(context).copyWith(
+                            fontStyle: FontStyle.italic,
+                            color: muted,
+                          )),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: retry,
+                      child: Text('Try again',
+                          style: AppText.bodyPreview(context).copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: t.primaryText,
+                            )),
+                    ),
+                  ],
+                ),
+              ),
               data: (entries) => entries.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No entries found.',
-                        style: TextStyle(fontFamily: context.fonts.body,
-                          fontSize: 15, fontStyle: FontStyle.italic, color: muted,
-                        ),
-                      ),
-                    )
+                  ? message('Nothing mentions “$query” yet.')
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: entries.length,
-                      itemBuilder: (_, i) => Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 5,
-                        ),
-                        child: JournalCard(
-                          entry: entries[i],
-                          onTap: () => context.push('/entry/${entries[i].id}'),
-                        ),
-                      ),
+                      padding: const EdgeInsets.only(top: 4, bottom: 24),
+                      itemCount: entries.length + 1,
+                      itemBuilder: (_, i) {
+                        if (i == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 4),
+                            child: Text(
+                              '${entries.length} ${entries.length == 1 ? 'entry mentions' : 'entries mention'} “$query”',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.meta(context).copyWith(
+                                  color: muted,
+                                ),
+                            ),
+                          );
+                        }
+                        final e = entries[i - 1];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 6,
+                          ),
+                          child: JournalCard(
+                            entry: e,
+                            onTap: () => context.push('/entry/${e.id}'),
+                          ),
+                        );
+                      },
                     ),
             ),
     );

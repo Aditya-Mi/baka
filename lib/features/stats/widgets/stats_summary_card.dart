@@ -70,14 +70,17 @@ class _Col extends StatelessWidget {
               )),
               if (unit.isNotEmpty) ...[
                 const SizedBox(width: 3),
-                Text(unit, style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13, color: muted)),
+                Text(unit, style: AppText.captionSm(context).copyWith(
+                    color: muted,
+                  )),
               ],
             ],
           ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontFamily: context.fonts.accent,
-            fontSize: 13, fontWeight: FontWeight.w500, color: muted,
-          )),
+          Text(label, style: AppText.captionSm(context).copyWith(
+              fontWeight: FontWeight.w500,
+              color: muted,
+            )),
         ],
       ),
     );

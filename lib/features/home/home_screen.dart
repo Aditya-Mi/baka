@@ -7,6 +7,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/home/widgets/draft_strip.dart';
 import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/features/home/widgets/mood_streak_widget.dart';
+import 'package:baka/features/home/widgets/on_this_day.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/providers/captures_provider.dart';
@@ -14,7 +15,8 @@ import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/widgets/motion.dart';
+import 'package:baka/widgets/state_views.dart';
 
 class HomeScreen extends HookConsumerWidget {
   const HomeScreen({super.key});
@@ -27,10 +29,6 @@ class HomeScreen extends HookConsumerWidget {
     final drafts = ref.watch(draftsProvider).valueOrNull ?? const <Draft>[];
     final inboxCount = ref.watch(unprocessedCapturesCountProvider);
 
-    final streak = entries.valueOrNull != null
-        ? EntriesNotifier.computeCurrentStreak(entries.valueOrNull!)
-        : 0;
-
     return Scaffold(
       backgroundColor: t.background,
       appBar: AppBar(
@@ -41,77 +39,64 @@ class HomeScreen extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    '${_greeting()}, ',
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 28, fontWeight: FontWeight.w700,
-                      color: t.primary, height: 0.95,
+                  // Both parts may shrink so large font scales never overflow
+                  // into the action icons; the name gives way first.
+                  Flexible(
+                    flex: 3,
+                    child: Text(
+                      '${_greeting()}, ',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.screenTitle(context).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: t.primary,
+                          height: 0.95,
+                        ),
                     ),
                   ),
                   Flexible(
+                    flex: 2,
                     child: Text(
                       name,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontFamily: context.fonts.display,
-                        fontSize: 18, fontWeight: FontWeight.w600,
-                        color: t.onBackground,
-                      ),
+                      style: AppText.sectionHeading(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: t.onBackground,
+                        ),
                     ),
                   ),
                 ],
               )
             : Text(
                 _greeting(),
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 28, fontWeight: FontWeight.w700,
-                  color: t.primary,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.screenTitle(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: t.primary,
+                  ),
               ),
         actions: [
-          if (streak > 0)
-            GestureDetector(
-              onTap: () => context.go('/stats'),
-              child: Container(
-                margin: const EdgeInsets.only(right: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: t.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FlameIcon(width: 13, height: 18, color: t.primary),
-                    const SizedBox(width: 3),
-                    Text(
-                      '$streak',
-                      style: TextStyle(fontFamily: context.fonts.accent,
-                        fontSize: 14, fontWeight: FontWeight.w700,
-                        color: t.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           IconButton(
             icon: inboxCount > 0
                 ? Badge(
                     label: Text('$inboxCount'),
                     backgroundColor: t.primary,
-                    textColor: Colors.white,
-                    child: Icon(Icons.mic_none_rounded, size: 22, color: t.onBackground),
+                    textColor: Theme.of(context).colorScheme.onPrimary,
+                    child: Icon(Icons.mic_none_rounded, size: 24, color: t.onBackground),
                   )
-                : Icon(Icons.mic_none_rounded, size: 22, color: t.onBackground),
+                : Icon(Icons.mic_none_rounded, size: 24, color: t.onBackground),
             onPressed: () => context.push('/inbox'),
             tooltip: 'Voice Inbox',
           ),
           IconButton(
-            icon: AppIcon(AppIconData.search, size: 22, color: t.onBackground),
+            tooltip: 'Search',
+            icon: AppIcon(AppIconData.search, size: 24, color: t.onBackground),
             onPressed: () => context.push('/search'),
           ),
           IconButton(
-            icon: AppIcon(AppIconData.calendar, size: 22, color: t.onBackground),
+            icon: AppIcon(AppIconData.calendar, size: 24, color: t.onBackground),
             onPressed: () => _onCalendarTap(context, ref),
             tooltip: 'Jump to date',
           ),
@@ -120,13 +105,20 @@ class HomeScreen extends HookConsumerWidget {
       ),
       body: entries.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorView(onRetry: () => ref.invalidate(entriesProvider)),
         data: (list) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MoodStreakWidget(entries: list),
-            if (drafts.any((d) => !d.isEdit))
-              DraftStrip(drafts: [for (final d in drafts) if (!d.isEdit) d]),
+            OnThisDay(entries: list),
+            AnimatedSize(
+              duration: Motion.of(context, Motion.fast),
+              curve: Motion.curve,
+              alignment: Alignment.topCenter,
+              child: drafts.any((d) => !d.isEdit)
+                  ? DraftStrip(drafts: [for (final d in drafts) if (!d.isEdit) d])
+                  : const SizedBox(width: double.infinity),
+            ),
             Expanded(
               child: list.isEmpty
                   ? _EmptyState(t: t)
@@ -190,14 +182,17 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             'Your story begins here.',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground,
-            ),
+            style: AppText.heading(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: t.onBackground,
+              ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tap Write to add your first entry.',
-            style: TextStyle(fontFamily: context.fonts.accent,fontSize: 16, color: t.onSurfaceMuted),
+            style: AppText.caption(context).copyWith(
+                color: t.onSurfaceMuted,
+              ),
           ),
         ],
       ),
@@ -212,18 +207,50 @@ class _EntryList extends StatelessWidget {
   final BakaTokens t;
   const _EntryList({required this.entries, required this.t});
 
+  /// The first cards rise in once per app session, not on every rebuild or
+  /// tab switch.
+  static bool _introPlayed = false;
+  static const _introCards = 6;
+
   @override
   Widget build(BuildContext context) {
     final grouped = _group(entries);
-    final keys    = grouped.keys.toList();
+    final intro   = !_introPlayed;
+    _introPlayed  = true;
+    // One lazy item per section label and per card, so a long month never
+    // builds all its cards at once. `null` entry = section label.
+    final items = <(String, JournalEntry?)>[
+      for (final MapEntry(:key, :value) in grouped.entries) ...[
+        (key, null),
+        for (final e in value) (key, e),
+      ],
+    ];
+    var cardIndex = 0;
+    final introIndex = <int, int>{}; // item index → card index
+    for (final (i, it) in items.indexed) {
+      if (it.$2 != null) introIndex[i] = cardIndex++;
+    }
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
-      itemCount: keys.length,
-      itemBuilder: (_, i) => _Section(
-        label:   keys[i],
-        entries: grouped[keys[i]]!,
-        t:       t,
-      ),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final (label, e) = items[i];
+        if (e == null) return _SectionLabel(label: label, t: t);
+        final n = introIndex[i]!;
+        return RepaintBoundary(
+          child: FadeRise(
+            animate: intro && n < _introCards,
+            delay: Duration(milliseconds: 40 * n),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: JournalCard(
+                entry: e,
+                onTap: () => context.push('/entry/${e.id}'),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -248,37 +275,22 @@ class _EntryList extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
+class _SectionLabel extends StatelessWidget {
   final String label;
-  final List<JournalEntry> entries;
   final BakaTokens t;
-  const _Section({required this.label, required this.entries, required this.t});
+  const _SectionLabel({required this.label, required this.t});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-          child: Text(
-            label,
-            style: TextStyle(fontFamily: context.fonts.accent,
-              fontSize: 15, fontWeight: FontWeight.w600,
-              color: t.onSurfaceMuted, letterSpacing: 0.5,
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
+      child: Text(
+        label,
+        style: AppText.sectionLabel(context).copyWith(
+            fontWeight: FontWeight.w600,
+            color: t.onSurfaceMuted,
           ),
-        ),
-        ...entries.map((e) => RepaintBoundary(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-            child: JournalCard(
-              entry: e,
-              onTap: () => context.push('/entry/${e.id}'),
-            ),
-          ),
-        )),
-      ],
+      ),
     );
   }
 }

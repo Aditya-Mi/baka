@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/providers/user_provider.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class NamePromptDialog extends HookConsumerWidget {
   const NamePromptDialog({super.key});
@@ -14,7 +13,6 @@ class NamePromptDialog extends HookConsumerWidget {
     final t       = context.tokens;
     final onBg    = t.onBackground;
     final muted   = t.onSurfaceMuted;
-    final primary = t.primary;
 
     final ctrl = useTextEditingController();
 
@@ -27,31 +25,31 @@ class NamePromptDialog extends HookConsumerWidget {
     }
 
     return AlertDialog(
-      title: Text(
-        'What should we call you?',
-        style: TextStyle(fontFamily: context.fonts.display,
-          fontSize: 19, fontWeight: FontWeight.w600, color: onBg,
-        ),
-      ),
+      title: const Text('What should we call you?'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Your name shows as a greeting on the home screen.',
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15, color: muted),
+            style: AppText.meta(context).copyWith(
+                color: muted,
+              ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: ctrl,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
-            style: TextStyle(fontFamily: context.fonts.body, fontSize: 16, color: onBg),
+            style: AppText.rowTitle(context).copyWith(
+                color: onBg,
+              ),
             decoration: InputDecoration(
               hintText: 'Your name',
-              hintStyle: TextStyle(fontFamily: context.fonts.body,
-                fontSize: 16, fontStyle: FontStyle.italic, color: muted,
-              ),
+              hintStyle: AppText.rowTitle(context).copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: muted,
+                ),
             ),
             onSubmitted: (_) => save(),
           ),
@@ -61,13 +59,15 @@ class NamePromptDialog extends HookConsumerWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           style: TextButton.styleFrom(foregroundColor: muted),
-          child: Text('Skip', style: TextStyle(fontFamily: context.fonts.body, fontSize: 14)),
+          child: Text('Skip', style: AppText.label(context)),
         ),
         ElevatedButton(
           onPressed: save,
           child: Text(
             "Let's go",
-            style: TextStyle(fontFamily: context.fonts.body, fontSize: 14, fontWeight: FontWeight.w600),
+            style: AppText.label(context).copyWith(
+                fontWeight: FontWeight.w600,
+              ),
           ),
         ),
       ],

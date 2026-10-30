@@ -11,9 +11,9 @@ import 'package:baka/features/settings/widgets/font_picker_sheet.dart';
 import 'package:baka/features/settings/widgets/font_theme_sheet.dart';
 import 'package:baka/features/settings/widgets/reminder_settings_tile.dart';
 import 'package:baka/features/settings/widgets/export_import_tile.dart';
+import 'package:baka/features/settings/widgets/settings_row.dart';
 import 'package:baka/features/settings/widgets/theme_toggle_tile.dart';
 import 'package:baka/providers/user_provider.dart';
-import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/security_option_tile.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 
@@ -23,10 +23,7 @@ class SettingsScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t       = context.tokens;
-    final onBg    = t.onBackground;
     final muted   = t.onSurfaceMuted;
-    final outline = t.outlineSoft;
-    final primary = t.primary;
 
     final fontKey = ref.watch(fontProvider);
     final preset  = ref.watch(fontThemeProvider);
@@ -45,35 +42,35 @@ class SettingsScreen extends HookConsumerWidget {
         backgroundColor: t.background,
         title: Text(
           'Settings',
-          style: TextStyle(
-            fontFamily: context.fonts.accent,
-            fontSize: 28, fontWeight: FontWeight.w700, color: t.primary,
-          ),
+          style: AppText.screenTitle(context).copyWith(
+              fontWeight: FontWeight.w700,
+              color: t.primary,
+            ),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
 
           // ── Profile ──────────────────────────────────────────────────
           const _SectionHeader('Profile'),
-          _Row(
+          SettingsRow(
+            icon: Icons.person_outline_rounded,
             title: 'Your name',
             value: name.isNotEmpty ? name : 'Not set',
-            valueColor: name.isNotEmpty ? primary : muted,
-            trailing: AppIcon(AppIconData.pencil, size: 16, color: muted),
+            trailing: Icon(Icons.edit_outlined, size: 18, color: muted),
             onTap: () => _showNameEdit(context, ref, name, t),
           ),
 
           // ── Appearance ───────────────────────────────────────────────
           const _SectionHeader('Appearance'),
           const ThemeToggleTile(),
-          _Divider(color: outline),
-          _Row(
+          const SettingsDivider(),
+          SettingsRow(
+            icon: Icons.text_fields_rounded,
             title: 'App font',
             value: preset.label,
-            valueColor: primary,
-            trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
+            chevron: true,
             onTap: () => showModalBottomSheet<void>(
               context: context,
               isScrollControlled: true,
@@ -84,12 +81,12 @@ class SettingsScreen extends HookConsumerWidget {
               builder: (_) => const FontThemeSheet(),
             ),
           ),
-          _Divider(color: outline),
-          _Row(
+          const SettingsDivider(),
+          SettingsRow(
+            icon: Icons.edit_note_rounded,
             title: 'Writing font',
             value: _fontDisplayName(fontKey, preset),
-            valueColor: primary,
-            trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
+            chevron: true,
             onTap: () => showModalBottomSheet<void>(
               context: context,
               isScrollControlled: true,
@@ -107,31 +104,25 @@ class SettingsScreen extends HookConsumerWidget {
 
           // ── Security ─────────────────────────────────────────────────
           const _SectionHeader('Security'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
-              children: [
-                Text('Lock with biometrics',
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 18, fontWeight: FontWeight.w600, color: onBg)),
-                const Spacer(),
-                Switch(
-                  value: auth.biometricsEnabled,
-                  onChanged: (enabled) {
-                    if (enabled) {
-                      _showSecurityOptions(context);
-                    } else {
-                      ref.read(authProvider.notifier).skipSetup();
-                    }
-                  },
-                ),
-              ],
+          SettingsRow(
+            icon: Icons.fingerprint_rounded,
+            title: 'Lock with biometrics',
+            trailing: Switch(
+              value: auth.biometricsEnabled,
+              onChanged: (enabled) {
+                if (enabled) {
+                  _showSecurityOptions(context);
+                } else {
+                  ref.read(authProvider.notifier).skipSetup();
+                }
+              },
             ),
           ),
-          _Divider(color: outline),
-          _Row(
+          const SettingsDivider(),
+          SettingsRow(
+            icon: Icons.lock_outline_rounded,
             title: 'Change security method',
-            trailing: AppIcon(AppIconData.chevronRight, size: 18, color: muted),
+            chevron: true,
             onTap: () => _showSecurityOptions(context),
           ),
 
@@ -141,27 +132,19 @@ class SettingsScreen extends HookConsumerWidget {
 
           // ── About ────────────────────────────────────────────────────
           const _SectionHeader('About'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
-              children: [
-                Text('Version',
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 18, fontWeight: FontWeight.w600, color: onBg)),
-                const Spacer(),
-                Text(versionStr,
-                    style: TextStyle(fontFamily: context.fonts.mono,
-                      fontSize: 12, letterSpacing: 0.5, color: muted)),
-              ],
-            ),
+          SettingsRow(
+            icon: Icons.info_outline_rounded,
+            title: 'Version',
+            value: versionStr,
           ),
-          _Divider(color: outline),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+            padding: const EdgeInsets.fromLTRB(58, 6, 20, 14),
             child: Text(
               'Made for your thoughts.',
-              style: TextStyle(fontFamily: context.fonts.body,
-                fontSize: 14, fontStyle: FontStyle.italic, color: muted),
+              style: AppText.label(context).copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: muted,
+                ),
             ),
           ),
         ],
@@ -188,20 +171,21 @@ class SettingsScreen extends HookConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Your name',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 19, fontWeight: FontWeight.w600, color: t.onBackground,
-            )),
+        title: const Text('Your name'),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           cursorColor: t.primary,
-          style: TextStyle(fontFamily: context.fonts.body, fontSize: 16, color: t.onBackground),
+          style: AppText.rowTitle(context).copyWith(
+              color: t.onBackground,
+            ),
           decoration: InputDecoration(
             hintText: 'Your name',
-            hintStyle: TextStyle(fontFamily: context.fonts.body,
-              fontSize: 16, fontStyle: FontStyle.italic, color: t.onSurfaceMuted),
+            hintStyle: AppText.rowTitle(context).copyWith(
+                fontStyle: FontStyle.italic,
+                color: t.onSurfaceMuted,
+              ),
           ),
           onSubmitted: (_) {
             ref.read(userProvider.notifier).setName(ctrl.text);
@@ -212,7 +196,7 @@ class SettingsScreen extends HookConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
-            child: Text('Cancel', style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -220,7 +204,7 @@ class SettingsScreen extends HookConsumerWidget {
               Navigator.of(ctx).pop();
             },
             child: Text('Save',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, fontWeight: FontWeight.w700)),
+                style: AppText.label(context).copyWith(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -242,59 +226,14 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 4),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 4),
       child: Text(
         label,
-        style: TextStyle(
-          fontFamily: context.fonts.display,
-          fontSize: 20, fontWeight: FontWeight.w600,
-          height: 1.3, color: t.primary,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Flat row ─────────────────────────────────────────────────────────────────
-
-class _Row extends StatelessWidget {
-  final String title;
-  final String? value;
-  final Color? valueColor;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _Row({
-    required this.title,
-    this.value,
-    this.valueColor,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        child: Row(
-          children: [
-            Text(title,
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 18, fontWeight: FontWeight.w600,
-                  color: t.onBackground)),
-            const Spacer(),
-            if (value != null) ...[
-              Text(value!,
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 16, color: valueColor ?? t.onSurfaceMuted)),
-              const SizedBox(width: 6),
-            ],
-            if (trailing != null) trailing!,
-          ],
-        ),
+        style: AppText.sectionHeading(context).copyWith(
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+            color: t.onBackground,
+          ),
       ),
     );
   }
@@ -377,15 +316,20 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
             decoration: BoxDecoration(color: t.outline.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(2))),
         const SizedBox(height: 20),
-        Text('Security method', style: TextStyle(fontFamily: context.fonts.display,
-            fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+        Text('Security method', style: AppText.heading(context).copyWith(
+            fontWeight: FontWeight.w600,
+            color: t.onBackground,
+          )),
         const SizedBox(height: 4),
         Text('Choose how to unlock your journal.',
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15, color: t.onSurfaceMuted)),
+            style: AppText.caption(context).copyWith(
+                color: t.onSurfaceMuted,
+              )),
         const SizedBox(height: 20),
         if (_error != null) ...[
-          Text(_error!, style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
-              color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
+          Text(_error!, style: AppText.meta(context).copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ), textAlign: TextAlign.center),
           const SizedBox(height: 10),
         ],
         SecurityOptionTile(
@@ -431,6 +375,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IconButton(
+          tooltip: 'Back',
           icon: Icon(Icons.arrow_back_ios_new, size: 18, color: t.onSurfaceMuted),
           onPressed: () => setState(() {
             if (isConfirm) { _firstPin = null; _pinError = null; }
@@ -461,21 +406,6 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
           },
         ),
       ],
-    );
-  }
-}
-
-// ── Thin divider with horizontal margin ──────────────────────────────────────
-
-class _Divider extends StatelessWidget {
-  final Color color;
-  const _Divider({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(color: color, height: 1, thickness: 1),
     );
   }
 }

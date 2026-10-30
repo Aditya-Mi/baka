@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Bottom sheet for setting a location label.
 /// Returns the label string, or null if user dismisses.
@@ -62,26 +61,30 @@ class _LocationSheetState extends State<_LocationSheet> {
             ),
             const SizedBox(height: 20),
             Text('Where are you?',
-                style: TextStyle(fontFamily: context.fonts.display,
-                  fontSize: 20, fontWeight: FontWeight.w600,
-                  color: t.onBackground)),
+                style: AppText.heading(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.onBackground,
+                  )),
             const SizedBox(height: 4),
             Text('Type a place name or address.',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 15, color: t.onSurfaceMuted)),
+                style: AppText.caption(context).copyWith(
+                    color: t.onSurfaceMuted,
+                  )),
             const SizedBox(height: 20),
             TextField(
               controller: _ctrl,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
               cursorColor: t.primary,
-              style: TextStyle(fontFamily: context.fonts.body,
-                fontSize: 16, color: t.onBackground),
+              style: AppText.rowTitle(context).copyWith(
+                  color: t.onBackground,
+                ),
               decoration: InputDecoration(
                 hintText: 'e.g. Café Blue, Mumbai',
-                hintStyle: TextStyle(fontFamily: context.fonts.body,
-                  fontSize: 16, fontStyle: FontStyle.italic,
-                  color: t.onSurfaceMuted),
+                hintStyle: AppText.rowTitle(context).copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: t.onSurfaceMuted,
+                  ),
                 prefixIcon: Icon(Icons.location_on_outlined,
                     size: 20, color: t.primary),
               ),
@@ -96,7 +99,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                     style: TextButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.error),
                     child: Text('Remove',
-                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+                        style: AppText.caption(context)),
                   ),
                 const Spacer(),
                 TextButton(
@@ -104,7 +107,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                   style: TextButton.styleFrom(
                       foregroundColor: t.onSurfaceMuted),
                   child: Text('Cancel',
-                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+                      style: AppText.caption(context)),
                 ),
                 const SizedBox(width: 8),
                 _SaveBtn(onTap: _submit, t: t),
@@ -137,9 +140,10 @@ class _SaveBtn extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Text('Set',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 16, fontWeight: FontWeight.w700,
-                  color: Colors.white)),
+                style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  )),
           ),
         ),
       );

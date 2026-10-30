@@ -5,7 +5,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class ShellScaffold extends ConsumerWidget {
   final Widget child;
@@ -26,6 +25,7 @@ class ShellScaffold extends ConsumerWidget {
     final inactive = t.onSurfaceMuted;
     final location = GoRouterState.of(context).matchedLocation;
     final tabIndex = _indexFromLocation(location);
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
 
     return PopScope(
       canPop: false,
@@ -35,26 +35,17 @@ class ShellScaffold extends ConsumerWidget {
         final exit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text('Exit Baka?',
-                style: TextStyle(fontFamily: context.fonts.display,
-                  fontSize: 18, fontWeight: FontWeight.w600,
-                  color: t.onBackground)),
-            content: Text('Your journal will be waiting.',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 16, color: t.onSurfaceMuted)),
+            title: const Text('Exit Baka?'),
+            content: const Text('Your journal will be waiting.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text('Stay',
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 16, color: t.onSurfaceMuted)),
+                style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
+                child: const Text('Stay'),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text('Exit',
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 16, color: t.primary,
-                      fontWeight: FontWeight.w700)),
+                child: const Text('Exit'),
               ),
             ],
           ),
@@ -64,16 +55,17 @@ class ShellScaffold extends ConsumerWidget {
       child: Scaffold(
         body: child,
 
-        floatingActionButton: FloatingActionButton.extended(
+        // Write is the Pages tab's primary action only — on Stats/Settings it
+        // covered real controls (calendar, biometrics toggle).
+        floatingActionButton: tabIndex != 0 ? null : FloatingActionButton.extended(
           onPressed: () => context.push('/new'),
           backgroundColor: t.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: onPrimary,
           elevation: 2,
           shape: const StadiumBorder(),
-          icon: const QuillIcon(size: 20, color: Colors.white),
+          icon: QuillIcon(size: 20, color: onPrimary),
           label: Text('Write',
-              style: TextStyle(fontFamily: context.fonts.accent,
-                fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+              style: AppText.handAction(context).copyWith(color: onPrimary)),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 

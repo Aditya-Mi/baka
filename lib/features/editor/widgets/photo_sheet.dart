@@ -7,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Opens the photo picker, copies selected image to app documents,
 /// returns the relative path (e.g. "photos/abc.jpg") or null.
@@ -95,19 +94,22 @@ class _PhotoSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.file(file,
                         height: 160, width: double.infinity,
-                        fit: BoxFit.cover),
+                        fit: BoxFit.cover,
+                        cacheWidth: (640 * MediaQuery.devicePixelRatioOf(context)).round()),
                   ),
                 );
               },
             ),
           Text('Attach a photo',
-              style: TextStyle(fontFamily: context.fonts.display,
-                fontSize: 20, fontWeight: FontWeight.w600,
-                color: t.onBackground)),
+              style: AppText.heading(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: t.onBackground,
+                )),
           const SizedBox(height: 4),
           Text('A visual memory for this entry.',
-              style: TextStyle(fontFamily: context.fonts.accent,
-                fontSize: 15, color: t.onSurfaceMuted)),
+              style: AppText.caption(context).copyWith(
+                  color: t.onSurfaceMuted,
+                )),
           const SizedBox(height: 24),
           _Option(
             icon: Icons.photo_library_outlined,
@@ -183,8 +185,10 @@ class _Option extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: color, size: 22),
       title: Text(label,
-          style: TextStyle(fontFamily: context.fonts.accent,
-            fontSize: 18, fontWeight: FontWeight.w600, color: color)),
+          style: AppText.sectionLabel(context).copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            )),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 0),
     );

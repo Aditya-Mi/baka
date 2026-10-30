@@ -56,7 +56,8 @@ class _LinesPainter extends CustomPainter {
 
     var y = topOffset + lineSpacing;
     while (y < size.height) {
-      canvas.drawLine(Offset(16, y), Offset(size.width - 16, y), paint);
+      // Inset 20 to line up with the 20px text edge.
+      canvas.drawLine(Offset(20, y), Offset(size.width - 20, y), paint);
       y += lineSpacing;
     }
   }

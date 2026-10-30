@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 
 import 'package:baka/models/tag.dart';
 
+/// Tags are case-insensitive: '#SOLO' and '#solo' are the same tag.
+/// Lowercases, trims and de-duplicates while keeping first-seen order.
+List<String> normalizeTags(Iterable<String> tags) {
+  final seen = <String>{};
+  return [
+    for (final t in tags)
+      if (t.trim().isNotEmpty && seen.add(t.trim().toLowerCase()))
+        t.trim().toLowerCase(),
+  ];
+}
+
 Color tagColorFor(List<Tag> tags, String name) {
+  final key = name.toLowerCase();
   for (final t in tags) {
-    if (t.name == name) return t.color;
+    if (t.name.toLowerCase() == key) return t.color;
   }
   return TagPalette.forName(name);
 }

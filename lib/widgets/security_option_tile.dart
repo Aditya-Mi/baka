@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class SecurityOptionTile extends StatelessWidget {
   final IconData icon;
@@ -25,11 +24,12 @@ class SecurityOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final cs = Theme.of(context).colorScheme;
     final filled = selected && !danger;
     final bg = filled ? t.primary : Colors.transparent;
-    final borderColor = danger ? Colors.red.shade300 : (selected ? t.primary : t.outline);
-    final labelColor = filled ? Colors.white : (danger ? Colors.red.shade400 : t.onBackground);
-    final subColor = filled ? Colors.white70 : t.onSurfaceMuted;
+    final borderColor = danger ? cs.error : (selected ? t.primary : t.outline);
+    final labelColor = filled ? cs.onPrimary : (danger ? cs.error : t.onBackground);
+    final subColor = filled ? cs.onPrimary.withValues(alpha: 0.8) : t.onSurfaceMuted;
 
     return SizedBox(
       width: double.infinity,
@@ -53,13 +53,17 @@ class SecurityOptionTile extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(label,
-                      style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 17, fontWeight: FontWeight.w700, color: labelColor)),
+                      style: AppText.rowTitle(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: labelColor,
+                        )),
                   Text(subtitle,
-                      style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13, color: subColor)),
+                      style: AppText.meta(context).copyWith(
+                          color: subColor,
+                        )),
                 ]),
               ),
-              if (filled) const Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),
+              if (filled) Icon(Icons.check_circle_rounded, size: 18, color: cs.onPrimary),
             ]),
           ),
         ),

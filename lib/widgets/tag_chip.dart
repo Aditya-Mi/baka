@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:baka/core/fonts/font_theme.dart';
+
+import 'package:baka/core/theme/app_theme.dart';
 
 class TagChip extends StatelessWidget {
   final String tag;
@@ -33,20 +34,31 @@ class TagChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          Flexible(
+            child: Text(
             '#$tag',
-            style: TextStyle(
-              fontFamily: context.fonts.accent,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.captionSm(context).copyWith(
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+          ),
           ),
           if (removable) ...[
             const SizedBox(width: 2),
-            GestureDetector(
-              onTap: onRemove,
-              child: Icon(Icons.close_rounded, size: 14, color: color),
+            Semantics(
+              button: true,
+              label: 'Remove tag $tag',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onRemove,
+                child: Padding(
+                  // Bigger hit area for the ✕ without a bigger glyph.
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.close_rounded, size: 14, color: color),
+                ),
+              ),
             ),
           ],
         ],

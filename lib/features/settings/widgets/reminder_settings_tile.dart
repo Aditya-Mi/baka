@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:baka/core/notifications/notification_service.dart';
 import 'package:baka/core/notifications/reminder_provider.dart';
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/features/settings/widgets/settings_row.dart';
 
-class ReminderSettingsTile extends ConsumerWidget {
+class ReminderSettingsTile extends HookConsumerWidget {
   const ReminderSettingsTile({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t        = context.tokens;
-    final onBg     = t.onBackground;
-    final muted    = t.onSurfaceMuted;
-    final primary  = t.primary;
-    final outline  = t.outline;
-    final surface  = t.surface;
 
     final reminder = ref.watch(reminderProvider);
     final notifier = ref.read(reminderProvider.notifier);
+
+    // Re-check the system permission whenever the app resumes (e.g. after
+    // returning from system settings) so a revoked permission is visible here
+    // instead of the switch silently lying.
+    final recheck = useState(0);
+    useOnAppLifecycleStateChange((_, state) {
+      if (state == AppLifecycleState.resumed) recheck.value++;
+    });
+    final permFuture = useMemoized(
+        () => NotificationService.instance.areNotificationsEnabled(),
+        [recheck.value, reminder.enabled]);
+    final systemOff = reminder.enabled && useFuture(permFuture).data == false;
 
     // Format time
     final timeStr = DateFormat.jm().format(DateTime(
@@ -32,41 +40,27 @@ class ReminderSettingsTile extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Main switch row
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Daily reminder',
-                        style: TextStyle(fontFamily: context.fonts.body,
-                          fontSize: 15, fontWeight: FontWeight.w500, color: onBg,
-                        )),
-                    const SizedBox(height: 2),
-                    Text('A gentle nudge to capture your thoughts.',
-                        style: TextStyle(fontFamily: context.fonts.accent,fontSize: 13, color: muted)),
-                  ],
-                ),
-              ),
-              Switch(
-                value: reminder.enabled,
-                onChanged: (v) async {
-                  if (v) {
-                    final granted = await NotificationService.instance.requestPermissions();
-                    if (!granted) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text('Allow notifications in system settings to get reminders')));
-                      }
-                      return;
-                    }
+        SettingsRow(
+          icon: Icons.notifications_none_rounded,
+          title: 'Daily reminder',
+          subtitle: 'A gentle nudge to capture your thoughts.',
+          trailing: Switch(
+            value: reminder.enabled,
+            onChanged: (v) async {
+              if (v) {
+                final granted = await NotificationService.instance.requestPermissions();
+                if (!granted) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Notifications are off for Baka'),
+                        action: SnackBarAction(
+                            label: 'Settings', onPressed: openAppSettings)));
                   }
-                  notifier.setEnabled(v);
-                },
-              ),
-            ],
+                  return;
+                }
+              }
+              notifier.setEnabled(v);
+            },
           ),
         ),
 
@@ -78,9 +72,16 @@ class ReminderSettingsTile extends ConsumerWidget {
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Divider(color: outline, height: 1),
-                    // Time row
-                    InkWell(
+                    if (systemOff)
+                      _PermissionWarning(t: t),
+                    const SettingsDivider(),
+                    SettingsRow(
+                      icon: Icons.schedule_rounded,
+                      title: 'Remind me at',
+                      value: timeStr,
+                      valueColor: t.primary,
+                      valueWeight: FontWeight.w600,
+                      chevron: true,
                       onTap: () async {
                         final picked = await showTimePicker(
                           context: context,
@@ -88,44 +89,34 @@ class ReminderSettingsTile extends ConsumerWidget {
                         );
                         if (picked != null) notifier.setTime(picked);
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: Row(
+                    ),
+                    // Preview — a soft card inside the gutter, under its row
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(58, 2, 20, 8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: t.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Remind me at',
-                                style: TextStyle(fontFamily: context.fonts.body,
-                                  fontSize: 15, fontWeight: FontWeight.w500, color: onBg,
-                                )),
-                            const Spacer(),
-                            Text(timeStr,
-                                style: TextStyle(fontFamily: context.fonts.body,
-                                  fontSize: 15, fontWeight: FontWeight.w600, color: primary,
-                                )),
-                            const SizedBox(width: 4),
-                            AppIcon(AppIconData.chevronRight, size: 18, color: muted),
+                            Text(
+                              '“What did today feel like?”',
+                              style: AppText.bodyPreview(context).copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: t.onSurface,
+                                ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Preview · changes daily',
+                                style: AppText.caption(context).copyWith(
+                                    color: t.onSurfaceMuted,
+                                  )),
                           ],
                         ),
-                      ),
-                    ),
-                    Divider(color: outline, height: 1),
-                    // Preview
-                    Container(
-                      width: double.infinity,
-                      color: surface,
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '"What did today feel like?"',
-                            style: TextStyle(fontFamily: context.fonts.body,
-                              fontSize: 14, fontStyle: FontStyle.italic, color: onBg,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('Preview · changes daily',
-                              style: TextStyle(fontFamily: context.fonts.accent,fontSize: 12, color: muted)),
-                        ],
                       ),
                     ),
                   ],
@@ -133,6 +124,41 @@ class ReminderSettingsTile extends ConsumerWidget {
               : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+}
+
+/// Shown under the reminder switch when Android notifications are blocked —
+/// the reminder can't fire, so say so and offer the fix.
+class _PermissionWarning extends StatelessWidget {
+  final BakaTokens t;
+  const _PermissionWarning({required this.t});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(58, 0, 12, 8),
+      child: Row(
+        children: [
+          Icon(Icons.notifications_off_outlined, size: 18, color: t.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text('Notifications are off in system settings.',
+                style: AppText.meta(context).copyWith(
+                    color: t.onSurface,
+                  )),
+          ),
+          TextButton(
+            onPressed: openAppSettings,
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+            child: Text('Open settings',
+                style: AppText.meta(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.primaryText,
+                  )),
+          ),
+        ],
+      ),
     );
   }
 }

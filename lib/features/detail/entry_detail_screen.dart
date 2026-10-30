@@ -4,11 +4,11 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import 'dart:io';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/features/editor/widgets/page_header.dart';
 import 'package:baka/features/capture/widgets/waveform.dart';
 import 'package:baka/utils/song_preview.dart';
 import 'package:baka/utils/tag_utils.dart';
@@ -17,10 +17,10 @@ import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/state_views.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class EntryDetailScreen extends HookConsumerWidget {
   final String id;
@@ -32,16 +32,42 @@ class EntryDetailScreen extends HookConsumerWidget {
     final bg       = t.background;
     final onBg     = t.onBackground;
     final muted    = t.onSurfaceMuted;
-    final outline  = t.outline;
-    final primary  = t.primary;
     final ruleColor = t.rule;
 
     final entriesAsync = ref.watch(entriesProvider);
     final tagList      = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
     final entry = entriesAsync.valueOrNull?.where((e) => e.id == id).firstOrNull;
 
-    if (entriesAsync.isLoading || entry == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (entry == null) {
+      // Loading, failed, or the entry was deleted — never spin forever.
+      final Widget body;
+      if (entriesAsync.hasError) {
+        body = ErrorView(
+          message: "Something went wrong loading this entry.",
+          onRetry: () => ref.invalidate(entriesProvider));
+      } else if (entriesAsync.isLoading && !entriesAsync.hasValue) {
+        body = const Center(child: CircularProgressIndicator());
+      } else {
+        body = StateMessage(
+          icon: Icons.menu_book_outlined,
+          title: 'This entry no longer exists',
+          body: 'It may have been deleted.',
+          actionLabel: 'Back to your pages',
+          onAction: () => context.canPop() ? context.pop() : context.go('/'),
+        );
+      }
+      return Scaffold(
+        backgroundColor: bg,
+        appBar: AppBar(
+          backgroundColor: bg,
+          leading: IconButton(
+            tooltip: 'Back',
+            icon: AppIcon(AppIconData.back, size: 22, color: onBg),
+            onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+          ),
+        ),
+        body: body,
+      );
     }
 
     return Scaffold(
@@ -49,51 +75,50 @@ class EntryDetailScreen extends HookConsumerWidget {
       appBar: AppBar(
         backgroundColor: bg,
         leading: IconButton(
+          tooltip: 'Back',
           icon: AppIcon(AppIconData.back, size: 22, color: onBg),
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: QuillIcon(size: 22, color: onBg),
-            onPressed: () => context.push('/edit/${entry.id}'),
-            tooltip: 'Edit',
+          Center(
+            child: Material(
+              color: t.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => context.push('/edit/${entry.id}'),
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.fromLTRB(12, 0, 16, 0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_outlined, size: 18, color: t.onPrimaryContainer),
+                      const SizedBox(width: 6),
+                      Text('Edit',
+                          style: AppText.handAction(context).copyWith(
+                              color: t.onPrimaryContainer,
+                            )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
+          const SizedBox(width: 4),
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, color: muted),
+            icon: Icon(Icons.delete_outline_rounded, size: 22, color: muted),
             onPressed: () => _confirmDelete(context, ref),
             tooltip: 'Delete',
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-            // Stamp
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-              child: Row(
-                children: [
-                  Text(
-                    DateFormat('EEEE, MMMM d').format(entry.createdAt),
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 16, fontWeight: FontWeight.w500, color: onBg,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (entry.mood != null)
-                    MoodGlyph(mood: entry.mood!, size: 22, color: primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat.jm().format(entry.createdAt),
-                    style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14, color: muted),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(date: entry.createdAt, mood: entry.mood),
 
-            Divider(color: outline, height: 1),
-
-            // Anchor bar (location + weather)
+            // Anchors (location / weather / song)
             if (entry.anchor != null &&
                 (entry.anchor!.hasLocation || entry.anchor!.hasWeather ||
                  entry.anchor!.hasSong))
@@ -102,11 +127,11 @@ class EntryDetailScreen extends HookConsumerWidget {
             // Tags (read-only)
             if (entry.tags.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Wrap(
-                    spacing: 6, runSpacing: 6,
+                    spacing: 8, runSpacing: 8,
                     children: entry.tags.map((tag) => TagChip(
                       tag: tag,
                       color: tagColorFor(tagList, tag),
@@ -116,7 +141,10 @@ class EntryDetailScreen extends HookConsumerWidget {
                 ),
               ),
 
-            if (entry.tags.isNotEmpty) Divider(color: outline, height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(color: t.outlineSoft, height: 1),
+            ),
 
             // Body — Stack fills the exact Expanded height so lines always
             // cover the full body area regardless of content length.
@@ -130,7 +158,7 @@ class EntryDetailScreen extends HookConsumerWidget {
                     child: SelectableText.rich(
                       buildTagSpan(
                         entry.body,
-                        primary,
+                        t.primaryText,
                         Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: onBg, height: 1.75, fontSize: 17,
                         ) ?? TextStyle(fontSize: 17, height: 1.75, color: onBg),
@@ -147,26 +175,16 @@ class EntryDetailScreen extends HookConsumerWidget {
 
             // Word count footer
             Container(
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: outline, width: 0.8)),
-                color: bg,
-              ),
+              color: bg,
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${entry.wordCount} words',
-                        style: TextStyle(fontFamily: context.fonts.mono, fontSize: 12, color: muted),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
+                  child: Text(
+                    '${entry.wordCount} words',
+                    style: AppText.counter(context).copyWith(
+                        color: muted,
                       ),
-                      const SizedBox(width: 16),
-                      Text(
-                        '${entry.body.length} chars',
-                        style: TextStyle(fontFamily: context.fonts.mono, fontSize: 12, color: muted),
-                      ),
-                    ],
                   ),
                 ),
               ),
@@ -209,69 +227,88 @@ class _AnchorBar extends StatelessWidget {
   final BakaTokens t;
   const _AnchorBar({required this.anchor, required this.t});
 
+  Widget _chip(BuildContext context, {required Widget icon, required String label,
+      Color? color, bool link = false, VoidCallback? onTap}) {
+    final c = color ?? t.onSurface;
+    return Material(
+      color: Colors.transparent,
+      shape: StadiumBorder(side: BorderSide(color: t.outline)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 30),
+          padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            icon,
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(label,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.meta(context).copyWith(
+                      color: c,
+                      decoration: link ? TextDecoration.underline : TextDecoration.none,
+                      decorationColor: c,
+                    )),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasLink = anchor.hasSong && anchor.songUrl != null;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 6,
-        children: [
-          if (anchor.hasLocation)
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.location_on_outlined, size: 16, color: t.onSurfaceMuted),
-              const SizedBox(width: 4),
-              Text(anchor.location!,
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 15, color: t.onSurfaceMuted)),
-            ]),
-          if (anchor.hasWeather)
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              WeatherIcon(anchor.weatherCondition!, size: 18, color: t.onSurfaceMuted),
-              const SizedBox(width: 4),
-              Text(
-                anchor.weatherTemp != null
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (anchor.hasLocation)
+              _chip(context,
+                icon: Icon(Icons.location_on_outlined, size: 16, color: t.onSurfaceMuted),
+                label: anchor.location!),
+            if (anchor.hasWeather)
+              _chip(context,
+                icon: WeatherIcon(anchor.weatherCondition!, size: 16, color: t.onSurfaceMuted),
+                label: anchor.weatherTemp != null
                     ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
-                    : anchor.weatherCondition!.label,
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 15, color: t.onSurfaceMuted),
+                    : anchor.weatherCondition!.label),
+            if (anchor.hasSong)
+              _chip(context,
+                icon: Icon(Icons.music_note_rounded, size: 16,
+                    color: hasLink ? t.primary : t.onSurfaceMuted),
+                label: anchor.songArtist != null
+                    ? '${anchor.songName!} · ${anchor.songArtist!}'
+                    : anchor.songName!,
+                color: hasLink ? t.primary : null,
+                link: hasLink,
+                onTap: hasLink
+                    ? () async {
+                        final uri = Uri.tryParse(normalizeSongUrl(anchor.songUrl!));
+                        final opened = uri != null &&
+                            await launchUrl(uri, mode: LaunchMode.externalApplication)
+                                .catchError((_) => false);
+                        if (!opened && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text("Couldn't open this song link")));
+                        }
+                      }
+                    : null),
+            if (anchor.hasSong)
+              _SongPreview(
+                name: anchor.songName!,
+                artist: anchor.songArtist,
+                url: anchor.songUrl,
+                t: t,
               ),
-            ]),
-          if (anchor.hasSong)
-            GestureDetector(
-              onTap: anchor.songUrl != null
-                  ? () async {
-                      final uri = Uri.tryParse(normalizeSongUrl(anchor.songUrl!));
-                      if (uri != null) await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  : null,
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.music_note_rounded, size: 16,
-                    color: anchor.songUrl != null ? t.primary : t.onSurfaceMuted),
-                const SizedBox(width: 4),
-                Text(
-                  anchor.songArtist != null
-                      ? '${anchor.songName!} · ${anchor.songArtist!}'
-                      : anchor.songName!,
-                  style: TextStyle(
-                    fontFamily: context.fonts.accent,
-                    fontSize: 15,
-                    color: anchor.songUrl != null ? t.primary : t.onSurfaceMuted,
-                    decoration: anchor.songUrl != null
-                        ? TextDecoration.underline : TextDecoration.none,
-                    decorationColor: t.primary,
-                  ),
-                ),
-              ]),
-            ),
-          if (anchor.hasSong)
-            _SongPreview(
-              name: anchor.songName!,
-              artist: anchor.songArtist,
-              url: anchor.songUrl,
-              t: t,
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -315,8 +352,9 @@ class _PhotoViewState extends State<_PhotoView> {
                         color: widget.t.onSurfaceMuted),
                     const SizedBox(width: 6),
                     Text('Photo',
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 15, color: widget.t.onSurfaceMuted)),
+                        style: AppText.caption(context).copyWith(
+                            color: widget.t.onSurfaceMuted,
+                          )),
                     const Spacer(),
                     Icon(
                       _expanded
@@ -339,7 +377,9 @@ class _PhotoViewState extends State<_PhotoView> {
                     child: Image.file(file,
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        height: 220),
+                        height: 220,
+                        // Decode at display width, not the camera\'s 12MP.
+                        cacheWidth: (640 * MediaQuery.devicePixelRatioOf(context)).round()),
                   ),
                 ),
               ),
@@ -381,7 +421,7 @@ class _PageLinesPainter extends CustomPainter {
     final paint = Paint()..color = color..strokeWidth = 0.6;
     var y = _topOffset + _spacing;
     while (y < size.height) {
-      canvas.drawLine(Offset(16, y), Offset(size.width - 16, y), paint);
+      canvas.drawLine(Offset(20, y), Offset(size.width - 20, y), paint);
       y += _spacing;
     }
   }
@@ -476,26 +516,34 @@ class _SongPreviewState extends State<_SongPreview> {
   @override
   Widget build(BuildContext context) {
     final t = widget.t;
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final active = _playing || _loading;
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Material(
-        color: t.primary,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
+      // 28px disc inside a 44px hit area.
+      Semantics(
+        button: true,
+        label: _playing ? 'Stop preview' : 'Play preview',
+        child: InkResponse(
           onTap: _loading ? null : _toggle,
+          radius: 22,
           child: SizedBox(
-            width: 28, height: 28,
-            child: _loading
-                ? const Padding(
-                    padding: EdgeInsets.all(7),
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  )
-                : Icon(
-                    _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                    size: 18, color: Colors.white,
-                  ),
+            width: 44, height: 44,
+            child: Center(
+              child: Container(
+                width: 28, height: 28,
+                decoration: BoxDecoration(color: t.primary, shape: BoxShape.circle),
+                child: _loading
+                    ? Padding(
+                        padding: const EdgeInsets.all(7),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: onPrimary),
+                      )
+                    : Icon(
+                        _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                        size: 18, color: onPrimary,
+                      ),
+              ),
+            ),
           ),
         ),
       ),
@@ -520,8 +568,9 @@ class _SongPreviewState extends State<_SongPreview> {
       if (!active) ...[
         const SizedBox(width: 6),
         Text('Preview',
-            style: TextStyle(fontFamily: context.fonts.accent,
-              fontSize: 14, color: t.onSurfaceMuted)),
+            style: AppText.caption(context).copyWith(
+                color: t.onSurfaceMuted,
+              )),
       ],
     ]);
   }

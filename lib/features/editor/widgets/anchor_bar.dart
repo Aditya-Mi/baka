@@ -10,7 +10,6 @@ import 'package:baka/widgets/weather_icon.dart';
 import 'location_sheet.dart';
 import 'photo_sheet.dart';
 import 'weather_sheet.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class AnchorBar extends StatelessWidget {
   final Anchor anchor;
@@ -23,10 +22,10 @@ class AnchorBar extends StatelessWidget {
     final t = context.tokens;
     return Container(
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: t.outline, width: 0.6)),
+        border: Border(top: BorderSide(color: t.outlineSoft, width: 1)),
         color: t.background,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -52,8 +51,9 @@ class AnchorBar extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 anchor.hasLocation ? anchor.location! : 'Location',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
-                    color: anchor.hasLocation ? t.primary : t.onSurfaceMuted),
+                style: AppText.meta(context).copyWith(
+                    color: anchor.hasLocation ? t.onPrimaryContainer : t.onSurface,
+                  ),
               ),
             ]),
             active: anchor.hasLocation,
@@ -90,8 +90,9 @@ class AnchorBar extends StatelessWidget {
                         ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
                         : anchor.weatherCondition!.label)
                     : 'Weather',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
-                    color: anchor.hasWeather ? t.primary : t.onSurfaceMuted),
+                style: AppText.meta(context).copyWith(
+                    color: anchor.hasWeather ? t.onPrimaryContainer : t.onSurface,
+                  ),
               ),
             ]),
             active: anchor.hasWeather,
@@ -111,8 +112,7 @@ class AnchorBar extends StatelessWidget {
               final saved = await showDialog<bool>(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: Text('Song',
-                      style: TextStyle(fontFamily: context.fonts.body, fontSize: 16)),
+                  title: const Text('Song'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -122,10 +122,10 @@ class AnchorBar extends StatelessWidget {
                         textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
                           labelText: 'Song name *',
-                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
-                          hintStyle: TextStyle(fontFamily: context.fonts.accent),
+                          labelStyle: AppText.label(context),
+                          hintStyle: AppText.label(context),
                         ),
-                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
+                        style: AppText.rowTitle(context),
                       ),
                       const SizedBox(height: 10),
                       TextField(
@@ -133,9 +133,9 @@ class AnchorBar extends StatelessWidget {
                         textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
                           labelText: 'Artist',
-                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
+                          labelStyle: AppText.label(context),
                         ),
-                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
+                        style: AppText.rowTitle(context),
                       ),
                       const SizedBox(height: 10),
                       TextField(
@@ -143,11 +143,11 @@ class AnchorBar extends StatelessWidget {
                         keyboardType: TextInputType.url,
                         decoration: InputDecoration(
                           labelText: 'Spotify / YouTube / Apple Music URL',
-                          labelStyle: TextStyle(fontFamily: context.fonts.accent),
+                          labelStyle: AppText.label(context),
                           hintText: 'https://',
-                          hintStyle: TextStyle(fontFamily: context.fonts.accent),
+                          hintStyle: AppText.label(context),
                         ),
-                        style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
+                        style: AppText.rowTitle(context),
                       ),
                     ],
                   ),
@@ -155,13 +155,13 @@ class AnchorBar extends StatelessWidget {
                     if (anchor.hasSong)
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: Text('Remove',
-                            style: TextStyle(fontFamily: context.fonts.accent)),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.error),
+                        child: const Text('Remove'),
                       ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: Text('Save',
-                          style: TextStyle(fontFamily: context.fonts.accent)),
+                      child: const Text('Save'),
                     ),
                   ],
                 ),
@@ -195,8 +195,9 @@ class AnchorBar extends StatelessWidget {
                         ? '${anchor.songName!} · ${anchor.songArtist!}'
                         : anchor.songName!)
                     : 'Song',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
-                    color: anchor.hasSong ? t.primary : t.onSurfaceMuted),
+                style: AppText.meta(context).copyWith(
+                    color: anchor.hasSong ? t.onPrimaryContainer : t.onSurface,
+                  ),
               ),
             ]),
           ),
@@ -232,23 +233,29 @@ class _Chip extends StatelessWidget {
       required this.t, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: active
-                ? t.primary.withValues(alpha: 0.10)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: active ? t.primary.withValues(alpha: 0.35) : t.outline,
-              width: 1,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: active,
+    child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 36,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: active
+                  ? t.primary.withValues(alpha: 0.10)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: active ? t.primary.withValues(alpha: 0.35) : t.outline,
+                width: 1,
+              ),
             ),
+            child: child,
           ),
-          child: child,
         ),
-      );
+  );
 }
 
 // ── Photo chip — shows thumbnail when set ─────────────────────────────────────
@@ -269,8 +276,9 @@ class _PhotoChip extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.image_outlined, size: 16, color: t.onSurfaceMuted),
           const SizedBox(width: 5),
-          Text('Photo', style: TextStyle(fontFamily: context.fonts.accent,
-              fontSize: 14, color: t.onSurfaceMuted)),
+          Text('Photo', style: AppText.meta(context).copyWith(
+              color: t.onSurface,
+            )),
         ]),
       );
     }
@@ -279,29 +287,36 @@ class _PhotoChip extends StatelessWidget {
       future: _resolve(anchor.photoPath!),
       builder: (_, snap) {
         final hasFile = snap.hasData && File(snap.data!).existsSync();
-        return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: BoxDecoration(
-              color: t.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: t.primary.withValues(alpha: 0.35), width: 1),
+        return Semantics(
+          button: true,
+          label: 'Photo',
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              height: 36,
+              padding: const EdgeInsets.fromLTRB(6, 0, 12, 0),
+              decoration: BoxDecoration(
+                color: t.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                    color: t.primary.withValues(alpha: 0.35), width: 1),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (hasFile)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.file(File(snap.data!),
+                        width: 24, height: 24, fit: BoxFit.cover,
+                        cacheWidth: (24 * MediaQuery.devicePixelRatioOf(context)).round()),
+                  )
+                else
+                  Icon(Icons.image_rounded, size: 16, color: t.primary),
+                const SizedBox(width: 5),
+                Text('Photo', style: AppText.meta(context).copyWith(
+                    color: t.onPrimaryContainer,
+                  )),
+              ]),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (hasFile)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.file(File(snap.data!),
-                      width: 24, height: 24, fit: BoxFit.cover),
-                )
-              else
-                Icon(Icons.image_rounded, size: 16, color: t.primary),
-              const SizedBox(width: 5),
-              Text('Photo', style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 14, color: t.primary)),
-            ]),
           ),
         );
       },

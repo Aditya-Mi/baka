@@ -7,7 +7,6 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Home-screen strip listing unsaved drafts. Tapping a card resumes the
 /// draft; the ✕ discards it.
@@ -22,13 +21,15 @@ class DraftStrip extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
-          child: Text('DRAFTS',
-              style: TextStyle(fontFamily: context.fonts.accent,
-                fontSize: 15, color: t.onSurfaceMuted, letterSpacing: 0.5)),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+          child: Text('Drafts',
+              style: AppText.sectionLabel(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: t.onSurfaceMuted,
+                )),
         ),
         ...drafts.map((d) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: _DraftCard(
                 draft: d,
                 onTap: () => context.push(d.isEdit
@@ -89,13 +90,15 @@ class _DraftCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(label,
-                              style: TextStyle(fontFamily: context.fonts.accent,
-                                fontSize: 13, color: t.primary)),
+                              style: AppText.captionSm(context).copyWith(
+                                  color: t.onPrimaryContainer,
+                                )),
                         ),
                         const SizedBox(width: 8),
                         Text(_relTime(draft.savedAt),
-                            style: TextStyle(fontFamily: context.fonts.accent,
-                              fontSize: 13, color: t.onSurfaceMuted)),
+                            style: AppText.captionSm(context).copyWith(
+                                color: t.onSurfaceMuted,
+                              )),
                       ],
                     ),
                     const SizedBox(height: 3),
@@ -103,14 +106,14 @@ class _DraftCard extends StatelessWidget {
                       snippet.isEmpty ? 'Empty draft' : snippet,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 14, color: t.onBackground),
+                      style: AppText.label(context).copyWith(
+                          color: t.onBackground,
+                        ),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                visualDensity: VisualDensity.compact,
                 icon: Icon(Icons.close_rounded, size: 18, color: t.onSurfaceMuted),
                 onPressed: onDiscard,
                 tooltip: 'Discard draft',

@@ -10,8 +10,8 @@ import 'package:baka/features/stats/widgets/streak_calendar.dart';
 import 'package:baka/features/stats/widgets/tags_summary.dart';
 import 'package:baka/features/stats/widgets/words_chart.dart';
 import 'package:baka/providers/entries_provider.dart';
-import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/widgets/motion.dart';
+import 'package:baka/widgets/state_views.dart';
 
 class StatsScreen extends HookConsumerWidget {
   const StatsScreen({super.key});
@@ -27,7 +27,9 @@ class StatsScreen extends HookConsumerWidget {
         bottom: false,
         child: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:   (e, _) => Center(child: Text('Error: $e')),
+        error:   (e, _) => ErrorView(
+          message: "Something went wrong loading your stats.",
+          onRetry: () => ref.invalidate(entriesProvider)),
         data: (entries) {
           final streak     = EntriesNotifier.computeCurrentStreak(entries);
           final longest    = EntriesNotifier.computeLongestStreak(entries);
@@ -37,33 +39,14 @@ class StatsScreen extends HookConsumerWidget {
           final moods      = EntriesNotifier.computeMoodCounts(entries, 90);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 96),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Your streak',
-                              style: AppText.handXl(context, t.primary, 42)),
-                          const SizedBox(height: 2),
-                          Text('Past year of pages',
-                              style: AppText.handSm(context, t.onSurfaceMuted)),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${DateTime.now().year}',
-                      style: AppText.mono(context, t.onSurfaceMuted),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 22),
+                Text('Your streak',
+                    style: AppText.handXl(context, t.primary, 32)),
+                const SizedBox(height: 18),
 
                 // Hero card
                 _HeroCard(
@@ -72,17 +55,11 @@ class StatsScreen extends HookConsumerWidget {
                   entries: entries.length,
                   words: totalWords,
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 30),
 
                 // Heatmap
-                Text('Your year', style: AppText.displayS(context, t.onBackground)),
-                const SizedBox(height: 4),
-                Text(
-                  'Each square is a day. Darker means more writing.',
-                  style: AppText.handSm(context, t.onSurfaceMuted)
-                      .copyWith(fontStyle: FontStyle.italic),
-                ),
-                const SizedBox(height: 14),
+                // Less/More legend below explains the shading.
+                const _SectionTitle('Your year'),
                 RepaintBoundary(
                   child: StreakCalendar(
                     entriesPerDay: perDay,
@@ -90,10 +67,12 @@ class StatsScreen extends HookConsumerWidget {
                     isDark: Theme.of(context).brightness == Brightness.dark,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    Text('Less', style: AppText.handSm(context, t.onSurfaceMuted)),
+                    Text('Less', style: AppText.small(context).copyWith(
+                        color: t.onSurfaceMuted,
+                      )),
                     const SizedBox(width: 6),
                     ...List.generate(5, (i) {
                       return Container(
@@ -106,20 +85,15 @@ class StatsScreen extends HookConsumerWidget {
                       );
                     }),
                     const SizedBox(width: 6),
-                    Text('More', style: AppText.handSm(context, t.onSurfaceMuted)),
+                    Text('More', style: AppText.small(context).copyWith(
+                        color: t.onSurfaceMuted,
+                      )),
                   ],
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 30),
 
                 // Words per day
-                Text('Words written', style: AppText.displayS(context, t.onBackground)),
-                const SizedBox(height: 4),
-                Text(
-                  'Daily word count, past 30 days.',
-                  style: AppText.handSm(context, t.onSurfaceMuted)
-                      .copyWith(fontStyle: FontStyle.italic),
-                ),
-                const SizedBox(height: 14),
+                const _SectionTitle('Words written', 'Daily word count, this month.'),
                 RepaintBoundary(
                   child: WordsChart(
                     wordsPerDay: wordsPerDay,
@@ -127,19 +101,12 @@ class StatsScreen extends HookConsumerWidget {
                     muted: t.onSurfaceMuted,
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 30),
 
                 // Mood mix
                 if (moods.isNotEmpty) ...[
-                  Text("How you've felt",
-                      style: AppText.displayS(context, t.onBackground)),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Top moods, past three months.',
-                    style: AppText.handSm(context, t.onSurfaceMuted)
-                        .copyWith(fontStyle: FontStyle.italic),
-                  ),
-                  const SizedBox(height: 20),
+                  const _SectionTitle("How you've felt", 'Top moods, past three months.'),
+                  const SizedBox(height: 6),
                   MoodChart(
                     moodCounts: moods,
                     primary: t.primary,
@@ -151,20 +118,17 @@ class StatsScreen extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 30),
                 ],
 
-                // Tags summary
-                TagsSummary(entries: entries),
-                const SizedBox(height: 28),
+                // Tags summary (hidden until a tag exists)
+                if (entries.any((e) => e.tags.isNotEmpty)) ...[
+                  TagsSummary(entries: entries),
+                  const SizedBox(height: 30),
+                ],
 
                 // Monthly mood calendar
-                Text('Mood this month', style: AppText.displayS(context, t.onBackground)),
-                const SizedBox(height: 4),
-                Text('Tap a day to open or write an entry.',
-                    style: AppText.handSm(context, t.onSurfaceMuted)
-                        .copyWith(fontStyle: FontStyle.italic)),
-                const SizedBox(height: 14),
+                const _SectionTitle('Mood this month', 'Tap a day to open or write an entry.'),
                 MoodCalendar(
                   entries: entries,
                   onDayTap: (date, entry) {
@@ -201,76 +165,87 @@ class _HeroCard extends StatelessWidget {
     required this.words,
   });
 
-  static String _fmtWords(int w) =>
-      w >= 1000 ? '${(w / 1000).toStringAsFixed(0)}k' : '$w';
+  /// The streak counts up from 0 the first time Stats opens in a session.
+  static bool _countPlayed = false;
+
+  /// 980 → "980", 1 450 → "1.4k", 21 300 → "21k", 1 250 000 → "1.3M".
+  static String _fmtWords(int w) {
+    String trim(double v) => v < 10
+        ? v.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')
+        : v.toStringAsFixed(0);
+    if (w >= 1000000) return '${trim(w / 1000000)}M';
+    if (w >= 1000) return '${trim(w / 1000)}k';
+    return '$w';
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final countFrom = _countPlayed ? streak : 0;
+    _countPlayed = true;
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
       decoration: BoxDecoration(
         color: t.surface,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha:0.06),
-            offset: const Offset(0, 4),
-            blurRadius: 14,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: t.outlineSoft, width: 1),
       ),
-      child: Stack(
-        children: [
-          // Ghost decoration
-          Positioned(
-            top: 0, right: 0,
-            child: Opacity(
-              opacity: 0.18,
-              child: InkwellIcon(size: 72, color: t.primary),
-            ),
-          ),
-          Column(
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    '$streak',
-                    style: TextStyle(fontFamily: context.fonts.display,
-                      fontSize: 64, fontWeight: FontWeight.w600,
-                      color: t.primary, letterSpacing: -1, height: 1,
+                  TweenAnimationBuilder<int>(
+                    tween: IntTween(begin: countFrom, end: streak),
+                    duration: Motion.of(context, Motion.count),
+                    curve: Motion.curve,
+                    builder: (_, v, __) => Text(
+                      '$v',
+                      style: AppText.numeralXL(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: t.primary,
+                          letterSpacing: -1,
+                          height: 1,
+                          fontFeatures: const [
+                            FontFeature.liningFigures(),
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text('day streak', style: AppText.handLg(context, t.onSurface)),
+                  Flexible(
+                    child: Text('day streak',
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: AppText.handLg(context, t.onSurface)),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
-              SizedBox(
-                width: 240,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 240),
                 child: Text(
-                  '"${_motivational(streak)}"',
-                  style: AppText.handSm(context, t.onSurfaceMuted)
-                      .copyWith(fontStyle: FontStyle.italic),
+                  _motivational(streak),
+                  style: AppText.label(context).copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: t.onSurfaceMuted,
+                    ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Container(height: 1, color: t.outlineSoft),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  _Stat(label: 'Longest', value: '$longest', suffix: 'days'),
+                  _Stat(label: 'Longest', value: '$longest', suffix: longest == 1 ? 'day' : 'days'),
                   _Stat(label: 'Entries', value: '$entries'),
                   _Stat(label: 'Words',   value: _fmtWords(words)),
                 ],
               ),
             ],
           ),
-        ],
-      ),
     );
   }
 
@@ -298,33 +273,74 @@ class _Stat extends StatelessWidget {
     final t = context.tokens;
     return Expanded(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // Scale down rather than overflow when values get long.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
                 value,
-                style: TextStyle(fontFamily: context.fonts.display,
-                  fontSize: 22, fontWeight: FontWeight.w600,
-                  color: t.onSurface, letterSpacing: -0.3,
-                ),
+                style: AppText.numeral(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.onSurface,
+                    letterSpacing: -0.3,
+                  ),
               ),
               if (suffix != null) ...[
                 const SizedBox(width: 4),
                 Text(
                   suffix!,
-                  style: AppText.handSm(context, t.onSurfaceMuted)
-                      .copyWith(fontSize: 13),
+                  style: AppText.meta(context).copyWith(
+                      color: t.onSurfaceMuted,
+                    ),
                 ),
               ],
             ],
           ),
-          const SizedBox(height: 1),
+          ),
+          const SizedBox(height: 2),
           Text(label,
-              style: AppText.handSm(context, t.onSurfaceMuted).copyWith(fontSize: 14)),
+              style: AppText.meta(context).copyWith(
+                  color: t.onSurfaceMuted,
+                )),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section title (display) with an optional one-line explanation beneath.
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  const _SectionTitle(this.title, [this.subtitle]);
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: AppText.heading(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: t.onBackground,
+                )),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(subtitle!,
+                style: AppText.meta(context).copyWith(
+                    color: t.onSurfaceMuted,
+                  )),
+          ],
         ],
       ),
     );

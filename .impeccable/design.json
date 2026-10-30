@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T13:13:53.377339+00:00",
+  "title": "Design System: Baka",
+  "extensions": {
+    "colorMeta": {
+      "aged-paper": {
+        "role": "neutral",
+        "displayName": "Aged Paper",
+        "canonical": "#F5F0E8",
+        "tonalRamp": [
+          "#2F281E",
+          "#564830",
+          "#816840",
+          "#AF894D",
+          "#BDA378",
+          "#CDBDA3",
+          "#DFD7CB",
+          "#F5F3F0"
+        ]
+      },
+      "paper-leaf": {
+        "role": "neutral",
+        "displayName": "Paper Leaf",
+        "canonical": "#EDE8DC",
+        "tonalRamp": [
+          "#2D291F",
+          "#534A34",
+          "#7B6B46",
+          "#A68E56",
+          "#B7A67F",
+          "#C9BFA7",
+          "#DDD8CD",
+          "#F4F3F0"
+        ]
+      },
+      "paper-top-sheet": {
+        "role": "neutral",
+        "displayName": "Top Sheet",
+        "canonical": "#F8F4EC",
+        "tonalRamp": [
+          "#302A1C",
+          "#5A4B2D",
+          "#876D3A",
+          "#B79144",
+          "#C3A873",
+          "#D0C0A0",
+          "#E1D9CA",
+          "#F5F3F0"
+        ]
+      },
+      "terracotta": {
+        "role": "primary",
+        "displayName": "Terracotta Ink",
+        "canonical": "#B85A28",
+        "tonalRamp": [
+          "#342218",
+          "#623A25",
+          "#94512D",
+          "#CC6630",
+          "#D28B64",
+          "#D9AE97",
+          "#E5D0C5",
+          "#F6F1EF"
+        ]
+      },
+      "terracotta-wash": {
+        "role": "primary",
+        "displayName": "Terracotta Wash",
+        "canonical": "#F0D5C0",
+        "tonalRamp": [
+          "#342519",
+          "#614026",
+          "#935A2E",
+          "#CA7431",
+          "#D19465",
+          "#D8B498",
+          "#E5D3C6",
+          "#F6F2EF"
+        ]
+      },
+      "terracotta-deep": {
+        "role": "primary",
+        "displayName": "Fired Clay",
+        "canonical": "#8A4419",
+        "tonalRamp": [
+          "#362317",
+          "#653B22",
+          "#9A5327",
+          "#D46927",
+          "#D78C5E",
+          "#DCAF94",
+          "#E6D1C4",
+          "#F6F1EE"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sage",
+        "canonical": "#8A9E7E",
+        "tonalRamp": [
+          "#252923",
+          "#424A3D",
+          "#5E6C55",
+          "#798F6C",
+          "#98A78E",
+          "#B6BFB1",
+          "#D4D9D2",
+          "#F2F3F1"
+        ]
+      },
+      "sage-wash": {
+        "role": "secondary",
+        "displayName": "Sage Wash",
+        "canonical": "#DDE4D3",
+        "tonalRamp": [
+          "#272C21",
+          "#454F38",
+          "#64744D",
+          "#839C60",
+          "#9FB086",
+          "#BAC4AB",
+          "#D6DBCF",
+          "#F2F4F1"
+        ]
+      },
+      "sage-deep": {
+        "role": "secondary",
+        "displayName": "Deep Sage",
+        "canonical": "#4A5A3C",
+        "tonalRamp": [
+          "#262B22",
+          "#434D3A",
+          "#5F7150",
+          "#7C9765",
+          "#9AAC89",
+          "#B7C2AE",
+          "#D5DAD0",
+          "#F2F3F1"
+        ]
+      },
+      "walnut-ink": {
+        "role": "neutral",
+        "displayName": "Walnut Ink",
+        "canonical": "#2C1A0E",
+        "tonalRamp": [
+          "#32241B",
+          "#5C3E2A",
+          "#8B5836",
+          "#BE713D",
+          "#C8926E",
+          "#D3B39D",
+          "#E2D3C8",
+          "#F5F2EF"
+        ]
+      },
+      "umber-ink": {
+        "role": "neutral",
+        "displayName": "Umber Ink",
+        "canonical": "#3D2314",
+        "tonalRamp": [
+          "#31231B",
+          "#5C3D2B",
+          "#8A5537",
+          "#BD6D3F",
+          "#C78F6F",
+          "#D2B19E",
+          "#E2D2C8",
+          "#F5F1EF"
+        ]
+      },
+      "faded-ink": {
+        "role": "neutral",
+        "displayName": "Faded Ink",
+        "canonical": "#C03D2314 (umber at ~75% alpha, ARGB)",
+        "tonalRamp": [
+          "#31231B",
+          "#5C3D2B",
+          "#8A5537",
+          "#BD6D3F",
+          "#C78F6F",
+          "#D2B19E",
+          "#E2D2C8",
+          "#F5F1EF"
+        ]
+      },
+      "pencil-line": {
+        "role": "neutral",
+        "displayName": "Pencil Line",
+        "canonical": "#C8BAA6",
+        "tonalRamp": [
+          "#2B2721",
+          "#4F4538",
+          "#74644D",
+          "#9B8360",
+          "#AF9E86",
+          "#C4BAAC",
+          "#DBD6CF",
+          "#F4F2F1"
+        ]
+      },
+      "error-red": {
+        "role": "error",
+        "displayName": "Error Red",
+        "canonical": "#C0392B",
+        "tonalRamp": [
+          "#341B18",
+          "#622B25",
+          "#95362C",
+          "#CD3E2F",
+          "#D26E63",
+          "#D99D97",
+          "#E5C8C5",
+          "#F6EFEF"
+        ]
+      },
+      "midnight-ink": {
+        "role": "neutral",
+        "displayName": "Midnight Ink",
+        "canonical": "#1A1208",
+        "tonalRamp": [
+          "#32281B",
+          "#5D462A",
+          "#8C6535",
+          "#C0853C",
+          "#C9A06D",
+          "#D4BB9C",
+          "#E2D7C8",
+          "#F5F3EF"
+        ]
+      },
+      "midnight-leaf": {
+        "role": "neutral",
+        "displayName": "Midnight Leaf",
+        "canonical": "#251A0F",
+        "tonalRamp": [
+          "#30261D",
+          "#58432F",
+          "#83613E",
+          "#B27E49",
+          "#C09B76",
+          "#CEB8A2",
+          "#E0D5CB",
+          "#F5F2F0"
+        ]
+      },
+      "midnight-top-sheet": {
+        "role": "neutral",
+        "displayName": "Midnight Top Sheet",
+        "canonical": "#2E2114",
+        "tonalRamp": [
+          "#2F261E",
+          "#564330",
+          "#816140",
+          "#AF7E4D",
+          "#BD9B78",
+          "#CDB8A3",
+          "#DFD5CB",
+          "#F5F2F0"
+        ]
+      },
+      "ember": {
+        "role": "primary",
+        "displayName": "Ember (dark terracotta)",
+        "canonical": "#D4784A",
+        "tonalRamp": [
+          "#342219",
+          "#613926",
+          "#93502E",
+          "#CA6431",
+          "#D18965",
+          "#D8AD98",
+          "#E5D0C6",
+          "#F6F1EF"
+        ]
+      },
+      "ember-wash": {
+        "role": "primary",
+        "displayName": "Ember Wash",
+        "canonical": "#3D2010",
+        "tonalRamp": [
+          "#332319",
+          "#603B27",
+          "#915330",
+          "#C66935",
+          "#CE8C68",
+          "#D6AF99",
+          "#E4D1C6",
+          "#F6F1EF"
+        ]
+      },
+      "ember-glow": {
+        "role": "primary",
+        "displayName": "Ember Glow",
+        "canonical": "#E7B48C",
+        "tonalRamp": [
+          "#352418",
+          "#634024",
+          "#975A2B",
+          "#CF742C",
+          "#D49462",
+          "#DAB496",
+          "#E5D3C5",
+          "#F6F2EE"
+        ]
+      },
+      "candle-paper": {
+        "role": "neutral",
+        "displayName": "Candle Paper",
+        "canonical": "#E8DDD0",
+        "tonalRamp": [
+          "#2E271F",
+          "#544533",
+          "#7D6344",
+          "#A88153",
+          "#B99D7D",
+          "#CAB9A6",
+          "#DED6CD",
+          "#F4F2F0"
+        ]
+      },
+      "candle-ink": {
+        "role": "neutral",
+        "displayName": "Candle Ink",
+        "canonical": "#D4C4B0",
+        "tonalRamp": [
+          "#2D2720",
+          "#524535",
+          "#796348",
+          "#A28259",
+          "#B59E81",
+          "#C7BAA9",
+          "#DCD6CE",
+          "#F4F2F1"
+        ]
+      },
+      "midnight-line": {
+        "role": "neutral",
+        "displayName": "Midnight Line",
+        "canonical": "#3A2A1A",
+        "tonalRamp": [
+          "#2F261E",
+          "#564331",
+          "#806141",
+          "#AD7E4E",
+          "#BC9B7A",
+          "#CCB8A4",
+          "#DFD5CC",
+          "#F4F2F0"
+        ]
+      },
+      "terracotta-text": {
+        "role": "primary",
+        "displayName": "Terracotta Script",
+        "canonical": "#9C4A1F",
+        "tonalRamp": [
+          "#362317",
+          "#653B22",
+          "#9A5327",
+          "#D46927",
+          "#D78C5E",
+          "#DCAF94",
+          "#E6D1C4",
+          "#F6F1EE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "day-title": {
+        "displayName": "Day title",
+        "purpose": "Weekday atop editor and detail."
+      },
+      "screen-title": {
+        "displayName": "Screen title",
+        "purpose": "Greeting, Your streak, Settings."
+      },
+      "numeral-xl": {
+        "displayName": "Numeral XL",
+        "purpose": "Stats streak count."
+      },
+      "reading": {
+        "displayName": "Reading",
+        "purpose": "Entry body text."
+      },
+      "row-title": {
+        "displayName": "Row title",
+        "purpose": "Settings rows and button labels."
+      },
+      "counter": {
+        "displayName": "Counter",
+        "purpose": "Word counts, version."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lifted-object",
+        "value": "0 3px 10px rgba(44,26,14,0.2)",
+        "purpose": "Write button only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "Curves.easeOutExpo",
+        "purpose": "Default curve for all feedback."
+      },
+      {
+        "name": "fast",
+        "value": "200ms",
+        "purpose": "Tab fade-through, drafts strip, AnimatedSize."
+      },
+      {
+        "name": "enter",
+        "value": "240ms",
+        "purpose": "Home list intro per card (40ms stagger, first 6)."
+      },
+      {
+        "name": "settle",
+        "value": "320ms",
+        "purpose": "Short settles."
+      },
+      {
+        "name": "after-pop",
+        "value": "600ms, Interval(0.45,1)",
+        "purpose": "Week-row moment held until the editor pop finishes."
+      },
+      {
+        "name": "count",
+        "value": "600ms",
+        "purpose": "Stats streak count-up, once per session."
+      },
+      {
+        "name": "shake",
+        "value": "300ms, 3 decaying swings, 8px",
+        "purpose": "Wrong-PIN dots."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "single column, 20px gutter"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Write Button",
+      "kind": "button",
+      "refersTo": "button-write",
+      "description": "Extended FAB, Pages tab only; the single lifted object.",
+      "html": "<button class=\"ds-write\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"><path d=\"M20 4c-6 1-11 6-13 13l-2 3 3-2c7-2 12-7 12-14z\"/><path d=\"M9 15l4-4\"/></svg>Write</button>",
+      "css": ".ds-write{display:inline-flex;align-items:center;gap:8px;height:56px;padding:0 22px 0 18px;border:none;border-radius:999px;background:#B85A28;color:#F8F4EC;font-family:Caveat,cursive;font-size:18px;font-weight:700;box-shadow:0 3px 10px rgba(44,26,14,.2);transition:transform .2s cubic-bezier(.16,1,.3,1),background .2s}.ds-write:hover{background:#B0561F;transform:translateY(-1px)}.ds-write:focus-visible{outline:2px solid #2C1A0E;outline-offset:3px}"
+    },
+    {
+      "name": "Save Button",
+      "kind": "button",
+      "refersTo": "button-save",
+      "description": "Editor app-bar pill; washed out until there is text.",
+      "html": "<button class=\"ds-save\">Save</button> <button class=\"ds-save\" disabled>Save</button>",
+      "css": ".ds-save{height:40px;padding:0 20px;border:none;border-radius:999px;background:#B85A28;color:#fff;font-family: Lora, Georgia, serif;font-size:15px;font-weight:600;transition:background .2s}.ds-save:hover{background:#B0561F}.ds-save:focus-visible{outline:2px solid #2C1A0E;outline-offset:3px}.ds-save:disabled{background:#F0D5C0;color:rgba(138,68,25,.6)}"
+    },
+    {
+      "name": "Outlined Pill",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action, e.g. Use PIN instead.",
+      "html": "<button class=\"ds-outline\">Use PIN instead</button>",
+      "css": ".ds-outline{height:44px;padding:0 20px;border:1.5px solid #B85A28;border-radius:999px;background:transparent;color:#B85A28;font-family: Lora, Georgia, serif;font-size:14px;font-weight:600}.ds-outline:hover{background:#F0D5C0}.ds-outline:focus-visible{outline:2px solid #2C1A0E;outline-offset:3px}"
+    },
+    {
+      "name": "Entry Card",
+      "kind": "card",
+      "refersTo": "card-entry",
+      "description": "Home list card: Caveat date, grouped mood, Lora preview, tag chips.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-head\"><span class=\"ds-card-date\">Fri, Oct 30</span><span class=\"ds-card-mood\">Calm</span></div><p class=\"ds-card-body\">Quiet evening. Tea and a long walk by the <b>#lake</b>.</p><span class=\"ds-tag\">#walks</span></article>",
+      "css": ".ds-card{max-width:360px;background:#EDE8DC;border-radius:14px;padding:14px 18px 16px;transition:background .2s}.ds-card:hover{background:#E6E0D2}.ds-card-head{display:flex;justify-content:space-between;align-items:center}.ds-card-date{font-family:Caveat,cursive;font-size:22px;font-weight:600;color:#3D2314}.ds-card-mood{font-family:Caveat,cursive;font-size:15px;color:#8A4419}.ds-card-body{margin:6px 0 10px;font-family: Lora, Georgia, serif;font-size:15px;line-height:1.55;color:#3D2314}.ds-card-body b{color:#B85A28}.ds-tag{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(138,158,126,.12);border:1px solid rgba(138,158,126,.3);font-family:Caveat,cursive;font-size:13px;color:#2C1A0E}"
+    },
+    {
+      "name": "Tag Chip",
+      "kind": "chip",
+      "refersTo": "chip-tag",
+      "description": "Tag colour at 12% fill, 30% border, Caveat label.",
+      "html": "<span class=\"ds-chip\">#solotrip</span>",
+      "css": ".ds-chip{display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(196,98,45,.12);border:1px solid rgba(196,98,45,.3);font-family:Caveat,cursive;font-size:15px;color:#2C1A0E;cursor:pointer}.ds-chip:hover{background:rgba(196,98,45,.2)}.ds-chip:focus-visible{outline:2px solid #B85A28;outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Paper-leaf field; terracotta border on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Your name\">",
+      "css": ".ds-input{width:280px;height:48px;padding:0 16px;border:1px solid #C8BAA6;border-radius:12px;background:#EDE8DC;color:#2C1A0E;font-family: Lora, Georgia, serif;font-size:16px;outline:none;transition:border-color .2s}.ds-input::placeholder{color:rgba(61,35,20,.75);font-style:italic}.ds-input:focus-visible{border:1.5px solid #B85A28}"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "nav-bar",
+      "description": "Three tabs on the top sheet; active pill indicator.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-tab on\" href=\"#\"><span class=\"ds-ind\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1z\"/><path d=\"M12 6v14\"/></svg></span>Pages</a><a class=\"ds-tab\" href=\"#\"><span class=\"ds-ind\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 20V12M12 20V5M18 20v-6\"/></svg></span>Stats</a><a class=\"ds-tab\" href=\"#\"><span class=\"ds-ind\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1\"/></svg></span>Settings</a></nav>",
+      "css": ".ds-nav{display:flex;width:360px;height:64px;background:#F8F4EC;border-top:1px solid rgba(200,186,166,.55)}.ds-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family: Lora, Georgia, serif;font-size:12px;color:rgba(61,35,20,.75);cursor:pointer}.ds-ind{display:flex;align-items:center;justify-content:center;width:64px;height:28px;border-radius:999px}.ds-tab.on{color:#B85A28}.ds-tab.on .ds-ind{background:#F0D5C0}.ds-tab:hover .ds-ind{background:rgba(240,213,192,.5)}.ds-tab{text-decoration:none}.ds-tab:focus-visible{outline:2px solid #B85A28;outline-offset:-4px;border-radius:12px}"
+    },
+    {
+      "name": "This Week Row",
+      "kind": "custom",
+      "refersTo": "week-row",
+      "description": "Signature: seven day discs, today ringed, streak on the right.",
+      "html": "<div class=\"ds-week\"><div class=\"ds-wk-head\"><span>This week</span><b>3-day streak</b></div><div class=\"ds-days\"><i></i><i></i><i class=\"w\"></i><i class=\"w\"></i><i class=\"t\"></i><i></i><i></i></div><p class=\"ds-ms\">Three days in a row. Keep the thread going.</p></div>",
+      "css": ".ds-week{width:360px}.ds-wk-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.ds-wk-head span{font-family:Caveat,cursive;font-size:17px;font-weight:600;color:rgba(61,35,20,.75)}.ds-wk-head b{font-family: Lora, Georgia, serif;font-size:12px;color:#B85A28}.ds-days{display:flex;justify-content:space-between}.ds-days i{width:40px;height:40px;border-radius:50%;display:block;position:relative}.ds-days i::after{content:'';position:absolute;inset:18px;border-radius:50%;background:#C8BAA6}.ds-days i.w{background:#EDE8DC}.ds-days i.w::after,.ds-days i.t::after{background:#B85A28}.ds-days i.t{background:#F0D5C0;box-shadow:inset 0 0 0 1.5px #B85A28;transition:background .32s cubic-bezier(.16,1,.3,1)}.ds-ms{margin:10px 0 0;font-family:Caveat,cursive;font-size:18px;color:#B85A28}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Kept Notebook",
+    "overview": "Baka is a private paper journal that quietly remembers. Every screen is a sheet of aged paper written on in terracotta ink; the interface is stationery, not software chrome. The product never shouts: it notices you showing up (a filled day, a streak that rolls forward, a page from a year ago) and says so in its own hand.\n\nDensity is calm and single-column. One 20px gutter holds every screen; sections breathe at 30px. Controls feel like tactile stationery: pills that read as tabs and stamps, chips like stickers, rows like ruled index lines. Two voices carry the system: a handwritten face for human moments and a bookish serif for everything you read or operate. A display serif sets headings and numerals.\n\nMotion is quiet and earned. There is one authored moment, saving today's page, and everything else is short, exponential ease-out feedback that disappears under the system reduce-motion setting.",
+    "keyCharacteristics": [
+      "Aged-paper light theme (\"Aged Paper\") and a warm candlelit dark theme (\"Midnight Ink\"), each a full palette, not an inversion.",
+      "One accent: terracotta ink. Sage is a secondary note for status only.",
+      "Handwriting for human moments only; Lora for every control and reading surface.",
+      "Flat paper surfaces; the Write button is the single lifted object.",
+      "Ruled lines only where you write or read a page (editor and entry detail)."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Terracotta is the only accent. If a second colour wants attention, it is wrong; sage marks status, never action.",
+        "section": "colors"
+      },
+      {
+        "name": "The Small Ink Rule",
+        "body": "Terracotta text under 24px uses Terracotta Script (≥5:1 on paper); white on Terracotta Ink is 4.6:1, and on dark the label on Ember is ink, not white.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heatmap Ramp Rule",
+        "body": "Intensity is terracotta at fixed alphas (light 7 / 22 / 45 / 72 / 100%, dark 9 / 25 / 50 / 78 / 100%), never a new hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Human Moments Rule",
+        "body": "Caveat only for titles, day names, dates, section names, captions, tags and mood words. Every control label, row, and paragraph is Lora.",
+        "section": "typography"
+      },
+      {
+        "name": "The Signature Hand Rule",
+        "body": "The two actions that start writing, Write and Edit, keep the handwritten face (Caveat 700, 18px). They are the only controls that do; Save and every other button stay Lora.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lining Numerals Rule",
+        "body": "Any numeral set large in Playfair uses lining figures; old-style digits drop below the baseline and open a hole above.",
+        "section": "typography"
+      },
+      {
+        "name": "The Single Lift Rule",
+        "body": "Exactly one object on a screen may cast a shadow, and it is the primary action. Everything else is paper on paper.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reach colours through tokens (`context.tokens`) and type through named roles (`AppText.*`).",
+      "Do keep the 20px gutter on every screen.",
+      "Do pair every mood glyph with its word.",
+      "Do route every animation through `Motion` so reduce-motion turns it off; use exponential ease-out.",
+      "Do keep delight proportional: celebrate milestones, let ordinary saves simply feel certain (a light haptic, no banner)."
+    ],
+    "donts": [
+      "Don't use Caveat for control labels, settings rows or paragraphs (Write and Edit are the only exceptions).",
+      "Don't add a coloured left or right strip to cards.",
+      "Don't put ruled lines on cards or anywhere outside the page body.",
+      "Don't show the Write button on Stats or Settings; it covered real controls.",
+      "Don't cast a shadow on anything but the Write button.",
+      "Don't use bottom sheets for the mood selector; it expands inline."
+    ]
+  }
+}

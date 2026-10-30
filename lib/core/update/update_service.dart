@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import 'package:baka/core/theme/app_theme.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart' show OpenFile, ResultType;
 import 'package:permission_handler/permission_handler.dart';
@@ -100,17 +102,18 @@ class _UpdateDialogState extends State<_UpdateDialog> {
       context: ctx,
       builder: (_) => AlertDialog(
         title: Text('Permission needed',
-            style: TextStyle(fontFamily: context.fonts.display,
-                fontSize: 16, fontWeight: FontWeight.w600)),
+            style: AppText.sectionHeading(context).copyWith(
+                fontWeight: FontWeight.w600,
+              )),
         content: Text(
           'Allow Baka to install apps.\nSettings → Apps → Baka → Install unknown apps',
-          style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15),
+          style: AppText.caption(context),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 15)),
+                style: AppText.caption(context)),
           ),
           TextButton(
             onPressed: () {
@@ -118,8 +121,9 @@ class _UpdateDialogState extends State<_UpdateDialog> {
               openAppSettings();
             },
             child: Text('Open Settings',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 15, fontWeight: FontWeight.w700)),
+                style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                  )),
           ),
         ],
       ),
@@ -184,14 +188,15 @@ class _UpdateDialogState extends State<_UpdateDialog> {
 
     return AlertDialog(
       title: Text('Update available',
-          style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 18, fontWeight: FontWeight.w600)),
+          style: AppText.sectionHeading(context).copyWith(
+              fontWeight: FontWeight.w600,
+            )),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(widget.message,
-              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+              style: AppText.caption(context)),
           if (downloading) ...[
             const SizedBox(height: 16),
             LinearProgressIndicator(value: _progress == 0 ? null : _progress),
@@ -200,14 +205,15 @@ class _UpdateDialogState extends State<_UpdateDialog> {
               _progress == 0 || _progress == null
                   ? 'Starting download…'
                   : '${(_progress! * 100).toInt()}%',
-              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 13),
+              style: AppText.captionSm(context),
             ),
           ],
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!,
-                style: TextStyle(
-                    fontFamily: context.fonts.accent, fontSize: 13, color: Colors.red)),
+                style: AppText.captionSm(context).copyWith(
+                    color: Colors.red,
+                  )),
           ],
         ],
       ),
@@ -216,16 +222,15 @@ class _UpdateDialogState extends State<_UpdateDialog> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text('Later',
-                style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16)),
+                style: AppText.caption(context)),
           ),
         if (!downloading)
           TextButton(
             onPressed: _download,
             child: Text(_error != null ? 'Retry' : 'Download',
-                style: TextStyle(
-                    fontFamily: context.fonts.accent,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700)),
+                style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                  )),
           ),
       ],
     );

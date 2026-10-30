@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:baka/core/fonts/font_theme.dart';
+
+import 'package:baka/core/theme/app_theme.dart';
 
 class StreakCalendar extends StatefulWidget {
   final Map<DateTime, int> entriesPerDay;
@@ -21,8 +22,8 @@ class StreakCalendar extends StatefulWidget {
 class _StreakCalendarState extends State<StreakCalendar> {
   final _scroll = ScrollController();
 
-  static const _cell  = 9.0;
-  static const _gap   = 2.5;
+  static const _cell  = 10.0;
+  static const _gap   = 3.0;
   static const _total = _cell + _gap;
 
   @override
@@ -42,14 +43,8 @@ class _StreakCalendarState extends State<StreakCalendar> {
     super.dispose();
   }
 
-  Color _heat(int count) {
-    final p = widget.primary;
-    if (count <= 0) return p.withValues(alpha:0.07);
-    if (count == 1) return p.withValues(alpha:0.22);
-    if (count == 2) return p.withValues(alpha:0.45);
-    if (count == 3) return p.withValues(alpha:0.72);
-    return p;
-  }
+  Color _heat(List<Color> levels, int count) =>
+      levels[count.clamp(0, levels.length - 1)];
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +73,8 @@ class _StreakCalendarState extends State<StreakCalendar> {
       }
     }
 
-    final muted = widget.isDark
-        ? const Color(0x8CD4C4B0)
-        : const Color(0x9E3D2314);
+    final t     = context.tokens;
+    final muted = t.onSurfaceMuted;
     const dayLabels = ['M', '', 'W', '', 'F', '', ''];
 
     return SingleChildScrollView(
@@ -89,9 +83,9 @@ class _StreakCalendarState extends State<StreakCalendar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Month row
+          // Month row — grows with the system text scale so labels never clip.
           SizedBox(
-            height: 14,
+            height: MediaQuery.textScalerOf(context).scale(16),
             child: Row(
               children: [
                 const SizedBox(width: 16),
@@ -101,11 +95,16 @@ class _StreakCalendarState extends State<StreakCalendar> {
                     width: _total,
                     child: label == null
                         ? null
-                        : Text(label,
-                            style: TextStyle(
-                              fontFamily: context.fonts.accent,
-                              fontSize: 10, color: muted,
-                            )),
+                        // Labels are wider than one week column; let them overflow.
+                        : OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            maxWidth: 40,
+                            child: Text(label,
+                                softWrap: false,
+                                style: AppText.micro(context).copyWith(
+                                    color: muted,
+                                  )),
+                          ),
                   );
                 }),
               ],
@@ -121,10 +120,9 @@ class _StreakCalendarState extends State<StreakCalendar> {
                   width: 14, height: _total,
                   child: Center(
                     child: Text(dayLabels[i],
-                        style: TextStyle(
-                          fontFamily: context.fonts.accent,
-                          fontSize: 9, color: muted,
-                        )),
+                        style: AppText.micro(context).copyWith(
+                            color: muted,
+                          )),
                   ),
                 )),
               ),
@@ -141,7 +139,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                     width: _cell, height: _cell,
                     margin: const EdgeInsets.all(_gap / 2),
                     decoration: BoxDecoration(
-                      color: _heat(count),
+                      color: _heat(t.heatmap, count),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   );

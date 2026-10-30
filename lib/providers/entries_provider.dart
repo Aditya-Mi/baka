@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:baka/core/db/database_helper.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/utils/tag_utils.dart';
 
 class ImportResult {
   final int imported;
@@ -16,6 +17,7 @@ class EntriesNotifier extends AsyncNotifier<List<JournalEntry>> {
   }
 
   Future<void> add(JournalEntry e) async {
+    e = e.copyWith(tags: normalizeTags(e.tags));
     await DatabaseHelper.instance.insertEntry(e);
     if (e.tags.isNotEmpty) {
       await DatabaseHelper.instance.upsertTagsMeta(e.tags);
@@ -26,6 +28,7 @@ class EntriesNotifier extends AsyncNotifier<List<JournalEntry>> {
   }
 
   Future<void> updateEntry(JournalEntry e) async {
+    e = e.copyWith(tags: normalizeTags(e.tags));
     await DatabaseHelper.instance.updateEntry(e);
     if (e.tags.isNotEmpty) {
       await DatabaseHelper.instance.upsertTagsMeta(e.tags);
@@ -64,7 +67,7 @@ class EntriesNotifier extends AsyncNotifier<List<JournalEntry>> {
     for (final e in entries) {
       await DatabaseHelper.instance.insertEntry(e);
     }
-    state = AsyncData(List<JournalEntry>.from(entries));
+    state = AsyncData(await DatabaseHelper.instance.getAllEntries());
   }
 
   Future<ImportResult> merge(List<JournalEntry> entries) async {

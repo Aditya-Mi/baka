@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Inline mood selector — header row expands/collapses a grid in-place.
 /// No bottom sheet.
@@ -31,21 +31,24 @@ class _MoodSelectorState extends State<MoodSelector> {
         // ── Header row — always visible ──────────────────────────────────
         InkWell(
           onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                if (widget.selected == null)
+                if (widget.selected == null) ...[
+                  Icon(Icons.add_reaction_outlined,
+                      size: 20, color: t.onSurfaceMuted),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'How does today feel?',
-                      style: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 15, fontStyle: FontStyle.italic,
-                        color: t.onSurfaceMuted,
-                      ),
+                      style: AppText.bodyPreview(context).copyWith(
+                          color: t.onSurface,
+                        ),
                     ),
-                  )
-                else ...[
+                  ),
+                ] else ...[
                   MoodGlyph(
                     mood: widget.selected!, size: 24, color: t.primary,
                   ),
@@ -56,16 +59,16 @@ class _MoodSelectorState extends State<MoodSelector> {
                     children: [
                       Text(
                         widget.selected!.label,
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 17, fontWeight: FontWeight.w600,
-                          color: t.onBackground,
-                        ),
+                        style: AppText.sectionLabel(context).copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: t.onBackground,
+                          ),
                       ),
                       Text(
                         'tap to change',
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                          fontSize: 12, color: t.onSurfaceMuted,
-                        ),
+                        style: AppText.captionSm(context).copyWith(
+                            color: t.onSurfaceMuted,
+                          ),
                       ),
                     ],
                   ),
@@ -95,42 +98,46 @@ class _MoodSelectorState extends State<MoodSelector> {
                     runSpacing: 8,
                     children: Mood.values.map((mood) {
                       final isSelected = mood == widget.selected;
-                      return GestureDetector(
-                        onTap: () {
-                          widget.onChanged(mood);
-                          setState(() => _expanded = false);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? t.primaryContainer
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: isSelected ? t.primary : t.outline,
-                              width: isSelected ? 1.5 : 1,
+                      return Semantics(
+                        button: true,
+                        selected: isSelected,
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            widget.onChanged(mood);
+                            setState(() => _expanded = false);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 11,
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              MoodGlyph(
-                                mood: mood, size: 18,
-                                color: isSelected ? t.primary : t.onSurface,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? t.primaryContainer
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: isSelected ? t.primary : t.outline,
+                                width: isSelected ? 1.5 : 1,
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                mood.label,
-                                style: TextStyle(fontFamily: context.fonts.accent,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isSelected ? t.primary : t.onBackground,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                MoodGlyph(
+                                  mood: mood, size: 18,
+                                  color: isSelected ? t.primary : t.onSurface,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 5),
+                                Text(
+                                  mood.label,
+                                  style: AppText.caption(context).copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected ? t.primary : t.onBackground,
+                                    ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

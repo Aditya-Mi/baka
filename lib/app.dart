@@ -21,6 +21,7 @@ import 'package:baka/features/stats/stats_screen.dart';
 import 'package:baka/features/capture/voice_inbox_screen.dart';
 import 'package:baka/providers/captures_provider.dart';
 import 'package:baka/navigation/shell_scaffold.dart';
+import 'package:baka/widgets/motion.dart';
 
 final _routerKey = GlobalKey<NavigatorState>();
 
@@ -69,9 +70,9 @@ GoRouter buildRouter() {
       ShellRoute(
         builder: (_, __, child) => ShellScaffold(child: child),
         routes: [
-          GoRoute(path: '/',         builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/stats',    builder: (_, __) => const StatsScreen()),
-          GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+          GoRoute(path: '/',         pageBuilder: (_, s) => fadeThroughPage(s, const HomeScreen())),
+          GoRoute(path: '/stats',    pageBuilder: (_, s) => fadeThroughPage(s, const StatsScreen())),
+          GoRoute(path: '/settings', pageBuilder: (_, s) => fadeThroughPage(s, const SettingsScreen())),
         ],
       ),
     ],
@@ -240,7 +241,17 @@ class _AppRootState extends ConsumerState<_AppRoot> with WidgetsBindingObserver 
           data: mq.copyWith(
             textScaler: PresetTextScaler(base: mq.textScaler, factor: preset.scale),
           ),
-          child: child!,
+          // Phone column on tablets, foldables and landscape: keeps the
+          // reading measure and layouts the app was designed for.
+          child: ColoredBox(
+            color: Theme.of(ctx).scaffoldBackgroundColor,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 640),
+                child: child!,
+              ),
+            ),
+          ),
         );
       },
     );

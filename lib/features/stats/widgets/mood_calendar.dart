@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
-import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 
@@ -69,6 +68,7 @@ class _MoodCalendarState extends State<MoodCalendar> {
         Row(
           children: [
             IconButton(
+              tooltip: 'Previous month',
               icon: Icon(Icons.chevron_left_rounded,
                   color: t.onSurfaceMuted, size: 22),
               onPressed: _prev,
@@ -78,13 +78,15 @@ class _MoodCalendarState extends State<MoodCalendar> {
               child: Center(
                 child: Text(
                   DateFormat('MMMM yyyy').format(_month),
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 18, fontWeight: FontWeight.w700,
-                    color: t.onBackground),
+                  style: AppText.sectionLabel(context).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: t.onBackground,
+                    ),
                 ),
               ),
             ),
             IconButton(
+              tooltip: 'Next month',
               icon: Icon(Icons.chevron_right_rounded,
                   color: isCurrentMonth
                       ? t.outline
@@ -102,8 +104,10 @@ class _MoodCalendarState extends State<MoodCalendar> {
           children: dayLabels.map((l) => Expanded(
             child: Center(
               child: Text(l,
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 12, color: t.onSurfaceMuted)),
+                  style: AppText.micro(context).copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: t.onSurfaceMuted,
+                    )),
             ),
           )).toList(),
         ),
@@ -130,25 +134,36 @@ class _MoodCalendarState extends State<MoodCalendar> {
                 date.month == now.month &&
                 date.day == now.day;
             final isFuture = date.isAfter(now);
+            // TalkBack: full date plus what a tap does, not just "28".
+            final mood = entry?.mood;
+            final a11y = DateFormat('EEEE, MMMM d').format(date) +
+                (isFuture ? ''
+                    : entry == null ? ', no entry. Write one'
+                    : ', open entry${mood != null ? ', ${mood.label}' : ''}');
 
-            return GestureDetector(
-              onTap: isFuture ? null : () => widget.onDayTap(date, entry),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isToday
-                      ? t.primaryContainer
-                      : Colors.transparent,
-                  border: isToday
-                      ? Border.all(color: t.primary, width: 1.5)
-                      : null,
-                ),
-                child: Center(
-                  child: _DayContent(
-                    day: day,
-                    entry: entry,
-                    isFuture: isFuture,
-                    t: t,
+            return Semantics(
+              button: !isFuture,
+              label: a11y,
+              excludeSemantics: true,
+              child: GestureDetector(
+                onTap: isFuture ? null : () => widget.onDayTap(date, entry),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isToday
+                        ? t.primaryContainer
+                        : Colors.transparent,
+                    border: isToday
+                        ? Border.all(color: t.primary, width: 1.5)
+                        : null,
+                  ),
+                  child: Center(
+                    child: _DayContent(
+                      day: day,
+                      entry: entry,
+                      isFuture: isFuture,
+                      t: t,
+                    ),
                   ),
                 ),
               ),
@@ -176,15 +191,17 @@ class _DayContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isFuture) {
       return Text('$day',
-          style: TextStyle(fontFamily: context.fonts.accent,
-            fontSize: 13, color: t.outline));
+          style: AppText.captionSm(context).copyWith(
+              color: t.outline,
+            ));
     }
 
     if (entry == null) {
       // No entry — show day number, muted
       return Text('$day',
-          style: TextStyle(fontFamily: context.fonts.accent,
-            fontSize: 13, color: t.onSurfaceMuted));
+          style: AppText.captionSm(context).copyWith(
+              color: t.onSurfaceMuted,
+            ));
     }
 
     final mood = entry!.mood;
@@ -216,7 +233,7 @@ class _DayContent extends StatelessWidget {
         MoodGlyph(mood: mood, size: 16, color: t.primary),
         Text('$day',
             style: TextStyle(fontFamily: context.fonts.accent,
-              fontSize: 10, color: t.primary)),
+              fontSize: 10, color: t.primaryText)),
       ],
     );
   }

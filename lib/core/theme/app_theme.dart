@@ -10,10 +10,11 @@ abstract final class AppColors {
   static const lightSurface         = Color(0xFFEDE8DC); // --surface
   static const lightSurfaceElev     = Color(0xFFF8F4EC); // --surface-elev
   static const lightCard            = Color(0xFFF8F4EC);
-  static const lightPrimary         = Color(0xFFC4622D); // --primary  (terracotta)
+  static const lightPrimary         = Color(0xFFB85A28); // --primary  (terracotta; white label 4.6:1)
   static const lightPrimaryContainer= Color(0xFFF0D5C0); // --primary-container
   static const lightSecondary       = Color(0xFF8A9E7E); // --secondary (sage green)
   static const lightOnPrimaryContainer   = Color(0xFF8A4419); // status chip text
+  static const lightPrimaryText     = Color(0xFF9C4A1F); // small terracotta text (≥5:1 on paper)
   static const lightSecondaryContainer   = Color(0xFFDDE4D3); // "Ready" chip bg
   static const lightOnSecondaryContainer = Color(0xFF4A5A3C); // "Ready" chip text
   static const lightOnBackground    = Color(0xFF2C1A0E); // --on-background
@@ -24,7 +25,7 @@ abstract final class AppColors {
   static const lightOutlineSoftBase = Color(0xFFC8BAA6);
   static const lightOutlineSoft     = Color(0x8CC8BAA6); // ~55% opacity
   static const lightRule            = Color(0xB3C8BAA6); // ~70% opacity — lined paper
-  static const lightMuted           = Color(0x9E3D2314); // on-surface-muted ~62%
+  static const lightMuted           = Color(0xC03D2314); // on-surface-muted ~75% (≥5.5:1 on paper)
   static const lightError           = Color(0xFFC0392B);
   // Scrim
   static const lightScrim           = Color(0x592C1A0E); // ~35%
@@ -42,12 +43,12 @@ abstract final class AppColors {
   static const darkOnSecondaryContainer = Color(0xFFAEC29C); // "Ready" chip text
   static const darkOnBackground     = Color(0xFFE8DDD0); // --on-background
   static const darkOnSurface        = Color(0xFFD4C4B0); // --on-surface
-  static const darkOnPrimary        = Color(0xFFFFFFFF); // --on-primary
+  static const darkOnPrimary        = Color(0xFF1A1208); // --on-primary (ink on ember, 5.8:1)
   static const darkOutline          = Color(0xFF3A2A1A); // --outline
   static const darkOutlineSoftBase  = Color(0xFF3A2A1A);
   static const darkOutlineSoft      = Color(0xB23A2A1A); // ~70% opacity
   static const darkRule             = Color(0x2ED4C4B0); // ~18% opacity — lined paper
-  static const darkMuted            = Color(0x8CD4C4B0); // on-surface-muted ~55%
+  static const darkMuted            = Color(0xA8D4C4B0); // on-surface-muted ~66% (≥4.8:1 on every surface)
   static const darkError            = Color(0xFFE57373);
   static const darkScrim            = Color(0x8C000000); // ~55%
 
@@ -74,6 +75,9 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
   final Color onSurface;
   final Color onSurfaceMuted;
   final Color primary;
+  /// Terracotta for small text (links, captions, hashtags); [primary] is
+  /// for fills, icons and large type.
+  final Color primaryText;
   final Color primaryContainer;
   final Color onPrimaryContainer;
   final Color secondary;
@@ -92,6 +96,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     required this.onSurface,
     required this.onSurfaceMuted,
     required this.primary,
+    required this.primaryText,
     required this.primaryContainer,
     required this.onPrimaryContainer,
     required this.secondary,
@@ -111,6 +116,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurface:       AppColors.lightOnSurface,
     onSurfaceMuted:  AppColors.lightMuted,
     primary:         AppColors.lightPrimary,
+    primaryText:     AppColors.lightPrimaryText,
     primaryContainer:AppColors.lightPrimaryContainer,
     onPrimaryContainer:   AppColors.lightOnPrimaryContainer,
     secondary:       AppColors.lightSecondary,
@@ -136,6 +142,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurface:       AppColors.darkOnSurface,
     onSurfaceMuted:  AppColors.darkMuted,
     primary:         AppColors.darkPrimary,
+    primaryText:     AppColors.darkPrimary,
     primaryContainer:AppColors.darkPrimaryContainer,
     onPrimaryContainer:   AppColors.darkOnPrimaryContainer,
     secondary:       AppColors.darkSecondary,
@@ -157,7 +164,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
   BakaTokens copyWith({
     Color? background, Color? surface, Color? surfaceElev,
     Color? onBackground, Color? onSurface, Color? onSurfaceMuted,
-    Color? primary, Color? primaryContainer, Color? onPrimaryContainer,
+    Color? primary, Color? primaryText, Color? primaryContainer, Color? onPrimaryContainer,
     Color? secondary, Color? secondaryContainer, Color? onSecondaryContainer,
     Color? outline, Color? outlineSoft, Color? rule, List<Color>? heatmap,
   }) => BakaTokens(
@@ -168,6 +175,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
     onSurface:        onSurface        ?? this.onSurface,
     onSurfaceMuted:   onSurfaceMuted   ?? this.onSurfaceMuted,
     primary:          primary          ?? this.primary,
+    primaryText:      primaryText      ?? this.primaryText,
     primaryContainer: primaryContainer ?? this.primaryContainer,
     onPrimaryContainer:   onPrimaryContainer   ?? this.onPrimaryContainer,
     secondary:        secondary        ?? this.secondary,
@@ -190,6 +198,7 @@ class BakaTokens extends ThemeExtension<BakaTokens> {
       onSurface:        Color.lerp(onSurface,         other.onSurface,        t)!,
       onSurfaceMuted:   Color.lerp(onSurfaceMuted,    other.onSurfaceMuted,   t)!,
       primary:          Color.lerp(primary,           other.primary,          t)!,
+      primaryText:      Color.lerp(primaryText,       other.primaryText,      t)!,
       primaryContainer: Color.lerp(primaryContainer,  other.primaryContainer, t)!,
       onPrimaryContainer:   Color.lerp(onPrimaryContainer,   other.onPrimaryContainer,   t)!,
       secondary:        Color.lerp(secondary,         other.secondary,        t)!,
@@ -259,6 +268,62 @@ class AppText {
         fontFamily: x.fonts.mono,
         fontSize: 12, letterSpacing: 0.5, color: c,
       );
+
+  // ── Role scale ──────────────────────────────────────────────────────────
+  // One source for every UI text role. Voice rule: accent (handwriting) only
+  // for human moments — titles, day names, dates, section names, captions,
+  // tags, mood words. Body for reading text and every control. Display for
+  // headings and numerals. Mono for counters. Colour/weight via copyWith.
+
+  // Accent — human moments
+  static TextStyle dayTitle(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 36, fontWeight: FontWeight.w700, height: 1.1);
+  static TextStyle screenTitle(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 30, fontWeight: FontWeight.w700, height: 1.15);
+  static TextStyle handTitle(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 22, height: 1.2);
+  static TextStyle sectionLabel(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 17, height: 1.2);
+  static TextStyle caption(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 15, height: 1.3);
+  static TextStyle captionSm(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 13, height: 1.3);
+  /// Write and Edit — the two actions that start writing keep the hand.
+  static TextStyle handAction(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.accent, fontSize: 18, fontWeight: FontWeight.w700, height: 1);
+
+  // Display — headings and numerals
+  static TextStyle numeralXL(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.display, fontSize: 64, fontWeight: FontWeight.w600,
+        height: 1, letterSpacing: -1);
+  static TextStyle headingL(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.display, fontSize: 28, fontWeight: FontWeight.w600, height: 1.2);
+  static TextStyle numeral(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.display, fontSize: 24, height: 1.15);
+  static TextStyle heading(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.display, fontSize: 20, fontWeight: FontWeight.w600, height: 1.3);
+  static TextStyle sectionHeading(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.display, fontSize: 18, fontWeight: FontWeight.w600, height: 1.3);
+
+  // Body — reading text and controls
+  static TextStyle reading(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 17, height: 1.75);
+  static TextStyle rowTitle(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 16);
+  static TextStyle bodyPreview(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 15, height: 1.55);
+  static TextStyle label(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 14);
+  static TextStyle meta(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 13);
+  static TextStyle small(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 12);
+  static TextStyle micro(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.body, fontSize: 11);
+
+  // Mono — counters, version
+  static TextStyle counter(BuildContext x) => TextStyle(
+        fontFamily: x.fonts.mono, fontSize: 12, letterSpacing: 0.5);
 
   /// Oversized decorative headline in the accent face. Not the logo — the
   /// logo is [WordmarkWidget], which pins [kWordmarkFamily] on purpose.
@@ -359,7 +424,10 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.lightOnBackground,
+          height: 1.3,
         ),
+        contentTextStyle: TextStyle(fontFamily: f.body,
+          fontSize: 15, height: 1.5, color: AppColors.lightMuted),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.lightCard,
@@ -383,14 +451,14 @@ class AppTheme {
           side: const BorderSide(color: AppColors.lightOutline),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.lightPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -417,11 +485,11 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((s) {
           if (s.contains(WidgetState.selected)) {
-            return TextStyle(fontFamily: f.accent,
-              fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.lightPrimary,
+            return TextStyle(fontFamily: f.body,
+              fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.lightOnPrimaryContainer,
             );
           }
-          return TextStyle(fontFamily: f.accent, fontSize: 12, color: AppColors.lightMuted);
+          return TextStyle(fontFamily: f.body, fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.lightMuted);
         }),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -520,7 +588,10 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.darkOnBackground,
+          height: 1.3,
         ),
+        contentTextStyle: TextStyle(fontFamily: f.body,
+          fontSize: 15, height: 1.5, color: AppColors.darkMuted),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.darkCard,
@@ -544,14 +615,14 @@ class AppTheme {
           side: const BorderSide(color: AppColors.darkOutline),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.darkPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w500, fontSize: 15),
+          textStyle: TextStyle(fontFamily: f.body, fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -578,11 +649,11 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((s) {
           if (s.contains(WidgetState.selected)) {
-            return TextStyle(fontFamily: f.accent,
-              fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.darkPrimary,
+            return TextStyle(fontFamily: f.body,
+              fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.darkOnPrimaryContainer,
             );
           }
-          return TextStyle(fontFamily: f.accent, fontSize: 12, color: AppColors.darkMuted);
+          return TextStyle(fontFamily: f.body, fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.darkMuted);
         }),
         surfaceTintColor: Colors.transparent,
         elevation: 0,

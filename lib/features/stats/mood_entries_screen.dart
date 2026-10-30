@@ -7,7 +7,6 @@ import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class MoodEntriesScreen extends ConsumerWidget {
   final Mood mood;
@@ -25,6 +24,7 @@ class MoodEntriesScreen extends ConsumerWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: t.onBackground),
           onPressed: () => context.pop(),
+          tooltip: 'Back',
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -32,15 +32,36 @@ class MoodEntriesScreen extends ConsumerWidget {
             MoodGlyph(mood: mood, size: 22, color: t.primary),
             const SizedBox(width: 10),
             Text(mood.label,
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 28, fontWeight: FontWeight.w700,
-                  color: t.primary)),
+                style: AppText.screenTitle(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: t.primary,
+                  )),
           ],
         ),
       ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:   (e, _) => Center(child: Text('Error: $e')),
+        error:   (_, __) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Couldn't load these entries.",
+                  style: AppText.bodyPreview(context).copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: t.onSurfaceMuted,
+                    )),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.invalidate(entriesProvider),
+                child: Text('Try again',
+                    style: AppText.bodyPreview(context).copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: t.primaryText,
+                      )),
+              ),
+            ],
+          ),
+        ),
         data: (entries) {
           final filtered = entries
               .where((e) => e.mood == mood)
@@ -54,9 +75,10 @@ class MoodEntriesScreen extends ConsumerWidget {
                   MoodGlyph(mood: mood, size: 48, color: t.onSurfaceMuted),
                   const SizedBox(height: 16),
                   Text('No entries with this mood.',
-                      style: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 15, fontStyle: FontStyle.italic,
-                        color: t.onSurfaceMuted)),
+                      style: AppText.bodyPreview(context).copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: t.onSurfaceMuted,
+                        )),
                 ],
               ),
             );
@@ -67,7 +89,7 @@ class MoodEntriesScreen extends ConsumerWidget {
             itemCount: filtered.length,
             itemBuilder: (_, i) => RepaintBoundary(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                 child: JournalCard(
                   entry: filtered[i],
                   onTap: () => context.push('/entry/${filtered[i].id}'),

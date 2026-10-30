@@ -1,16 +1,20 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/models/voice_capture.dart';
+import 'package:baka/utils/tag_utils.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
   DatabaseHelper._internal();
 
   static const _dbName    = 'baka_journal.db';
-  static const _dbVersion = 5; // bumped for voice_captures.waveform column
+  static const _dbVersion = 6; // v6: tags made case-insensitive (merge SOLO/solo)
   static const tableEntries  = 'entries';
   static const tableTagsMeta = 'tags_meta';
   static const tableCaptures = 'voice_captures';
@@ -107,6 +111,55 @@ class DatabaseHelper {
         );
       }
     }
+    if (oldVersion < 6) {
+      await mergeTagCaseDuplicates(db);
+    }
+  }
+
+  /// One-time, idempotent: lowercases every entry's tags and folds case
+  /// variants in tags_meta into one row, keeping the colour of the variant
+  /// used by the most entries. Safe to run again — a second pass is a no-op.
+  static Future<void> mergeTagCaseDuplicates(DatabaseExecutor db) async {
+    final usage = <String, int>{};
+    final rows = await db.query(tableEntries, columns: ['id', 'tags']);
+    for (final r in rows) {
+      final raw = (r['tags'] as String?) ?? '[]';
+      List<String> tags;
+      try {
+        tags = List<String>.from(jsonDecode(raw) as List);
+      } catch (_) {
+        continue; // leave unreadable rows untouched
+      }
+      for (final t in tags) {
+        usage[t] = (usage[t] ?? 0) + 1;
+      }
+      final norm = normalizeTags(tags);
+      if (!listEquals(norm, tags)) {
+        await db.update(tableEntries, {'tags': jsonEncode(norm)},
+            where: 'id = ?', whereArgs: [r['id']]);
+      }
+    }
+
+    final meta = await db.query(tableTagsMeta);
+    final groups = <String, List<Map<String, Object?>>>{};
+    for (final m in meta) {
+      final name = m['name'] as String;
+      groups.putIfAbsent(name.toLowerCase(), () => []).add(m);
+    }
+    for (final g in groups.entries) {
+      final lower = g.key;
+      final variants = g.value;
+      if (variants.length == 1 && variants.first['name'] == lower) continue;
+      variants.sort((a, b) => (usage[b['name']] ?? 0)
+          .compareTo(usage[a['name']] ?? 0));
+      final color = variants.first['color'];
+      for (final v in variants) {
+        await db.delete(tableTagsMeta,
+            where: 'name = ?', whereArgs: [v['name']]);
+      }
+      await db.insert(tableTagsMeta, {'name': lower, 'color': color},
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
   }
 
   // ── Entries CRUD ─────────────────────────────────────────────────────────────
@@ -124,15 +177,17 @@ class DatabaseHelper {
     return maps.isEmpty ? null : JournalEntry.fromMap(maps.first);
   }
 
+  JournalEntry _norm(JournalEntry e) => e.copyWith(tags: normalizeTags(e.tags));
+
   Future<void> insertEntry(JournalEntry entry) async {
     final db = await database;
-    await db.insert(tableEntries, entry.toMap(),
+    await db.insert(tableEntries, _norm(entry).toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> updateEntry(JournalEntry entry) async {
     final db = await database;
-    await db.update(tableEntries, entry.toMap(),
+    await db.update(tableEntries, _norm(entry).toMap(),
         where: 'id = ?', whereArgs: [entry.id]);
   }
 
@@ -148,7 +203,7 @@ class DatabaseHelper {
 
   Future<void> insertOrIgnoreEntry(JournalEntry entry) async {
     final db = await database;
-    await db.insert(tableEntries, entry.toMap(),
+    await db.insert(tableEntries, _norm(entry).toMap(),
         conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -221,11 +276,12 @@ class DatabaseHelper {
   /// Ignores if already present (preserves user-customized color).
   Future<void> upsertTagMeta(String name) async {
     final db = await database;
+    final key = name.trim().toLowerCase();
     await db.insert(
       tableTagsMeta,
       {
-        'name':  name,
-        'color': TagPalette.toHex(TagPalette.forName(name)),
+        'name':  key,
+        'color': TagPalette.toHex(TagPalette.forName(key)),
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
@@ -235,7 +291,7 @@ class DatabaseHelper {
   Future<void> upsertTagsMeta(List<String> names) async {
     final db = await database;
     final batch = db.batch();
-    for (final name in names) {
+    for (final name in normalizeTags(names)) {
       batch.insert(
         tableTagsMeta,
         {
@@ -255,7 +311,7 @@ class DatabaseHelper {
       tableTagsMeta,
       {'color': hexColor},
       where:     'name = ?',
-      whereArgs: [name],
+      whereArgs: [name.toLowerCase()],
     );
   }
 

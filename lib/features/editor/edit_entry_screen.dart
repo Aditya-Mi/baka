@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -11,6 +12,7 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/editor/widgets/anchor_bar.dart';
 import 'package:baka/features/editor/widgets/editor_meta.dart';
 import 'package:baka/features/editor/widgets/lined_paper_background.dart';
+import 'package:baka/features/editor/widgets/page_header.dart';
 import 'package:baka/features/editor/widgets/word_counter_bar.dart';
 import 'package:baka/features/editor/widgets/mood_selector.dart';
 import 'package:baka/features/editor/widgets/tag_input_field.dart';
@@ -22,9 +24,7 @@ import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
-import 'package:baka/utils/time_picker_util.dart';
 import 'package:baka/utils/word_counter.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class EditEntryScreen extends HookConsumerWidget {
   final String id;
@@ -44,7 +44,7 @@ class EditEntryScreen extends HookConsumerWidget {
       return null;
     }();
 
-    final bodyCtrl = useMemoized(() => HashtagController(highlightColor: t.primary));
+    final bodyCtrl = useMemoized(() => HashtagController(highlightColor: t.primaryText));
     useEffect(() => bodyCtrl.dispose, const []);
     useEffect(() {
       bodyCtrl.highlightColor = t.primary;
@@ -143,9 +143,12 @@ class EditEntryScreen extends HookConsumerWidget {
           savedAt:   DateTime.now(),
         );
 
+    // Read once: commitDraft also runs from dispose, where ref is unusable.
+    final draftsNotifier = ref.read(draftsProvider.notifier);
+
     void commitDraft() {
       if (!hydrated.value || isSaving.value) return;
-      final notifier = ref.read(draftsProvider.notifier);
+      final notifier = draftsNotifier;
       if (matchesEntry()) {
         notifier.clear(sessionId);
       } else {
@@ -226,9 +229,17 @@ class EditEntryScreen extends HookConsumerWidget {
           anchor:    anchor.value.isEmpty ? null : anchor.value,
         ));
         await ref.read(draftsProvider.notifier).clear(sessionId);
+        // A page kept should feel certain without anything on screen.
+        HapticFeedback.lightImpact();
         if (context.mounted) context.pop();
+      } catch (_) {
+        // The autosaved draft still holds the text — say so, don't lose trust.
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Couldn't save. Your draft is kept — try again.")));
+        }
       } finally {
-        isSaving.value = false;
+        if (context.mounted) isSaving.value = false;
       }
     }
 
@@ -252,31 +263,44 @@ class EditEntryScreen extends HookConsumerWidget {
         backgroundColor: t.background,
         leading: IconButton(
           icon: Icon(Icons.close_rounded, color: t.onBackground),
-          onPressed: () => context.pop(),
+          tooltip: 'Close',
+          onPressed: () {
+            // Closing never loses text: the draft autosaves on dispose.
+            if (!matchesEntry() && !isSaving.value) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Unsaved changes kept as a draft'), duration: Duration(seconds: 2)));
+            }
+            context.pop();
+          },
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
             child: isSaving.value
                 ? const SizedBox(
-                    width: 60, height: 32,
+                    width: 60, height: 40,
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
                 : ValueListenableBuilder<TextEditingValue>(
                     valueListenable: bodyCtrl,
                     builder: (_, value, __) {
                       final canSave = value.text.trim().isNotEmpty;
                       return Material(
-                        color: canSave ? t.primary : t.primary.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(50),
+                        color: canSave ? t.primary : t.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(50),
+                          borderRadius: BorderRadius.circular(20),
                           onTap: canSave ? save : null,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                          child: Container(
+                            height: 40,
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Text('Save',
-                                style: TextStyle(fontFamily: context.fonts.accent,
-                                  fontSize: 17, fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
+                                style: AppText.bodyPreview(context).copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: canSave
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : t.onPrimaryContainer.withValues(alpha: 0.6),
+                                  )),
                           ),
                         ),
                       );
@@ -298,13 +322,19 @@ class EditEntryScreen extends HookConsumerWidget {
               mood: mood.value,
               tagCount: tags.value.length,
               expanded: [
-                _StampRow(entryDate: entryDate),
-                Divider(color: t.outline, height: 1),
+                PageHeader(date: dateVal, entryDate: entryDate),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(color: t.outlineSoft, height: 1),
+                ),
                 MoodSelector(
                   selected: mood.value,
                   onChanged: (m) { mood.value = m; scheduleSave(); },
                 ),
-                Divider(color: t.outline, height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(color: t.outlineSoft, height: 1),
+                ),
                 TagInputField(
                   tags: tags.value,
                   onChanged: (updated) { tags.value = updated; scheduleSave(); },
@@ -345,9 +375,10 @@ class EditEntryScreen extends HookConsumerWidget {
                     filled:             false,
                     isCollapsed:        true,
                     hintText: 'Write something…',
-                    hintStyle: TextStyle(fontFamily: context.fonts.body,
-                      fontSize: 17, fontStyle: FontStyle.italic,
-                      color: t.onSurfaceMuted),
+                    hintStyle: AppText.reading(context).copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: t.onSurfaceMuted,
+                      ),
                   ),
                 ),
               ),
@@ -366,51 +397,13 @@ class EditEntryScreen extends HookConsumerWidget {
             outline: t.outline,
             bg: t.background,
             muted: t.onSurfaceMuted,
+            showTopBorder: false,
           ),
         ],
       ),
     );
   }
 
-}
-
-// ── Date/time stamp row ──────────────────────────────────────────────────────
-
-class _StampRow extends StatelessWidget {
-  final ValueNotifier<DateTime> entryDate;
-  const _StampRow({required this.entryDate});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return ValueListenableBuilder<DateTime>(
-      valueListenable: entryDate,
-      builder: (ctx, date, _) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-        child: Row(
-          children: [
-            Text(DateFormat('EEEE, MMMM d').format(date),
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 16, fontWeight: FontWeight.w500,
-                  color: t.onBackground)),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => pickTime(ctx, entryDate),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(DateFormat.jm().format(date),
-                    style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 14, fontWeight: FontWeight.w500,
-                      color: t.primary)),
-                const SizedBox(width: 2),
-                Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 14, color: t.onSurfaceMuted),
-              ]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ── Restored-draft banner ────────────────────────────────────────────────────
@@ -432,16 +425,20 @@ class _RestoredBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text('Restored unsaved changes',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 15, color: t.onBackground)),
+                style: AppText.caption(context).copyWith(
+                    color: t.onBackground,
+                  )),
           ),
           TextButton(
             onPressed: onDiscard,
             child: Text('Discard',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 15, fontWeight: FontWeight.w700, color: t.primary)),
+                style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: t.primaryText,
+                  )),
           ),
           IconButton(
+            tooltip: 'Dismiss',
             visualDensity: VisualDensity.compact,
             icon: Icon(Icons.close_rounded, size: 18, color: t.onSurfaceMuted),
             onPressed: onDismiss,

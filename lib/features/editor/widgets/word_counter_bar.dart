@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:baka/core/theme/app_theme.dart';
+
 import 'package:baka/utils/word_counter.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Word/char counter bar — uses [ValueListenableBuilder] so only this widget
 /// rebuilds on text changes, not the entire editor screen.
@@ -10,6 +11,8 @@ class WordCounterBar extends StatelessWidget {
   final Color outline;
   final Color bg;
   final Color muted;
+  /// False when the bar sits under the anchor bar, which owns the hairline.
+  final bool showTopBorder;
 
   const WordCounterBar({
     super.key,
@@ -17,6 +20,7 @@ class WordCounterBar extends StatelessWidget {
     required this.outline,
     required this.bg,
     required this.muted,
+    this.showTopBorder = true,
   });
 
   @override
@@ -25,27 +29,23 @@ class WordCounterBar extends StatelessWidget {
       valueListenable: controller,
       builder: (_, value, __) {
         final words = countWords(value.text);
-        final chars = value.text.length;
         return Container(
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: outline, width: 0.8)),
+            border: showTopBorder
+                ? Border(top: BorderSide(color: outline, width: 0.8))
+                : null,
             color: bg,
           ),
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
-                  Text('$words words',
-                      style: TextStyle(fontFamily: context.fonts.mono,
-                        fontSize: 12, color: muted)),
-                  const SizedBox(width: 16),
-                  Text('$chars chars',
-                      style: TextStyle(fontFamily: context.fonts.mono,
-                        fontSize: 12, color: muted)),
-                ],
-              ),
+              padding: showTopBorder
+                  ? const EdgeInsets.symmetric(horizontal: 20, vertical: 10)
+                  : const EdgeInsets.fromLTRB(20, 8, 20, 18),
+              child: Text('$words words',
+                  style: AppText.counter(context).copyWith(
+                      color: muted,
+                    )),
             ),
           ),
         );

@@ -13,7 +13,6 @@ import 'package:baka/features/lock/pin_keypad.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/security_option_tile.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class LockScreen extends HookConsumerWidget {
   const LockScreen({super.key});
@@ -81,8 +80,9 @@ class LockScreen extends HookConsumerWidget {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new,
-                          size: 18, color: t.onSurfaceMuted),
+                      icon: Icon(Icons.arrow_back_rounded,
+                          size: 24, color: t.onBackground),
+                      tooltip: 'Back',
                       onPressed: () {
                         if (isSetup) {
                           firstPin.value = null;
@@ -110,6 +110,14 @@ class LockScreen extends HookConsumerWidget {
                         pinError: pinError.value,
                         pinUnlockError: pinUnlockError.value,
                         pinUnlockAttempt: pinUnlockAttempt.value,
+                        biometricLabel: biometricLabel.value,
+                        onUseBiometric: !isSetup &&
+                                auth.authMode == AuthMode.biometricAndPin
+                            ? () {
+                                showPinKeypad.value = false;
+                                pinUnlockError.value = null;
+                              }
+                            : null,
                         onSetupFirstPin: (pin) {
                           firstPin.value = pin;
                           pinError.value = null;
@@ -265,11 +273,12 @@ class _Branding extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          WordmarkWidget(fontSize: 40, color: primary),
+          WordmarkWidget(fontSize: 48, color: primary),
           const SizedBox(height: 6),
           Text('Your private sanctuary.',
-              style: TextStyle(fontFamily: context.fonts.accent,
-                fontSize: 16, color: muted, letterSpacing: 0.2)),
+              style: AppText.caption(context).copyWith(
+                  color: muted,
+                )),
         ],
       );
 }
@@ -288,6 +297,9 @@ class _PinArea extends StatelessWidget {
   final ValueChanged<String> onSetupFirstPin;
   final ValueChanged<String> onSetupConfirmPin;
   final ValueChanged<String> onUnlockPin;
+  final String biometricLabel;
+  /// Set when biometrics can unlock too — shows a way back under the keypad.
+  final VoidCallback? onUseBiometric;
 
   const _PinArea({
     required this.isSetup,
@@ -299,6 +311,8 @@ class _PinArea extends StatelessWidget {
     required this.onSetupFirstPin,
     required this.onSetupConfirmPin,
     required this.onUnlockPin,
+    required this.biometricLabel,
+    this.onUseBiometric,
   });
 
   @override
@@ -314,6 +328,7 @@ class _PinArea extends StatelessWidget {
             subtitle: isConfirm
                 ? (pinError ?? 'Enter the same PIN again')
                 : 'Choose a 4-digit PIN for your journal',
+            isError: isConfirm && pinError != null,
             onComplete: isConfirm ? onSetupConfirmPin : onSetupFirstPin,
           ),
         ),
@@ -328,7 +343,18 @@ class _PinArea extends StatelessWidget {
           key: ValueKey('unlock_$pinUnlockAttempt'),
           title: 'Enter your PIN',
           subtitle: pinUnlockError ?? 'Unlock your journal',
+          isError: pinUnlockError != null,
           onComplete: onUnlockPin,
+          footer: onUseBiometric == null
+              ? null
+              : TextButton(
+                  onPressed: onUseBiometric,
+                  child: Text('Use ${biometricLabel.toLowerCase()} instead',
+                      style: AppText.label(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: context.tokens.primary,
+                        )),
+                ),
         ),
       ),
     );
@@ -421,19 +447,25 @@ class _NameStepState extends State<_NameStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('What should we call you?',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+            style: AppText.heading(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: t.onBackground,
+              )),
         const SizedBox(height: 20),
         TextField(
           controller: widget.ctrl,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           cursorColor: t.primary,
-          style: TextStyle(fontFamily: context.fonts.body, fontSize: 17, color: t.onBackground),
+          style: AppText.reading(context).copyWith(
+              color: t.onBackground,
+            ),
           decoration: InputDecoration(
             hintText: 'Your name',
-            hintStyle: TextStyle(fontFamily: context.fonts.body, fontSize: 17,
-                fontStyle: FontStyle.italic, color: t.onSurfaceMuted),
+            hintStyle: AppText.reading(context).copyWith(
+                fontStyle: FontStyle.italic,
+                color: t.onSurfaceMuted,
+              ),
           ),
           onSubmitted: _valid ? (v) => widget.onDone(widget.ctrl.text.trim()) : null,
         ),
@@ -484,18 +516,23 @@ class _SecurityStep extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text('Protect your journal?',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+            style: AppText.heading(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: t.onBackground,
+              )),
         const SizedBox(height: 4),
         Text('Choose your lock method. Change anytime in Settings.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
-                color: t.onSurfaceMuted, height: 1.4)),
+            style: AppText.caption(context).copyWith(
+                color: t.onSurfaceMuted,
+                height: 1.4,
+              )),
         if (error != null) ...[
           const SizedBox(height: 12),
           Text(error!,
-              style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
-                  color: Theme.of(context).colorScheme.error),
+              style: AppText.meta(context).copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
               textAlign: TextAlign.center),
         ],
         const SizedBox(height: 20),
@@ -521,7 +558,9 @@ class _SecurityStep extends StatelessWidget {
           onPressed: loading ? null : onSkip,
           style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
           child: Text('Skip for now',
-              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
+              style: AppText.caption(context).copyWith(
+                  color: t.onSurfaceMuted,
+                )),
         ),
       ],
     );
@@ -556,13 +595,17 @@ class _ReminderStep extends HookConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text('Daily reminders?',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 20, fontWeight: FontWeight.w600, color: t.onBackground)),
+            style: AppText.heading(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: t.onBackground,
+              )),
         const SizedBox(height: 4),
         Text('A gentle nudge to write each day.\nChange anytime in Settings.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14,
-                color: t.onSurfaceMuted, height: 1.4)),
+            style: AppText.caption(context).copyWith(
+                color: t.onSurfaceMuted,
+                height: 1.4,
+              )),
         const SizedBox(height: 20),
         // Tappable time chip
         GestureDetector(
@@ -587,8 +630,10 @@ class _ReminderStep extends HookConsumerWidget {
                 const SizedBox(width: 8),
                 Text(
                   selectedTime.value.format(context),
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 16, fontWeight: FontWeight.w700, color: t.primary),
+                  style: AppText.caption(context).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: t.primaryText,
+                    ),
                 ),
                 const SizedBox(width: 6),
                 Icon(Icons.edit_rounded, size: 13, color: t.primary.withValues(alpha: 0.7)),
@@ -617,7 +662,9 @@ class _ReminderStep extends HookConsumerWidget {
           onPressed: loading.value ? null : onDone,
           style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
           child: Text('Skip for now',
-              style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
+              style: AppText.caption(context).copyWith(
+                  color: t.onSurfaceMuted,
+                )),
         ),
       ],
     );
@@ -652,18 +699,20 @@ class _UnlockControls extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('Welcome back',
-            style: TextStyle(fontFamily: context.fonts.display,
-              fontSize: 22, fontWeight: FontWeight.w600, color: t.onBackground)),
-        const SizedBox(height: 4),
-        Text('Tap to unlock your journal',
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 16, color: t.onSurfaceMuted)),
-        const SizedBox(height: 32),
+            style: AppText.headingL(context).copyWith(
+                fontWeight: FontWeight.w600,
+                color: t.onBackground,
+              )),
+        const SizedBox(height: 28),
 
         // Fingerprint circle — primary colored, clearly tappable
-        GestureDetector(
+        Semantics(
+          button: true,
+          label: 'Unlock with ${biometricLabel.toLowerCase()}',
+          child: GestureDetector(
           onTap: bioInFlight ? null : onBiometricTap,
           child: Container(
-            width: 80, height: 80,
+            width: 96, height: 96,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: t.primaryContainer,
@@ -675,26 +724,40 @@ class _UnlockControls extends StatelessWidget {
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation(t.primary)))
-                  : FingerprintIcon(size: 44, color: t.primary),
+                  : FingerprintIcon(size: 48, color: t.primary),
             ),
           ),
         ),
+        ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         Text('Tap to unlock',
-            style: TextStyle(fontFamily: context.fonts.accent, fontSize: 14, color: t.onSurfaceMuted)),
+            style: AppText.label(context).copyWith(
+                color: t.onSurfaceMuted,
+              )),
 
         if (bioError != null) ...[
           const SizedBox(height: 12),
           Text(bioError!,
-              style: TextStyle(fontFamily: context.fonts.body, fontSize: 13,
-                  color: Theme.of(context).colorScheme.error),
+              style: AppText.meta(context).copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
               textAlign: TextAlign.center),
         ],
 
         if (authMode == AuthMode.biometricAndPin && onUsePinInstead != null) ...[
-          const SizedBox(height: 24),
-          _OutlinedPill(label: 'Use PIN instead', onTap: onUsePinInstead!, t: t),
+          const SizedBox(height: 20),
+          // Secondary path stays a text button so it never outshouts the
+          // fingerprint (the full-width outlined pill did).
+          TextButton(
+            onPressed: onUsePinInstead,
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+            child: Text('Use PIN instead',
+                style: AppText.bodyPreview(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.primaryText,
+                  )),
+          ),
         ],
       ],
     );
@@ -723,8 +786,10 @@ class _FilledPill extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 15),
             child: Center(child: Text(label,
-                style: TextStyle(fontFamily: context.fonts.accent,
-                  fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white))),
+                style: AppText.sectionLabel(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ))),
           ),
         ),
       ),
@@ -732,31 +797,3 @@ class _FilledPill extends StatelessWidget {
   }
 }
 
-class _OutlinedPill extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final BakaTokens t;
-  const _OutlinedPill({required this.label, required this.onTap, required this.t});
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-        width: double.infinity,
-        child: Material(
-          color: Colors.transparent, borderRadius: BorderRadius.circular(50),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(50),
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: t.primary, width: 1.5),
-              ),
-              child: Center(child: Text(label,
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 18, fontWeight: FontWeight.w700, color: t.primary))),
-            ),
-          ),
-        ),
-      );
-}

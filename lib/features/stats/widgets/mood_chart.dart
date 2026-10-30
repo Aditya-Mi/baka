@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:baka/core/theme/app_theme.dart';
+
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 class MoodChart extends StatelessWidget {
   final Map<Mood, int> moodCounts;
@@ -32,10 +33,11 @@ class MoodChart extends StatelessWidget {
     return Column(
       children: sorted.map((e) {
         final frac = maxCount > 0 ? e.value / maxCount : 0.0;
-        return GestureDetector(
+        return InkWell(
           onTap: onMoodTap != null ? () => onMoodTap!(e.key) : null,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
             child: Row(
               children: [
                 MoodGlyph(mood: e.key, size: 22, color: primary),
@@ -43,8 +45,9 @@ class MoodChart extends StatelessWidget {
                 SizedBox(
                   width: 92,
                   child: Text(e.key.label,
-                      style: TextStyle(fontFamily: context.fonts.accent,
-                        fontSize: 18, color: onBg)),
+                      style: AppText.bodyPreview(context).copyWith(
+                          color: onBg,
+                        )),
                 ),
                 Expanded(
                   child: Container(
@@ -72,8 +75,9 @@ class MoodChart extends StatelessWidget {
                   width: 26,
                   child: Text('${e.value}',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontFamily: context.fonts.mono,
-                        fontSize: 12, letterSpacing: 0.5, color: muted)),
+                      style: AppText.small(context).copyWith(
+                          color: muted,
+                        )),
                 ),
                 if (onMoodTap != null) ...[
                   const SizedBox(width: 4),

@@ -12,6 +12,7 @@ import 'package:baka/features/capture/widgets/waveform.dart';
 import 'package:baka/features/capture/widgets/permission_priming_sheet.dart';
 import 'package:baka/models/voice_capture.dart';
 import 'package:baka/providers/captures_provider.dart';
+import 'package:baka/widgets/state_views.dart';
 
 /// Voice Inbox — raw voice captures waiting to be processed. Phase 1 lets the
 /// user play, review, and delete captures. Later phases add transcription and
@@ -98,7 +99,7 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
     if (!await File(c.audioPath).exists()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audio file missing')),
+          const SnackBar(content: Text("This recording's audio is missing — it may have been deleted.")),
         );
       }
       return;
@@ -110,7 +111,16 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
         _duration = Duration(milliseconds: c.durationMs);
       });
     }
-    await _player.play(DeviceFileSource(c.audioPath));
+    try {
+      await _player.play(DeviceFileSource(c.audioPath));
+    } catch (_) {
+      // Corrupt or unreadable file: reset the tile instead of a stuck "playing".
+      if (mounted) {
+        setState(() => _playingId = null);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Couldn't play this recording.")));
+      }
+    }
   }
 
   Future<void> _confirmDelete(VoiceCapture c) async {
@@ -118,24 +128,18 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete voice note?',
-            style: TextStyle(fontFamily: context.fonts.display,
-                fontSize: 18, fontWeight: FontWeight.w600, color: t.onBackground)),
-        content: Text('The audio will be permanently removed.',
-            style: TextStyle(fontFamily: context.fonts.accent,
-                fontSize: 16, color: t.onSurfaceMuted)),
+        title: const Text('Delete voice note?'),
+        content: const Text('The audio will be permanently removed.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 16, color: t.onSurfaceMuted)),
+            style: TextButton.styleFrom(foregroundColor: t.onSurfaceMuted),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Delete',
-                style: TextStyle(fontFamily: context.fonts.accent,
-                    fontSize: 16, color: t.primary, fontWeight: FontWeight.w700)),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -159,30 +163,31 @@ class _VoiceInboxScreenState extends ConsumerState<VoiceInboxScreen> {
       appBar: AppBar(
         backgroundColor: t.background,
         title: Text('Voice Inbox',
-            style: TextStyle(fontFamily: context.fonts.display,
-                fontSize: 26, fontWeight: FontWeight.w600, color: t.onBackground)),
+            style: AppText.screenTitle(context).copyWith(color: t.primary)),
       ),
       body: captures.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorView(
+          message: 'Something went wrong loading your voice notes.',
+          onRetry: () => ref.invalidate(capturesProvider)),
         data: (list) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_importing)
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+                padding: EdgeInsets.fromLTRB(20, 4, 20, 4),
                 child: _ProcessingBanner(label: 'Importing voice notes…'),
               ),
             if (!_micGranted)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
                 child: _MicCta(onTap: _openPriming),
               ),
             Expanded(
               child: list.isEmpty
                   ? _EmptyState(t: t)
                   : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                       itemCount: list.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (_, i) {
@@ -231,9 +236,10 @@ class _ProcessingBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: TextStyle(fontFamily: context.fonts.body,
-                    fontSize: 14, fontWeight: FontWeight.w500,
-                    color: t.onPrimaryContainer)),
+                style: AppText.label(context).copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: t.onPrimaryContainer,
+                  )),
           ),
         ],
       ),
@@ -264,9 +270,10 @@ class _MicCta extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text('Microphone off — tap to enable recording',
-                    style: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 14, fontWeight: FontWeight.w500,
-                        color: t.onPrimaryContainer)),
+                    style: AppText.label(context).copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: t.onPrimaryContainer,
+                      )),
               ),
               Icon(Icons.chevron_right_rounded, size: 20, color: t.onPrimaryContainer),
             ],
@@ -298,16 +305,20 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text('No voice notes yet.',
-                style: TextStyle(fontFamily: context.fonts.display,
-                    fontSize: 22, fontWeight: FontWeight.w500, color: t.onBackground)),
+                style: AppText.numeral(context).copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: t.onBackground,
+                  )),
             const SizedBox(height: 8),
             SizedBox(
               width: 260,
               child: Text(
                 'Tap and hold the widget, or start a recording, to capture your first thought.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: context.fonts.body,
-                    fontSize: 14, height: 1.4, color: t.onSurfaceMuted),
+                style: AppText.label(context).copyWith(
+                    height: 1.4,
+                    color: t.onSurfaceMuted,
+                  ),
               ),
             ),
           ],
@@ -368,7 +379,7 @@ class _CaptureTile extends StatelessWidget {
                 width: 44, height: 44,
                 child: Icon(
                   isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                  size: 24, color: Colors.white,
+                  size: 24, color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ),
@@ -388,8 +399,9 @@ class _CaptureTile extends StatelessWidget {
                       _Times(position: position, totalMs: maxMs.toInt(), t: t)
                     else
                       Text(_relTime(capture.createdAt),
-                          style: TextStyle(fontFamily: context.fonts.body,
-                              fontSize: 12, color: t.onSurfaceMuted)),
+                          style: AppText.small(context).copyWith(
+                              color: t.onSurfaceMuted,
+                            )),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -398,8 +410,10 @@ class _CaptureTile extends StatelessWidget {
                     capture.transcript!.trim(),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontFamily: context.fonts.body,
-                        fontSize: 13, height: 1.35, color: t.onSurface),
+                    style: AppText.meta(context).copyWith(
+                        height: 1.35,
+                        color: t.onSurface,
+                      ),
                   ),
                   const SizedBox(height: 6),
                   SizedBox(
@@ -513,8 +527,10 @@ class _StatusChip extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(label,
-              style: TextStyle(fontFamily: context.fonts.body,
-                  fontSize: 12, fontWeight: FontWeight.w500, color: fg)),
+              style: AppText.small(context).copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: fg,
+                )),
         ],
       ),
     );

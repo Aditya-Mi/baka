@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/core/fonts/font_theme.dart';
 
 /// Bottom sheet that explains why Baka needs the microphone (and, on Android 13+,
 /// notifications for recording controls), then requests them. Returns true if
@@ -59,20 +58,24 @@ class _PrimingSheetState extends State<_PrimingSheet> {
             Container(
               width: 72, height: 72,
               decoration: BoxDecoration(color: t.primary, shape: BoxShape.circle),
-              child: const Icon(Icons.mic_rounded, size: 34, color: Colors.white),
+              child: Icon(Icons.mic_rounded, size: 34, color: Theme.of(context).colorScheme.onPrimary),
             ),
             const SizedBox(height: 16),
             Text('Let Baka hear you',
-                style: TextStyle(fontFamily: context.fonts.display,
-                    fontSize: 22, fontWeight: FontWeight.w600, color: t.onBackground)),
+                style: AppText.numeral(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.onBackground,
+                  )),
             const SizedBox(height: 12),
             Text(
               'Baka needs your microphone to record voice notes, and '
               'notifications to show recording controls. Your audio stays on '
               'your device.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: context.fonts.body,
-                  fontSize: 14, height: 1.45, color: t.onSurfaceMuted),
+              style: AppText.label(context).copyWith(
+                  height: 1.45,
+                  color: t.onSurfaceMuted,
+                ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -81,26 +84,28 @@ class _PrimingSheetState extends State<_PrimingSheet> {
                 onPressed: _requesting ? null : _allow,
                 style: FilledButton.styleFrom(
                   backgroundColor: t.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                 ),
                 child: _requesting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20, height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2, color: Theme.of(context).colorScheme.onPrimary))
                     : Text('Allow',
-                        style: TextStyle(fontFamily: context.fonts.accent,
-                            fontSize: 22, color: Colors.white)),
+                        style: AppText.handTitle(context).copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          )),
               ),
             ),
             TextButton(
               onPressed: _requesting ? null : () => Navigator.of(context).pop(false),
               child: Text('Not now',
-                  style: TextStyle(fontFamily: context.fonts.accent,
-                      fontSize: 20, color: t.onSurfaceMuted)),
+                  style: AppText.handTitle(context).copyWith(
+                      color: t.onSurfaceMuted,
+                    )),
             ),
           ],
         ),
