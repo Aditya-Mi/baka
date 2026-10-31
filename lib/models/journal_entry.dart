@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/models/paper.dart';
 
 class JournalEntry {
   final String id;
@@ -12,6 +13,9 @@ class JournalEntry {
   final List<String> tags;
   final int wordCount;
   final Anchor? anchor;
+  /// Optional name the writer gives the page; shown on Home instead of text.
+  final String? title;
+  final Paper paper;
 
   const JournalEntry({
     required this.id,
@@ -22,6 +26,8 @@ class JournalEntry {
     required this.tags,
     required this.wordCount,
     this.anchor,
+    this.title,
+    this.paper = Paper.ruled,
   });
 
   JournalEntry copyWith({
@@ -33,6 +39,8 @@ class JournalEntry {
     List<String>? tags,
     int? wordCount,
     Object? anchor = _sentinel,
+    Object? title = _sentinel,
+    Paper? paper,
   }) =>
       JournalEntry(
         id:        id        ?? this.id,
@@ -43,6 +51,8 @@ class JournalEntry {
         tags:      tags      ?? this.tags,
         wordCount: wordCount ?? this.wordCount,
         anchor:    anchor    == _sentinel ? this.anchor : anchor as Anchor?,
+        title:     title     == _sentinel ? this.title  : title as String?,
+        paper:     paper     ?? this.paper,
       );
 
   static const _sentinel = Object();
@@ -56,6 +66,8 @@ class JournalEntry {
         'tags':       jsonEncode(tags),
         'word_count': wordCount,
         'anchors':    anchor?.toDbString() ?? '',
+        'title':      title ?? '',
+        'paper':      paper.name,
       };
 
   factory JournalEntry.fromMap(Map<String, dynamic> map) => JournalEntry(
@@ -67,6 +79,8 @@ class JournalEntry {
         tags:      List<String>.from(jsonDecode(map['tags'] as String) as List),
         wordCount: map['word_count'] as int,
         anchor:    Anchor.fromDbString(map['anchors'] as String?),
+        title:     _blankToNull(map['title'] as String?),
+        paper:     Paper.fromName(map['paper'] as String?),
       );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +92,8 @@ class JournalEntry {
         'tags':      tags,
         'wordCount': wordCount,
         'anchors':   anchor?.toDbString() ?? '',
+        'title':     title ?? '',
+        'paper':     paper.name,
       };
 
   factory JournalEntry.fromJson(Map<String, dynamic> json) => JournalEntry(
@@ -89,7 +105,12 @@ class JournalEntry {
         tags:      List<String>.from(json['tags'] as List),
         wordCount: json['wordCount'] as int,
         anchor:    Anchor.fromDbString(json['anchors'] as String?),
+        title:     _blankToNull(json['title'] as String?),
+        paper:     Paper.fromName(json['paper'] as String?),
       );
+
+  static String? _blankToNull(String? s) =>
+      s == null || s.trim().isEmpty ? null : s;
 
   static Mood? _moodFromString(String? s) {
     if (s == null || s.isEmpty) return null;

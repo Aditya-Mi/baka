@@ -55,7 +55,9 @@ class PageHeader extends StatelessWidget {
               if (mood != null) ...[
                 const SizedBox(width: 12),
                 const Spacer(),
-                MoodGlyph(mood: mood!, size: 18, color: t.primary),
+                MoodGlyph(mood: mood!, size: 18, color: t.primary,
+                    // Traced once the page has settled in.
+                    draw: true, delay: const Duration(milliseconds: 280)),
                 const SizedBox(width: 4),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 110),

@@ -194,3 +194,7 @@ final entriesProvider =
     AsyncNotifierProvider<EntriesNotifier, List<JournalEntry>>(
   EntriesNotifier.new,
 );
+
+/// The page just kept from the editor, so Home can show it landing on its
+/// pile. Home clears it once the landing has played.
+final justSavedProvider = StateProvider<String?>((ref) => null);

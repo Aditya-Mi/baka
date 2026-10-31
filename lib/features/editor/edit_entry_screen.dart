@@ -12,17 +12,20 @@ import 'package:intl/intl.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/features/editor/widgets/editor_bottom_bar.dart';
 import 'package:baka/features/editor/widgets/editor_meta.dart';
-import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
+import 'package:baka/features/editor/widgets/title_field.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/models/paper.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/widgets/motion.dart';
+import 'package:baka/widgets/paper_background.dart';
 
 class EditEntryScreen extends HookConsumerWidget {
   final String id;
@@ -31,7 +34,6 @@ class EditEntryScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t        = context.tokens;
-    final ruleColor = t.rule;
     final sessionId = 'edit:$id';
 
     final entriesAsync = ref.watch(entriesProvider);
@@ -54,6 +56,8 @@ class EditEntryScreen extends HookConsumerWidget {
     final tags      = useState<List<String>>([]);
     final bodyTags  = useState<Set<String>>({});
     final anchor    = useState(const Anchor());
+    final titleCtrl = useTextEditingController();
+    final paper     = useState(Paper.ruled);
     final hydrated  = useState(false);
     final restored  = useState(false);
     final isSaving  = useState(false);
@@ -77,7 +81,11 @@ class EditEntryScreen extends HookConsumerWidget {
       required List<String> tg,
       required Anchor a,
       required DateTime date,
+      required String title,
+      required Paper p,
     }) {
+      titleCtrl.text  = title;
+      paper.value     = p;
       bodyCtrl.text   = body;
       mood.value      = m;
       tags.value      = List<String>.from(tg);
@@ -94,12 +102,14 @@ class EditEntryScreen extends HookConsumerWidget {
           applyFields(
             body: d.body, m: d.mood, tg: d.tags,
             a: d.anchor ?? const Anchor(), date: d.entryDate,
+            title: d.title, p: d.paper,
           );
           restored.value = true;
         } else {
           applyFields(
             body: entry.body, m: entry.mood, tg: entry.tags,
             a: entry.anchor ?? const Anchor(), date: entry.createdAt,
+            title: entry.title ?? '', p: entry.paper,
           );
         }
         hydrated.value = true;
@@ -130,6 +140,8 @@ class EditEntryScreen extends HookConsumerWidget {
           mood.value == entry.mood &&
           listEquals(tags.value, entry.tags) &&
           sameAnchor &&
+          titleCtrl.text.trim() == (entry.title ?? '') &&
+          paper.value == entry.paper &&
           entryDate.value == entry.createdAt;
     }
 
@@ -141,6 +153,8 @@ class EditEntryScreen extends HookConsumerWidget {
           mood:      mood.value,
           tags:      tags.value,
           anchor:    anchor.value.isEmpty ? null : anchor.value,
+          title:     titleCtrl.text,
+          paper:     paper.value,
           savedAt:   DateTime.now(),
         );
 
@@ -208,6 +222,12 @@ class EditEntryScreen extends HookConsumerWidget {
       };
     }, [bodyCtrl]);
 
+    useEffect(() {
+      void l() => scheduleSave();
+      titleCtrl.addListener(l);
+      return () => titleCtrl.removeListener(l);
+    }, [titleCtrl]);
+
     // Autosave when date/time changes.
     useEffect(() {
       void l() => scheduleSave();
@@ -228,6 +248,8 @@ class EditEntryScreen extends HookConsumerWidget {
           tags:      tags.value,
           wordCount: countWords(bodyCtrl.text),
           anchor:    anchor.value.isEmpty ? null : anchor.value,
+          title:     titleCtrl.text.trim().isEmpty ? null : titleCtrl.text.trim(),
+          paper:     paper.value,
         ));
         saved.value = true;
         await ref.read(draftsProvider.notifier).clear(sessionId);
@@ -250,6 +272,7 @@ class EditEntryScreen extends HookConsumerWidget {
       applyFields(
         body: entry.body, m: entry.mood, tg: entry.tags,
         a: entry.anchor ?? const Anchor(), date: entry.createdAt,
+        title: entry.title ?? '', p: entry.paper,
       );
       ref.read(draftsProvider.notifier).clear(sessionId);
       restored.value = false;
@@ -286,9 +309,15 @@ class EditEntryScreen extends HookConsumerWidget {
                     valueListenable: bodyCtrl,
                     builder: (_, value, __) {
                       final canSave = value.text.trim().isNotEmpty;
-                      return Material(
-                        color: canSave ? t.primary : t.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
+                      return AnimatedContainer(
+                        duration: Motion.of(context, Motion.settle),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: canSave ? t.primary : t.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Material(
+                        type: MaterialType.transparency,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
                           onTap: canSave ? save : null,
@@ -304,6 +333,7 @@ class EditEntryScreen extends HookConsumerWidget {
                                     : t.onPrimaryContainer.withValues(alpha: 0.6),
                                   )),
                           ),
+                        ),
                         ),
                       );
                     },
@@ -325,6 +355,10 @@ class EditEntryScreen extends HookConsumerWidget {
               tagCount: tags.value.length,
               expanded: [
                 PageHeader(date: dateVal, entryDate: entryDate),
+                TitleField(
+                  controller: titleCtrl,
+                  onSubmitted: bodyFocus.requestFocus,
+                ),
               ],
             ),
           ),
@@ -338,8 +372,9 @@ class EditEntryScreen extends HookConsumerWidget {
 
           // ── Body ─────────────────────────────────────────────────────────
           Expanded(
-            child: RepaintBoundary(child: LinedPaperBackground(
-              ruleColor: ruleColor,
+            child: RepaintBoundary(child: PaperBackground(
+              paper: paper.value,
+              rule: true,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: TextField(
@@ -381,6 +416,8 @@ class EditEntryScreen extends HookConsumerWidget {
             anchor: anchor.value,
             onAnchor: (a) { anchor.value = a; scheduleSave(); },
             body: bodyCtrl,
+            paper: paper.value,
+            onPaper: (p) { paper.value = p; scheduleSave(); },
           ),
         ],
       ),

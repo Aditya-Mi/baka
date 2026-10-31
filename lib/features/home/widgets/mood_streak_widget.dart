@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/journal_entry.dart';
@@ -51,7 +52,7 @@ class MoodStreakWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'This week',
+                DateFormat('MMMM').format(today),
                 style: AppText.sectionLabel(context).copyWith(
                     fontWeight: FontWeight.w600,
                     color: t.onSurfaceMuted,

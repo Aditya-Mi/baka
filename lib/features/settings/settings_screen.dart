@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:baka/core/auth/auth_provider.dart';
+import 'package:baka/features/editor/widgets/paper_sheet.dart';
 import 'package:baka/features/lock/pin_keypad.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_provider.dart';
@@ -14,6 +15,7 @@ import 'package:baka/features/settings/widgets/reminder_settings_tile.dart';
 import 'package:baka/features/settings/widgets/export_import_tile.dart';
 import 'package:baka/features/settings/widgets/settings_row.dart';
 import 'package:baka/features/settings/widgets/theme_toggle_tile.dart';
+import 'package:baka/providers/paper_provider.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/security_option_tile.dart';
 import 'package:baka/core/fonts/font_theme.dart';
@@ -28,6 +30,7 @@ class SettingsScreen extends HookConsumerWidget {
 
     final fontKey = ref.watch(fontProvider);
     final preset  = ref.watch(fontThemeProvider);
+    final paper   = ref.watch(defaultPaperProvider);
     final auth    = ref.watch(authProvider);
     final name    = ref.watch(userProvider);
 
@@ -97,6 +100,19 @@ class SettingsScreen extends HookConsumerWidget {
               ),
               builder: (_) => const FontPickerSheet(),
             ),
+          ),
+          const SettingsDivider(),
+          SettingsRow(
+            icon: AppIconData.paper,
+            title: 'Paper for new pages',
+            value: paper.label,
+            chevron: true,
+            onTap: () async {
+              final p = await showPaperSheet(context,
+                  current: paper,
+                  subtitle: 'New pages start on this. Each page can change it.');
+              if (p != null) ref.read(defaultPaperProvider.notifier).set(p);
+            },
           ),
 
           // ── Reminders ────────────────────────────────────────────────

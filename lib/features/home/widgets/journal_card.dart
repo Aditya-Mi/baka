@@ -14,7 +14,10 @@ import 'package:baka/widgets/tag_chip.dart';
 class JournalCard extends ConsumerWidget {
   final JournalEntry entry;
   final VoidCallback? onTap;
-  const JournalCard({super.key, required this.entry, this.onTap});
+  /// Shows a few lines of the text. Off by default: a list of closed pages
+  /// keeps old entries from being re-read by accident while scrolling.
+  final bool preview;
+  const JournalCard({super.key, required this.entry, this.onTap, this.preview = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -113,26 +116,28 @@ class JournalCard extends ConsumerWidget {
                   ],
                 ],
               ),
-              const SizedBox(height: 6),
-              // Body preview with #word highlighting
-              if (entry.body.trim().isNotEmpty)
+              if (preview && entry.body.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
                 Text.rich(
                   buildTagSpan(entry.body.trim(), t.primaryText, baseStyle),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-              // Tags
-              if (entry.tags.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8, runSpacing: 6,
-                  children: entry.tags.map((tag) => TagChip(
+              ],
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8, runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text('${entry.wordCount} ${entry.wordCount == 1 ? 'word' : 'words'}',
+                      style: AppText.counter(context).copyWith(color: t.onSurfaceMuted)),
+                  ...entry.tags.map((tag) => TagChip(
                     tag: tag,
                     color: tagColorFor(tagList, tag),
                     textColor: t.onBackground,
-                  )).toList(),
-                ),
-              ],
+                  )),
+                ],
+              ),
             ],
           ),
         ),

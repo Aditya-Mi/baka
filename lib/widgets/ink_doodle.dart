@@ -168,3 +168,26 @@ class _DoodlePainter extends CustomPainter {
   bool shouldRepaint(_DoodlePainter o) =>
       o.doodle != doodle || o.ink != ink || o.accent != accent;
 }
+
+/// A wet-ink blot: a circle with a slightly uneven edge.
+class InkBlotPainter extends CustomPainter {
+  final Color color;
+  const InkBlotPainter(this.color);
+
+  static final _blot = parseSvgPath(
+      'M21 2.5C30.5 2 38.5 9.5 37.5 19.5C38 29.5 31 37.5 20.5 37'
+      'C10.5 38.5 2 31 2.5 20.5C1.5 10 10 3 21 2.5Z');
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide / 40;
+    canvas
+      ..save()
+      ..scale(s)
+      ..drawPath(_blot, Paint()..color = color)
+      ..restore();
+  }
+
+  @override
+  bool shouldRepaint(InkBlotPainter o) => o.color != color;
+}

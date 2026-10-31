@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/models/paper.dart';
 import 'package:baka/utils/word_counter.dart';
 import 'package:baka/widgets/app_icon.dart';
 import 'package:baka/widgets/motion.dart';
 import 'anchor_bar.dart';
 import 'mood_selector.dart';
+import 'paper_sheet.dart';
 import 'tag_input_field.dart';
 
 /// Everything about the page that isn't the writing: mood strip, tags,
@@ -22,6 +24,8 @@ class EditorBottomBar extends StatefulWidget {
   final Anchor anchor;
   final ValueChanged<Anchor> onAnchor;
   final TextEditingController body;
+  final Paper paper;
+  final ValueChanged<Paper> onPaper;
 
   const EditorBottomBar({
     super.key,
@@ -33,6 +37,8 @@ class EditorBottomBar extends StatefulWidget {
     required this.anchor,
     required this.onAnchor,
     required this.body,
+    required this.paper,
+    required this.onPaper,
   });
 
   @override
@@ -77,6 +83,14 @@ class _EditorBottomBarState extends State<EditorBottomBar> {
                   icon: AppIconData.hash,
                   tooltip: 'Add tag',
                   onTap: () => _tagField.currentState?.startEditing(),
+                ),
+                end: ToolButton(
+                  icon: AppIconData.paper,
+                  tooltip: 'Paper',
+                  onTap: () async {
+                    final p = await showPaperSheet(context, current: widget.paper);
+                    if (p != null && p != widget.paper) widget.onPaper(p);
+                  },
                 ),
                 trailing: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: widget.body,

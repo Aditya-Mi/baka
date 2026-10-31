@@ -15,7 +15,7 @@ enum AppIconData {
   back, close, chevronRight, chevronDown, chevronUp, search, book, stats, cog,
   // Write
   quill, pencil, hash, mapPin, cloud, music, image, images, camera,
-  calendar, clock, history,
+  calendar, clock, history, paper,
   // Voice
   mic, micOff, play, stop, trash,
   // Settings
@@ -52,8 +52,9 @@ const Map<AppIconData, String> _glyphs = {
 
   AppIconData.mic:          'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3',
   AppIconData.micOff:       'M2 2l20 20M18.9 13.2A7 7 0 0 0 19 12v-2M5 10v2a7 7 0 0 0 12 5M15 9.3V5a3 3 0 0 0-5.7-1.3M9 9v3a3 3 0 0 0 5.1 2.1M12 19v3',
-  AppIconData.play:         'M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5Z',
-  AppIconData.stop:         'M8 6h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z',
+  AppIconData.paper:        'M7 3h7.5L19 7.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM14 3v5h5M9.5 12h6M9.5 15.5h6M9.5 19h3',
+  AppIconData.play:         'M8.5 6.2v11.6a1 1 0 0 0 1.5.86l9.2-5.8a1 1 0 0 0 0-1.72L10 5.34a1 1 0 0 0-1.5.86Z',
+  AppIconData.stop:         'M9 7h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z',
   AppIconData.trash:        'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6',
 
   AppIconData.user:         'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8a4 4 0 1 0 0-8',
@@ -90,12 +91,18 @@ class AppIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget glyph = icon == AppIconData.quill
-        ? QuillIcon(size: size, color: color)
-        : CustomPaint(
-            size: Size(size, size),
-            painter: _AppIconPainter(icon: icon, color: color),
-          );
+    // Keep [size] even inside a tight parent (a 28px button disc, a 48px
+    // field prefix), the way Icon does, instead of stretching to fill it.
+    final Widget glyph = Center(
+      widthFactor: 1,
+      heightFactor: 1,
+      child: SizedBox.square(
+        dimension: size,
+        child: icon == AppIconData.quill
+            ? QuillIcon(size: size, color: color)
+            : CustomPaint(painter: _AppIconPainter(icon: icon, color: color)),
+      ),
+    );
     return semanticLabel == null
         ? ExcludeSemantics(child: glyph)
         : Semantics(label: semanticLabel, child: ExcludeSemantics(child: glyph));
@@ -109,6 +116,7 @@ class _AppIconPainter extends CustomPainter {
 
   static const _vb = 24.0;
   static final _cache = <AppIconData, Path>{};
+  static const _solid = {AppIconData.play, AppIconData.stop};
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -123,7 +131,10 @@ class _AppIconPainter extends CustomPainter {
         Paint()
           ..color = color
           ..strokeWidth = 1.75
-          ..style = PaintingStyle.stroke
+          // Transport glyphs sit in filled discs: solid reads better there.
+          ..style = _solid.contains(icon)
+              ? PaintingStyle.fill
+              : PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       )

@@ -10,6 +10,7 @@ import 'package:baka/utils/song_preview.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'location_sheet.dart';
 import 'photo_sheet.dart';
+import 'song_dialog.dart';
 import 'weather_sheet.dart';
 
 /// The editor's bottom toolbar. Unset anchors are quiet icon buttons; once
@@ -19,6 +20,8 @@ class AnchorBar extends StatelessWidget {
   final Anchor anchor;
   final ValueChanged<Anchor> onChanged;
   final Widget? leading;
+  /// Tools that follow the anchors (the paper button).
+  final Widget? end;
   final Widget? trailing;
 
   const AnchorBar({
@@ -26,6 +29,7 @@ class AnchorBar extends StatelessWidget {
     required this.anchor,
     required this.onChanged,
     this.leading,
+    this.end,
     this.trailing,
   });
 
@@ -53,80 +57,23 @@ class AnchorBar extends StatelessWidget {
   }
 
   Future<void> _pickSong(BuildContext context) async {
-    final nameCtrl   = TextEditingController(text: anchor.songName ?? '');
-    final artistCtrl = TextEditingController(text: anchor.songArtist ?? '');
-    final urlCtrl    = TextEditingController(text: anchor.songUrl ?? '');
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Song'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'Song name *',
-                labelStyle: AppText.label(context),
-                hintStyle: AppText.label(context),
-              ),
-              style: AppText.rowTitle(context),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: artistCtrl,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'Artist',
-                labelStyle: AppText.label(context),
-              ),
-              style: AppText.rowTitle(context),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: urlCtrl,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: 'Spotify / YouTube / Apple Music URL',
-                labelStyle: AppText.label(context),
-                hintText: 'https://',
-                hintStyle: AppText.label(context),
-              ),
-              style: AppText.rowTitle(context),
-            ),
-          ],
-        ),
-        actions: [
-          if (anchor.hasSong)
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error),
-              child: const Text('Remove'),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final r = await showSongDialog(
+      context,
+      name: anchor.songName,
+      artist: anchor.songArtist,
+      url: anchor.songUrl,
+      canRemove: anchor.hasSong,
     );
-
-    if (saved == null) return;
-    if (!saved) {
+    if (r == null) return;
+    if (r.remove) {
       onChanged(anchor.copyWith(songName: null, songArtist: null, songUrl: null));
       return;
     }
-    final name = nameCtrl.text.trim();
-    if (name.isEmpty) return;
-    final url = urlCtrl.text.trim();
+    if (r.name.isEmpty) return;
     onChanged(anchor.copyWith(
-      songName:   name,
-      songArtist: artistCtrl.text.trim().isEmpty ? null : artistCtrl.text.trim(),
-      songUrl:    url.isEmpty ? null : normalizeSongUrl(url),
+      songName:   r.name,
+      songArtist: r.artist.isEmpty ? null : r.artist,
+      songUrl:    r.url.isEmpty ? null : normalizeSongUrl(r.url),
     ));
   }
 
@@ -223,6 +170,7 @@ class AnchorBar extends StatelessWidget {
                         icon: AppIconData.image,
                         tooltip: 'Photo',
                         onTap: () => _pickPhoto(context)),
+                  if (end != null) end!,
                 ],
               ),
             ),

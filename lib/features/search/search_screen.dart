@@ -169,6 +169,7 @@ class SearchScreen extends HookConsumerWidget {
                             horizontal: 20, vertical: 6,
                           ),
                           child: JournalCard(
+                            preview: true,
                             entry: e,
                             onTap: () => context.push('/entry/${e.id}'),
                           ),

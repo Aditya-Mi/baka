@@ -257,7 +257,8 @@ Tactile stationery: pills that read like tabs and stamps.
 - **Mood:** glyph plus word together, never the glyph alone. The one exception is the editor's mood strip, where every glyph is a labelled button and the chosen one writes its word beneath.
 
 ### Cards / Containers
-- **Entry card:** paper-leaf, 14px corners, 14/18/16px padding, no border, no shadow, no edge strip. Head row: Caveat date left, mood glyph + word grouped right; up to three lines of Lora preview with terracotta hashtags; tag chips beneath.
+- **Entry card (lists):** paper-leaf, 14px corners, no border, no shadow. Head row: Caveat date left, mood glyph + word grouped right; beneath, the word count in mono with tag chips inline. Used by Tags, mood lists and Search (Search alone shows three lines of text, since there the text is the match).
+- **Home page stacks:** Home is one scroll: week row, draft sheets, then shelves. "This month" lies open (a quiet "Earlier this month" line marks where this week ends); each earlier month is a shut shelf showing only its page count. A day's pages are one loose sheet (6px corners, outline-soft edge, ≤0.7° tilt seeded by id, terracotta margin line at 18px, a faint trace of the page's own paper), with up to two sheets peeking beneath when the day has more pages; tapping such a stack deals its pages out: the sheets beneath slide down from their peeking spots and straighten into a column (460ms, ease-out-expo). A handwritten "Fold ⌃" under the column slides them back under the top sheet. The face is the date (Caveat) with mood and page count, then the title in Playfair 18, or, untitled, the first line in faded Lora italic. No word count, no body beyond one line. Drafts are lighter sheets with a terracotta edge.
 - **Outlined card:** transparent with a pencil-line border for secondary notes (drafts, On this day).
 
 ### Inputs / Fields
@@ -268,13 +269,15 @@ Tactile stationery: pills that read like tabs and stamps.
 - Three tabs (Pages, Stats, Settings) on the top sheet, 64px, labels always shown. Active tab: terracotta icon on a terracotta-wash pill indicator. Tabs cross-fade with a 4px rise (200ms) rather than cutting.
 
 ### Icons
-One set, `AppIcon`: 24px grid, 1.75 stroke, round caps and joins, no fills, drawn as path data in `lib/widgets/app_icon.dart`. Write and Edit share the illustrated quill. Material Icons are not used anywhere, including implicit back and close buttons (themed through `actionIconTheme`).
+One set, `AppIcon`: 24px grid, 1.75 stroke, round caps and joins, no fills (except play and stop, which sit solid inside filled discs), drawn as path data in `lib/widgets/app_icon.dart`. Write and Edit share the illustrated quill. Material Icons are not used anywhere, including implicit back and close buttons (themed through `actionIconTheme`).
 
 ### Editor bottom bar
-The page starts right under the date. Below the paper, one bar holds the mood strip (all ten glyphs; the chosen one sits on a terracotta-wash ink blot that blooms in 0.2→1 with its name wiping in beneath), the tag chips, and a toolbar: # (add tag), location, weather, song, photo as 44px icon buttons that turn into value chips once set, with the word count pinned right. The mood strip folds away while typing.
+The page starts right under the date. Below the paper, one bar holds the mood strip (all ten glyphs; the chosen one sits on a terracotta-wash ink blot that blooms in 0.2→1 with its name wiping in beneath), the tag chips, and a toolbar: # (add tag), location, weather, song, photo as 44px icon buttons that turn into value chips once set, with the word count pinned right. The mood strip folds away while typing. Under the date sits an optional title (Playfair 22, "Add a title…" placeholder). The toolbar's last tool is Paper: Ruled, Plain, Dotted, Grid, Margin (red margin line) or Kraft (brown sheet, its own dark-mode brown), per page; Settings sets the paper new pages start on. The Song box asks for the link first: pasting one fills the song name and artist (a handwritten "Finding the song…" line under the field), never overwriting what was typed by hand.
 
 ### Empty states and delete
 Empty screens show an `InkDoodle` (umber strokes, a terracotta accent) that draws itself in pen order over 1.2s, then the words fade in. Deleting an entry crumples the page (scale 0.55, −12° tilt, 60px drop, crease lines inking in, 450ms ease-in) and offers Undo for 5s; the database delete happens only after Undo has passed.
+
+Mood glyphs trace themselves the same way (`MoodGlyph(draw: true)`, 650ms, pen order) where a mood is met fresh: the entry header on open, the mood strip on pick, and the Stats mood chart, whose bars then draw across. Lists of cards stay still. A new page lands on Home: it drops 22px with a small turn while a terracotta wash dries off it (1.1s). Opening Write rules the page in (lines left to right, row after row, 520ms) and re-rules it when the paper changes. Save warms from wash to terracotta as the first words land; PIN dots fill as spreading ink blots.
 
 ### This Week row (signature)
 Seven 40px discs, Monday first. Written days fill with paper-leaf; today wears terracotta-wash with a 1.5px terracotta ring; a day's mood glyph sits inside. The current streak (flame + "N-day streak") sits on the right and opens Stats. Saving today's page is the system's one authored moment: the disc fills, the glyph settles from 0.6 scale, the streak rolls up, and on milestone days a handwritten line appears beneath.

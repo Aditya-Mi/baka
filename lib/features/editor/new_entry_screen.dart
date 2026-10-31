@@ -13,17 +13,20 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/prompts/writing_prompts.dart';
 import 'package:baka/features/editor/widgets/editor_bottom_bar.dart';
 import 'package:baka/features/editor/widgets/editor_meta.dart';
-import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
+import 'package:baka/features/editor/widgets/title_field.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
+import 'package:baka/providers/paper_provider.dart';
 import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/word_counter.dart';
+import 'package:baka/widgets/motion.dart';
+import 'package:baka/widgets/paper_background.dart';
 
 class NewEntryScreen extends HookConsumerWidget {
   final String? source;
@@ -35,7 +38,6 @@ class NewEntryScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t        = context.tokens;
-    final ruleColor = t.rule;
 
     // Draft session id — reuse the resumed one, else mint a fresh uuid.
     final sessionId = useMemoized(
@@ -57,6 +59,14 @@ class NewEntryScreen extends HookConsumerWidget {
     // Tracks which tags were extracted from body (vs manually added via chip input).
     final bodyTags = useState<Set<String>>({});
     final anchor   = useState(const Anchor());
+    final titleCtrl = useTextEditingController();
+    final paper    = useState(ref.read(defaultPaperProvider));
+    // The default loads from storage after first read; follow it until this
+    // page has a paper of its own (picked here or restored from a draft).
+    final paperSet = useRef(resumeDraftId != null);
+    ref.listen(defaultPaperProvider, (_, next) {
+      if (!paperSet.value) paper.value = next;
+    });
     final isSaving = useState(false);
     // Set once the page is kept: no draft may be written after that, even
     // by the dispose-time flush while the route is still popping.
@@ -82,6 +92,8 @@ class NewEntryScreen extends HookConsumerWidget {
           mood:      mood.value,
           tags:      tags.value,
           anchor:    anchor.value.isEmpty ? null : anchor.value,
+          title:     titleCtrl.text,
+          paper:     paper.value,
           savedAt:   DateTime.now(),
         );
 
@@ -115,6 +127,8 @@ class NewEntryScreen extends HookConsumerWidget {
               HashtagController.extractTags(d.body));
           anchor.value    = d.anchor ?? const Anchor();
           entryDate.value = d.entryDate;
+          titleCtrl.text  = d.title;
+          paper.value     = d.paper;
         }
       }
       hydrated.value = true;
@@ -163,6 +177,12 @@ class NewEntryScreen extends HookConsumerWidget {
       };
     }, [bodyCtrl]);
 
+    useEffect(() {
+      void l() => scheduleSave();
+      titleCtrl.addListener(l);
+      return () => titleCtrl.removeListener(l);
+    }, [titleCtrl]);
+
     // Autosave when date/time changes.
     useEffect(() {
       void l() => scheduleSave();
@@ -175,8 +195,9 @@ class NewEntryScreen extends HookConsumerWidget {
       isSaving.value = true;
       debounce.value?.cancel();
       try {
+        final newId = const Uuid().v4();
         await ref.read(entriesProvider.notifier).add(JournalEntry(
-          id:        const Uuid().v4(),
+          id:        newId,
           createdAt: entryDate.value,
           updatedAt: DateTime.now(),
           body:      bodyCtrl.text.trim(),
@@ -184,8 +205,11 @@ class NewEntryScreen extends HookConsumerWidget {
           tags:      tags.value,
           wordCount: countWords(bodyCtrl.text),
           anchor:    anchor.value.isEmpty ? null : anchor.value,
+          title:     titleCtrl.text.trim().isEmpty ? null : titleCtrl.text.trim(),
+          paper:     paper.value,
         ));
         saved.value = true;
+        ref.read(justSavedProvider.notifier).state = newId;
         await ref.read(draftsProvider.notifier).clear(sessionId);
         // A page kept should feel certain without anything on screen.
         HapticFeedback.lightImpact();
@@ -229,9 +253,16 @@ class NewEntryScreen extends HookConsumerWidget {
                     valueListenable: bodyCtrl,
                     builder: (_, value, __) {
                       final canSave = value.text.trim().isNotEmpty;
-                      return Material(
-                        color: canSave ? t.primary : t.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
+                      // The button warms into ink as the first words land.
+                      return AnimatedContainer(
+                        duration: Motion.of(context, Motion.settle),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: canSave ? t.primary : t.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Material(
+                        type: MaterialType.transparency,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
                           onTap: canSave ? save : null,
@@ -247,6 +278,7 @@ class NewEntryScreen extends HookConsumerWidget {
                                     : t.onPrimaryContainer.withValues(alpha: 0.6),
                                   )),
                           ),
+                        ),
                         ),
                       );
                     },
@@ -268,14 +300,19 @@ class NewEntryScreen extends HookConsumerWidget {
               tagCount: tags.value.length,
               expanded: [
                 PageHeader(date: dateVal, entryDate: entryDate),
+                TitleField(
+                  controller: titleCtrl,
+                  onSubmitted: bodyFocus.requestFocus,
+                ),
               ],
             ),
           ),
 
           // ── Body ────────────────────────────────────────────────────────
           Expanded(
-            child: RepaintBoundary(child: LinedPaperBackground(
-              ruleColor: ruleColor,
+            child: RepaintBoundary(child: PaperBackground(
+              paper: paper.value,
+              rule: true,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: TextField(
@@ -318,6 +355,8 @@ class NewEntryScreen extends HookConsumerWidget {
             anchor: anchor.value,
             onAnchor: (a) { anchor.value = a; scheduleSave(); },
             body: bodyCtrl,
+            paper: paper.value,
+            onPaper: (p) { paperSet.value = true; paper.value = p; scheduleSave(); },
           ),
         ],
       ),

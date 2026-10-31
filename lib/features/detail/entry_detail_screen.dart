@@ -21,6 +21,7 @@ import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
 import 'package:baka/widgets/motion.dart';
+import 'package:baka/widgets/paper_background.dart';
 import 'package:baka/widgets/state_views.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,7 +37,6 @@ class EntryDetailScreen extends HookConsumerWidget {
     final bg       = t.background;
     final onBg     = t.onBackground;
     final muted    = t.onSurfaceMuted;
-    final ruleColor = t.rule;
 
     final entriesAsync = ref.watch(entriesProvider);
     final tagList      = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
@@ -131,6 +131,16 @@ class EntryDetailScreen extends HookConsumerWidget {
         child: Column(
         children: [
             PageHeader(date: entry.createdAt, mood: entry.mood),
+            if (entry.title != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(entry.title!,
+                      style: AppText.heading(context)
+                          .copyWith(color: onBg, fontSize: 22)),
+                ),
+              ),
 
             // Anchors (location / weather / song)
             if (entry.anchor != null &&
@@ -163,11 +173,9 @@ class EntryDetailScreen extends HookConsumerWidget {
             // Body — Stack fills the exact Expanded height so lines always
             // cover the full body area regardless of content length.
             Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CustomPaint(painter: _PageLinesPainter(color: ruleColor)),
-                  SingleChildScrollView(
+              child: PaperBackground(
+                paper: entry.paper,
+                child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     child: SelectableText.rich(
                       buildTagSpan(
@@ -179,7 +187,6 @@ class EntryDetailScreen extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                ],
               ),
             ),
 
@@ -363,8 +370,6 @@ class _AnchorBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppText.meta(context).copyWith(
                       color: c,
-                      decoration: link ? TextDecoration.underline : TextDecoration.none,
-                      decorationColor: c,
                     )),
             ),
           ]),
@@ -522,29 +527,6 @@ class _PhotoViewState extends State<_PhotoView> {
   }
 }
 
-/// Paints horizontal ruled lines across the full canvas area.
-/// Used as a background for the entire body column so lines are always
-/// full-screen regardless of text length.
-class _PageLinesPainter extends CustomPainter {
-  final Color color;
-  static const _spacing = 29.0;
-  static const _topOffset = 16.0;
-
-  const _PageLinesPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color..strokeWidth = 0.6;
-    var y = _topOffset + _spacing;
-    while (y < size.height) {
-      canvas.drawLine(Offset(20, y), Offset(size.width - 20, y), paint);
-      y += _spacing;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PageLinesPainter old) => old.color != color;
-}
 
 // ── Song preview (10s clip) ──────────────────────────────────────────────────
 

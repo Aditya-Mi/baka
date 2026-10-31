@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/features/home/widgets/draft_strip.dart';
-import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/features/home/widgets/mood_streak_widget.dart';
 import 'package:baka/features/home/widgets/on_this_day.dart';
+import 'package:baka/features/home/widgets/page_stack.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/providers/captures_provider.dart';
@@ -107,26 +107,38 @@ class HomeScreen extends HookConsumerWidget {
       body: entries.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(onRetry: () => ref.invalidate(entriesProvider)),
-        data: (list) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MoodStreakWidget(entries: list),
-            OnThisDay(entries: list),
-            AnimatedSize(
-              duration: Motion.of(context, Motion.fast),
-              curve: Motion.curve,
-              alignment: Alignment.topCenter,
-              child: drafts.any((d) => !d.isEdit)
-                  ? DraftStrip(drafts: [for (final d in drafts) if (!d.isEdit) d])
-                  : const SizedBox(width: double.infinity),
-            ),
-            Expanded(
-              child: list.isEmpty
-                  ? _EmptyState(t: t)
-                  : _EntryList(entries: list, t: t),
-            ),
-          ],
-        ),
+        data: (list) {
+          final newDrafts = [for (final d in drafts) if (!d.isEdit) d];
+          // One scroll for the whole page: the week, the drafts and the
+          // shelves move together instead of the top staying pinned.
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: MoodStreakWidget(entries: list)),
+              SliverToBoxAdapter(child: OnThisDay(entries: list)),
+              SliverToBoxAdapter(
+                child: AnimatedSize(
+                  duration: Motion.of(context, Motion.fast),
+                  curve: Motion.curve,
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    children: [
+                      for (final d in newDrafts)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                          child: DraftSheet(key: ValueKey(d.id), draft: d),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (list.isEmpty)
+                SliverFillRemaining(hasScrollBody: false, child: _EmptyState(t: t))
+              else
+                _Shelves(entries: list),
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -207,96 +219,146 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ── Grouped list ─────────────────────────────────────────────────────────────
+// ── Shelves ──────────────────────────────────────────────────────────────────
 
-class _EntryList extends StatelessWidget {
+/// This month lies open; every earlier month sits shut on its shelf with only
+/// its page count, so old pages are found on purpose, not met by scrolling.
+class _Shelves extends HookWidget {
   final List<JournalEntry> entries;
-  final BakaTokens t;
-  const _EntryList({required this.entries, required this.t});
+  const _Shelves({required this.entries});
 
-  /// The first cards rise in once per app session, not on every rebuild or
-  /// tab switch.
+  /// The first stacks rise in once per app session, not on every rebuild.
   static bool _introPlayed = false;
-  static const _introCards = 6;
 
   @override
   Widget build(BuildContext context) {
-    final grouped = _group(entries);
-    final intro   = !_introPlayed;
-    _introPlayed  = true;
-    // One lazy item per section label and per card, so a long month never
-    // builds all its cards at once. `null` entry = section label.
-    final items = <(String, JournalEntry?)>[
-      for (final MapEntry(:key, :value) in grouped.entries) ...[
-        (key, null),
-        for (final e in value) (key, e),
-      ],
-    ];
-    var cardIndex = 0;
-    final introIndex = <int, int>{}; // item index → card index
-    for (final (i, it) in items.indexed) {
-      if (it.$2 != null) introIndex[i] = cardIndex++;
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 96),
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final (label, e) = items[i];
-        if (e == null) return _SectionLabel(label: label, t: t);
-        final n = introIndex[i]!;
-        return RepaintBoundary(
-          child: FadeRise(
-            animate: intro && n < _introCards,
-            delay: Duration(milliseconds: 40 * n),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: JournalCard(
-                entry: e,
-                onTap: () => context.push('/entry/${e.id}'),
+    final shelves = _group(entries);
+    final open = useState<Set<String>>({shelves.keys.first});
+    final intro = !_introPlayed;
+    _introPlayed = true;
+
+    final items = <Widget>[];
+    var n = 0;
+    for (final MapEntry(key: label, value: days) in shelves.entries) {
+      final isOpen = open.value.contains(label);
+      final pages = days.fold<int>(0, (a, d) => a + d.length);
+      items.add(_ShelfHeader(
+        label: label,
+        pages: pages,
+        open: isOpen,
+        onTap: () => open.value = isOpen
+            ? ({...open.value}..remove(label))
+            : {...open.value, label},
+      ));
+      items.add(AnimatedSize(
+        duration: Motion.of(context, Motion.settle),
+        curve: Motion.curve,
+        alignment: Alignment.topCenter,
+        child: !isOpen
+            ? const SizedBox(width: double.infinity)
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+                child: Column(children: [
+                  for (final (i, day) in days.indexed) ...[
+                    // Inside this month, a quiet line where this week ends.
+                    if (label == _thisMonth && i > 0 &&
+                        !_inThisWeek(day.first) && _inThisWeek(days[i - 1].first))
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Earlier this month',
+                              style: AppText.caption(context)
+                                  .copyWith(color: context.tokens.onSurfaceMuted)),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      child: FadeRise(
+                        animate: intro && n < 6,
+                        delay: Duration(milliseconds: 45 * n++),
+                        child: DayStack(key: ValueKey(day.first.id), entries: day),
+                      ),
+                    ),
+                  ],
+                ]),
               ),
-            ),
-          ),
-        );
-      },
-    );
+      ));
+    }
+    return SliverList.list(children: items);
   }
 
-  static Map<String, List<JournalEntry>> _group(List<JournalEntry> entries) {
-    final now       = DateTime.now();
-    final today     = DateTime(now.year, now.month, now.day);
-    final weekStart = today.subtract(Duration(days: today.weekday - 1));
-    final lastStart = weekStart.subtract(const Duration(days: 7));
-    final result    = <String, List<JournalEntry>>{};
+  static const _thisMonth = 'This month';
 
+  static bool _inThisWeek(JournalEntry e) {
+    final now   = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    return !e.createdAt.isBefore(start);
+  }
+
+  /// Shelf label → days (newest first) → that day's pages (newest first).
+  static Map<String, List<List<JournalEntry>>> _group(List<JournalEntry> entries) {
+    final now       = DateTime.now();
+    final result    = <String, List<List<JournalEntry>>>{};
+    DateTime? lastDay;
     for (final e in entries) {
-      final d    = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
-      final diff = today.difference(d).inDays;
-      final label = diff == 0              ? 'Today'
-                  : diff == 1              ? 'Yesterday'
-                  : !d.isBefore(weekStart) ? 'This week'
-                  : !d.isBefore(lastStart) ? 'Last week'
-                  : DateFormat('MMMM yyyy').format(e.createdAt);
-      result.putIfAbsent(label, () => []).add(e);
+      final d = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+      final label = d.year == now.year && d.month == now.month
+          ? _thisMonth
+          : d.year == now.year
+              ? DateFormat('MMMM').format(d)
+              : DateFormat('MMMM y').format(d);
+      final shelf = result.putIfAbsent(label, () => []);
+      if (lastDay == d && shelf.isNotEmpty) {
+        shelf.last.add(e);
+      } else {
+        shelf.add([e]);
+      }
+      lastDay = d;
     }
     return result;
   }
 }
 
-class _SectionLabel extends StatelessWidget {
+class _ShelfHeader extends StatelessWidget {
   final String label;
-  final BakaTokens t;
-  const _SectionLabel({required this.label, required this.t});
+  final int pages;
+  final bool open;
+  final VoidCallback onTap;
+  const _ShelfHeader(
+      {required this.label, required this.pages, required this.open, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
-      child: Text(
-        label,
-        style: AppText.sectionLabel(context).copyWith(
-            fontWeight: FontWeight.w600,
-            color: t.onSurfaceMuted,
+    final t = context.tokens;
+    return Semantics(
+      button: true,
+      expanded: open,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.fromLTRB(2, 18, 2, 10),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.outlineSoft)),
           ),
+          child: Row(
+            children: [
+              Text(label,
+                  style: AppText.sectionHeading(context).copyWith(color: t.onBackground)),
+              const Spacer(),
+              Text(pages == 1 ? '1 page' : '$pages pages',
+                  style: AppText.caption(context).copyWith(color: t.onSurfaceMuted)),
+              const SizedBox(width: 6),
+              AnimatedRotation(
+                turns: open ? 0 : -0.25,
+                duration: Motion.of(context, Motion.fast),
+                curve: Motion.curve,
+                child: AppIcon(AppIconData.chevronDown, size: 18, color: t.onSurfaceMuted),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

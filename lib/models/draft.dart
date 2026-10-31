@@ -1,5 +1,6 @@
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/mood.dart';
+import 'package:baka/models/paper.dart';
 
 /// An unsaved editor session, persisted to SharedPreferences.
 /// [id] namespaces it: new entries use a uuid; edit-drafts use "edit:<entryId>".
@@ -11,6 +12,8 @@ class Draft {
   final Mood? mood;
   final List<String> tags;
   final Anchor? anchor;
+  final String title;
+  final Paper paper;
   final DateTime savedAt;
 
   const Draft({
@@ -21,6 +24,8 @@ class Draft {
     this.mood,
     required this.tags,
     this.anchor,
+    this.title = '',
+    this.paper = Paper.ruled,
     required this.savedAt,
   });
 
@@ -34,6 +39,8 @@ class Draft {
         'mood': mood?.name ?? '',
         'tags': tags,
         'anchor': anchor?.toDbString() ?? '',
+        'title': title,
+        'paper': paper.name,
         'savedAt': savedAt.toUtc().toIso8601String(),
       };
 
@@ -49,6 +56,8 @@ class Draft {
           : Mood.values.firstWhere((x) => x.name == m, orElse: () => Mood.calm),
       tags: List<String>.from(j['tags'] as List),
       anchor: Anchor.fromDbString(j['anchor'] as String?),
+      title: (j['title'] as String?) ?? '',
+      paper: Paper.fromName(j['paper'] as String?),
       savedAt: DateTime.parse(j['savedAt'] as String).toLocal(),
     );
   }

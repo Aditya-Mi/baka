@@ -35,7 +35,7 @@ class StatsScreen extends HookConsumerWidget {
           final longest    = EntriesNotifier.computeLongestStreak(entries);
           final totalWords = entries.fold<int>(0, (s, e) => s + e.wordCount);
           final perDay     = EntriesNotifier.computeEntriesPerDay(entries, 365);
-          final wordsPerDay = EntriesNotifier.computeWordsPerDay(entries, DateTime.now().day);
+          final wordsPerDay = EntriesNotifier.computeWordsPerDay(entries, WordsChart.days);
           final moods      = EntriesNotifier.computeMoodCounts(entries, 90);
 
           return SingleChildScrollView(
@@ -93,7 +93,7 @@ class StatsScreen extends HookConsumerWidget {
                 const SizedBox(height: 30),
 
                 // Words per day
-                const _SectionTitle('Words written', 'Daily word count, this month.'),
+                const _SectionTitle('Words written', 'Daily word count, past 30 days.'),
                 RepaintBoundary(
                   child: WordsChart(
                     wordsPerDay: wordsPerDay,

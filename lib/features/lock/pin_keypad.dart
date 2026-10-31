@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/widgets/motion.dart';
 
 /// Compact PIN entry widget — title, subtitle, 4 dots, keypad.
@@ -129,14 +130,20 @@ class _PinKeypadState extends State<PinKeypad>
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(4, (i) {
               final filled = i < _digits.length;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
+              // Each digit lands as a drop of ink spreading into its ring.
+              return Container(
                 width: 16, height: 16,
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: filled ? t.primary : Colors.transparent,
                   border: Border.all(color: dotColor, width: 1.5),
+                ),
+                child: AnimatedScale(
+                  scale: filled ? 1.15 : 0,
+                  duration: Motion.of(context,
+                      filled ? const Duration(milliseconds: 260) : Motion.fast),
+                  curve: filled ? Curves.easeOutCubic : Curves.easeIn,
+                  child: CustomPaint(painter: InkBlotPainter(t.primary)),
                 ),
               );
             }),

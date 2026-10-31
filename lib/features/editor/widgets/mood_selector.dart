@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/widgets/motion.dart';
 
 /// Every mood in one swipeable row. Tapping one blooms an ink blot under its
@@ -144,6 +145,10 @@ class _MoodCellState extends State<_MoodCell>
                             ),
                           ),
                         MoodGlyph(
+                          // Re-mounted on select so the mark is traced anew.
+                          key: ValueKey(widget.selected),
+                          draw: widget.selected,
+                          delay: const Duration(milliseconds: 80),
                           mood: widget.mood,
                           size: 26,
                           color: Color.lerp(
@@ -163,7 +168,11 @@ class _MoodCellState extends State<_MoodCell>
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 widthFactor: write,
-                                child: Text(
+                                // Slack on both sides so the hand's flourish
+                                // (Excited's last 'd') isn't shaved by the clip.
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
                                   widget.mood.label,
                                   maxLines: 1,
                                   softWrap: false,
@@ -172,6 +181,7 @@ class _MoodCellState extends State<_MoodCell>
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
                                           height: 1.1),
+                                  ),
                                 ),
                               ),
                             ),
@@ -185,27 +195,4 @@ class _MoodCellState extends State<_MoodCell>
       ),
     );
   }
-}
-
-/// A wet-ink blot: a circle with a slightly uneven edge.
-class InkBlotPainter extends CustomPainter {
-  final Color color;
-  const InkBlotPainter(this.color);
-
-  static final _blot = parseSvgPath(
-      'M21 2.5C30.5 2 38.5 9.5 37.5 19.5C38 29.5 31 37.5 20.5 37'
-      'C10.5 38.5 2 31 2.5 20.5C1.5 10 10 3 21 2.5Z');
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = size.shortestSide / 40;
-    canvas
-      ..save()
-      ..scale(s)
-      ..drawPath(_blot, Paint()..color = color)
-      ..restore();
-  }
-
-  @override
-  bool shouldRepaint(InkBlotPainter o) => o.color != color;
 }

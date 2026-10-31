@@ -4,6 +4,7 @@ import 'package:baka/core/theme/app_theme.dart';
 
 import 'package:baka/models/mood.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/motion.dart';
 
 class MoodChart extends StatelessWidget {
   final Map<Mood, int> moodCounts;
@@ -31,8 +32,10 @@ class MoodChart extends StatelessWidget {
     final maxCount = sorted.first.value;
 
     return Column(
-      children: sorted.map((e) {
+      children: [for (final (i, e) in sorted.indexed) () {
         final frac = maxCount > 0 ? e.value / maxCount : 0.0;
+        // Rows ink in top to bottom: glyph traced, then the bar drawn across.
+        final delay = Duration(milliseconds: 120 + i * 90);
         return InkWell(
           onTap: onMoodTap != null ? () => onMoodTap!(e.key) : null,
           borderRadius: BorderRadius.circular(8),
@@ -40,7 +43,8 @@ class MoodChart extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 48),
             child: Row(
               children: [
-                MoodGlyph(mood: e.key, size: 22, color: primary),
+                MoodGlyph(mood: e.key, size: 22, color: primary,
+                    draw: true, delay: delay),
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 92,
@@ -58,8 +62,14 @@ class MoodChart extends StatelessWidget {
                     ),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: frac.clamp(0.04, 1.0),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: frac.clamp(0.04, 1.0)),
+                        duration: Motion.of(context, delay + const Duration(milliseconds: 600)),
+                        curve: Interval(
+                            (delay.inMilliseconds + 200) / (delay.inMilliseconds + 600),
+                            1, curve: Curves.easeOutCubic),
+                        builder: (_, w, child) => FractionallySizedBox(
+                            widthFactor: w, child: child),
                         child: Container(
                           decoration: BoxDecoration(
                             color: primary,
@@ -87,7 +97,7 @@ class MoodChart extends StatelessWidget {
             ),
           ),
         );
-      }).toList(),
+      }()],
     );
   }
 }

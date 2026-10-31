@@ -7,6 +7,10 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 
 class WordsChart extends StatefulWidget {
+  /// A rolling window, not the calendar month: early in a month a month-long
+  /// chart is one lonely point.
+  static const days = 30;
+
   final Map<DateTime, int> wordsPerDay;
   final Color primary;
   final Color muted;
@@ -36,11 +40,12 @@ class _WordsChartState extends State<WordsChart> {
 
   @override
   Widget build(BuildContext context) {
-    final today       = DateTime.now();
-    final n           = today.day;
+    final now         = DateTime.now();
+    final today       = DateTime(now.year, now.month, now.day);
+    const n           = WordsChart.days;
 
     _points = List.generate(n, (i) {
-      final d = DateTime(today.year, today.month, i + 1);
+      final d = DateTime(today.year, today.month, today.day - (n - 1 - i));
       return _Point(date: d, words: widget.wordsPerDay[d] ?? 0);
     });
 
@@ -64,7 +69,7 @@ class _WordsChartState extends State<WordsChart> {
           border: Border(bottom: BorderSide(color: t.outlineSoft)),
         ),
         child: Text(
-          'No words yet this month.\nYour next entry starts the line.',
+          'No words in the past 30 days.\nYour next entry starts the line.',
           textAlign: TextAlign.center,
           style: AppText.label(context).copyWith(
               height: 1.5,
@@ -108,10 +113,8 @@ class _WordsChartState extends State<WordsChart> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            if (n > 1)
-              Text(DateFormat('MMM d').format(_points.first.date), style: axisStyle),
-            if (n > 2)
-              Text(DateFormat('MMM d').format(_points[n ~/ 2].date), style: axisStyle),
+            Text(DateFormat('MMM d').format(_points.first.date), style: axisStyle),
+            Text(DateFormat('MMM d').format(_points[n ~/ 2].date), style: axisStyle),
             Text('Today', style: axisStyle),
           ],
         ),

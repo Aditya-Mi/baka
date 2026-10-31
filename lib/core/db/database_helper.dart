@@ -14,7 +14,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const _dbName    = 'baka_journal.db';
-  static const _dbVersion = 6; // v6: tags made case-insensitive (merge SOLO/solo)
+  static const _dbVersion = 7; // v7: page title + paper
   static const tableEntries  = 'entries';
   static const tableTagsMeta = 'tags_meta';
   static const tableCaptures = 'voice_captures';
@@ -50,7 +50,9 @@ class DatabaseHelper {
         mood        TEXT NOT NULL DEFAULT '',
         tags        TEXT NOT NULL DEFAULT '[]',
         word_count  INTEGER NOT NULL DEFAULT 0,
-      anchors     TEXT NOT NULL DEFAULT ''
+        anchors     TEXT NOT NULL DEFAULT '',
+        title       TEXT NOT NULL DEFAULT '',
+        paper       TEXT NOT NULL DEFAULT 'ruled'
       )
     ''');
     await db.execute('''
@@ -113,6 +115,12 @@ class DatabaseHelper {
     }
     if (oldVersion < 6) {
       await mergeTagCaseDuplicates(db);
+    }
+    if (oldVersion < 7) {
+      await db.execute(
+          "ALTER TABLE $tableEntries ADD COLUMN title TEXT NOT NULL DEFAULT ''");
+      await db.execute(
+          "ALTER TABLE $tableEntries ADD COLUMN paper TEXT NOT NULL DEFAULT 'ruled'");
     }
   }
 
@@ -223,8 +231,8 @@ class DatabaseHelper {
     final db   = await database;
     final maps = await db.query(
       tableEntries,
-      where:     'body LIKE ? OR tags LIKE ?',
-      whereArgs: ['%$query%', '%$query%'],
+      where:     'title LIKE ? OR body LIKE ? OR tags LIKE ?',
+      whereArgs: ['%$query%', '%$query%', '%$query%'],
       orderBy:   'created_at DESC',
     );
     return maps.map(JournalEntry.fromMap).toList();

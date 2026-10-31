@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:baka/models/mood.dart';
 import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/widgets/motion.dart';
 
 export 'package:baka/widgets/app_icon.dart';
 
@@ -520,29 +521,167 @@ class _FoldedLetterPainter extends CustomPainter {
 // MoodGlyph  (viewBox 0 0 24 24)
 // ─────────────────────────────────────────────────────────────────────────────
 
-class MoodGlyph extends StatelessWidget {
+/// A mood's ink mark. With [draw] it traces itself in pen order once per
+/// mount, like the empty-state doodles; reduce-motion shows it complete.
+class MoodGlyph extends StatefulWidget {
   final Mood mood;
   final double size;
   final Color color;
+  final bool draw;
+  final Duration delay;
 
   const MoodGlyph({
     super.key,
     required this.mood,
     this.size = 22,
     required this.color,
+    this.draw = false,
+    this.delay = Duration.zero,
   });
 
   @override
+  State<MoodGlyph> createState() => _MoodGlyphState();
+}
+
+class _MoodGlyphState extends State<MoodGlyph>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _c;
+  Animation<double>? _a;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.draw || _c != null) return;
+    if (Motion.reduced(context)) return;
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 650));
+    _a = CurvedAnimation(parent: _c!, curve: Curves.easeInOutCubic);
+    Future.delayed(widget.delay, () {
+      if (mounted) _c!.forward();
+    });
+  }
+
+  @override
+  void didUpdateWidget(MoodGlyph old) {
+    super.didUpdateWidget(old);
+    // A new mood in the same spot is a fresh mark.
+    if (old.mood != widget.mood && _c != null) _c!.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => CustomPaint(
-        size: Size(size, size),
-        painter: _MoodGlyphPainter(mood: mood, color: color),
+        size: Size(widget.size, widget.size),
+        painter: _MoodGlyphPainter(
+            mood: widget.mood, color: widget.color, progress: _a),
       );
 }
+
+class _MoodStroke {
+  final Path path;
+  final bool fill;
+  final double alpha;
+  const _MoodStroke(this.path, {this.fill = false, this.alpha = 1});
+}
+
+Path _dot(double x, double y, double r) =>
+    Path()..addOval(Rect.fromCircle(center: Offset(x, y), radius: r));
+Path _line(double x1, double y1, double x2, double y2) =>
+    Path()..moveTo(x1, y1)..lineTo(x2, y2);
+Path _arc(double x1, double y1, double cx, double cy, double x2, double y2) =>
+    Path()..moveTo(x1, y1)..quadraticBezierTo(cx, cy, x2, y2);
+
+/// Each mood as strokes in the order a hand would draw them.
+List<_MoodStroke> _moodStrokes(Mood mood) => switch (mood) {
+      Mood.happy => [
+          _MoodStroke(_dot(9, 10, 0.7), fill: true),
+          _MoodStroke(_dot(15, 10, 0.7), fill: true),
+          _MoodStroke(_arc(7.5, 14, 12, 18, 16.5, 14)),
+        ],
+      Mood.calm => [
+          _MoodStroke(_line(7, 10, 9, 10)),
+          _MoodStroke(_line(15, 10, 17, 10)),
+          _MoodStroke(_arc(8, 14, 12, 16, 16, 14)),
+        ],
+      Mood.thoughtful => [
+          _MoodStroke(Path()
+            ..moveTo(9, 9)..quadraticBezierTo(11, 5, 14, 7)
+            ..quadraticBezierTo(16, 10, 12, 12)
+            ..lineTo(12, 14)),
+          _MoodStroke(_dot(12, 17.5, 0.8), fill: true),
+        ],
+      Mood.sad => [
+          _MoodStroke(_dot(9, 10, 0.7), fill: true),
+          _MoodStroke(_dot(15, 10, 0.7), fill: true),
+          _MoodStroke(_arc(7.5, 16, 12, 12, 16.5, 16)),
+        ],
+      Mood.tired => [
+          _MoodStroke(_arc(6.5, 11, 9, 13, 11.5, 11)),
+          _MoodStroke(_arc(12.5, 11, 15, 13, 17.5, 11)),
+          _MoodStroke(_line(8, 15, 16, 15)),
+        ],
+      Mood.anxious => [
+          _MoodStroke(Path()
+            ..moveTo(5, 13)..lineTo(8, 10)..lineTo(11, 13)
+            ..lineTo(14, 10)..lineTo(17, 13)..lineTo(19, 11)),
+        ],
+      Mood.excited => [
+          for (final p in const [
+            [12.0, 4.0, 12.0, 8.0], [17.7, 6.3, 15.2, 8.8],
+            [16.0, 12.0, 20.0, 12.0], [15.2, 15.2, 17.7, 17.7],
+            [12.0, 16.0, 12.0, 20.0], [8.8, 15.2, 6.3, 17.7],
+            [4.0, 12.0, 8.0, 12.0], [6.3, 6.3, 8.8, 8.8],
+          ])
+            _MoodStroke(_line(p[0], p[1], p[2], p[3])),
+        ],
+      Mood.loved => [
+          _MoodStroke(Path()
+            ..moveTo(12, 18.5)
+            ..cubicTo(7.5, 15, 4.5, 12, 4.5, 9)
+            ..arcToPoint(const Offset(12, 7.5),
+                radius: const Radius.circular(3.3), clockwise: true)
+            ..arcToPoint(const Offset(19.5, 9),
+                radius: const Radius.circular(3.3), clockwise: true)
+            ..cubicTo(19.5, 12, 16.5, 15, 12, 18.5)..close()),
+        ],
+      Mood.angry => [
+          _MoodStroke(_line(6, 8, 10, 10)),
+          _MoodStroke(_line(18, 8, 14, 10)),
+          _MoodStroke(_arc(8, 16, 12, 14, 16, 16)),
+        ],
+      Mood.crying => [
+          _MoodStroke(_dot(9, 10, 0.7), fill: true),
+          _MoodStroke(_dot(15, 10, 0.7), fill: true),
+          _MoodStroke(_arc(7.5, 16, 12, 12, 16.5, 16)),
+          _MoodStroke(Path()
+            ..moveTo(8, 13)..quadraticBezierTo(9, 16, 8, 17.5)
+            ..quadraticBezierTo(7, 16, 8, 13)..close(),
+              fill: true, alpha: 0.4),
+        ],
+    };
 
 class _MoodGlyphPainter extends CustomPainter {
   final Mood mood;
   final Color color;
-  const _MoodGlyphPainter({required this.mood, required this.color});
+  final Animation<double>? progress;
+  _MoodGlyphPainter({required this.mood, required this.color, this.progress})
+      : super(repaint: progress);
+
+  static final _cache = <Mood, List<(_MoodStroke, double)>>{};
+
+  // Dots and the tear land as a single touch of the pen.
+  static const _touch = 2.0;
+
+  List<(_MoodStroke, double)> get _strokes => _cache.putIfAbsent(mood, () => [
+        for (final s in _moodStrokes(mood))
+          (s, s.fill
+              ? _touch
+              : s.path.computeMetrics().fold<double>(0, (a, m) => a + m.length)),
+      ]);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -551,126 +690,37 @@ class _MoodGlyphPainter extends CustomPainter {
       ..save()
       ..translate((size.width - 24 * s) / 2, (size.height - 24 * s) / 2)
       ..scale(s);
-    _drawMood(canvas);
-    canvas.restore();
-  }
 
-  void _drawMood(Canvas canvas) {
-    final stroke = Paint()
-      ..color = color
-      ..strokeWidth = 1.75
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final dot = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+    final strokes = _strokes;
+    final total = strokes.fold<double>(0, (a, e) => a + e.$2);
+    var budget = total * (progress?.value ?? 1);
 
-    switch (mood) {
-      case Mood.happy:
-        canvas.drawCircle(const Offset(9, 10), 0.7, dot);
-        canvas.drawCircle(const Offset(15, 10), 0.7, dot);
-        canvas.drawPath(
-          Path()..moveTo(7.5, 14)..quadraticBezierTo(12, 18, 16.5, 14),
-          stroke,
-        );
-
-      case Mood.calm:
-        canvas.drawLine(const Offset(7, 10), const Offset(9, 10), stroke);
-        canvas.drawLine(const Offset(15, 10), const Offset(17, 10), stroke);
-        canvas.drawPath(
-          Path()..moveTo(8, 14)..quadraticBezierTo(12, 16, 16, 14),
-          stroke,
-        );
-
-      case Mood.thoughtful:
-        canvas.drawPath(
-          Path()
-            ..moveTo(9, 9)..quadraticBezierTo(11, 5, 14, 7)
-            ..quadraticBezierTo(16, 10, 12, 12)
-            ..lineTo(12, 14),
-          stroke,
-        );
-        canvas.drawCircle(const Offset(12, 17.5), 0.8, dot);
-
-      case Mood.sad:
-        canvas.drawCircle(const Offset(9, 10), 0.7, dot);
-        canvas.drawCircle(const Offset(15, 10), 0.7, dot);
-        canvas.drawPath(
-          Path()..moveTo(7.5, 16)..quadraticBezierTo(12, 12, 16.5, 16),
-          stroke,
-        );
-
-      case Mood.tired:
-        canvas.drawPath(
-          Path()..moveTo(6.5, 11)..quadraticBezierTo(9, 13, 11.5, 11),
-          stroke,
-        );
-        canvas.drawPath(
-          Path()..moveTo(12.5, 11)..quadraticBezierTo(15, 13, 17.5, 11),
-          stroke,
-        );
-        canvas.drawLine(const Offset(8, 15), const Offset(16, 15), stroke);
-
-      case Mood.anxious:
-        canvas.drawPath(
-          Path()
-            ..moveTo(5, 13)..lineTo(8, 10)..lineTo(11, 13)
-            ..lineTo(14, 10)..lineTo(17, 13)..lineTo(19, 11),
-          stroke,
-        );
-
-      case Mood.excited:
-        for (final pair in [
-          [12.0, 4.0, 12.0, 8.0], [12.0, 16.0, 12.0, 20.0],
-          [4.0, 12.0, 8.0, 12.0], [16.0, 12.0, 20.0, 12.0],
-          [6.3, 6.3, 8.8, 8.8], [15.2, 15.2, 17.7, 17.7],
-          [17.7, 6.3, 15.2, 8.8], [8.8, 15.2, 6.3, 17.7],
-        ]) {
-          canvas.drawLine(Offset(pair[0], pair[1]), Offset(pair[2], pair[3]), stroke);
+    for (final (stroke, len) in strokes) {
+      if (budget <= 0) break;
+      final paint = Paint()
+        ..color = color.withValues(alpha: color.a * stroke.alpha)
+        ..strokeWidth = 1.75
+        ..style = stroke.fill ? PaintingStyle.fill : PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      if (budget >= len || stroke.fill) {
+        canvas.drawPath(stroke.path, paint);
+      } else {
+        var left = budget;
+        for (final m in stroke.path.computeMetrics()) {
+          if (left <= 0) break;
+          canvas.drawPath(m.extractPath(0, left.clamp(0, m.length)), paint);
+          left -= m.length;
         }
-
-      case Mood.loved:
-        canvas.drawPath(
-          Path()
-            ..moveTo(12, 18.5)
-            ..cubicTo(7.5, 15, 4.5, 12, 4.5, 9)
-            ..arcToPoint(const Offset(12, 7.5),
-                radius: const Radius.circular(3.3), clockwise: true)
-            ..arcToPoint(const Offset(19.5, 9),
-                radius: const Radius.circular(3.3), clockwise: true)
-            ..cubicTo(19.5, 12, 16.5, 15, 12, 18.5)..close(),
-          stroke,
-        );
-
-      case Mood.angry:
-        canvas.drawLine(const Offset(6, 8), const Offset(10, 10), stroke);
-        canvas.drawLine(const Offset(18, 8), const Offset(14, 10), stroke);
-        canvas.drawPath(
-          Path()..moveTo(8, 16)..quadraticBezierTo(12, 14, 16, 16),
-          stroke,
-        );
-
-      case Mood.crying:
-        canvas.drawCircle(const Offset(9, 10), 0.7, dot);
-        canvas.drawCircle(const Offset(15, 10), 0.7, dot);
-        canvas.drawPath(
-          Path()..moveTo(7.5, 16)..quadraticBezierTo(12, 12, 16.5, 16),
-          stroke,
-        );
-        // Teardrop
-        canvas.drawPath(
-          Path()
-            ..moveTo(8, 13)..quadraticBezierTo(9, 16, 8, 17.5)
-            ..quadraticBezierTo(7, 16, 8, 13)..close(),
-          Paint()..color = color.withValues(alpha:0.4)..style = PaintingStyle.fill,
-        );
+      }
+      budget -= len;
     }
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(_MoodGlyphPainter o) =>
-      o.mood != mood || o.color != color;
+      o.mood != mood || o.color != color || o.progress != progress;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
