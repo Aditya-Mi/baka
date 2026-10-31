@@ -22,7 +22,7 @@ class MoodEntriesScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: t.background,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: t.onBackground),
+          icon: AppIcon(AppIconData.back, color: t.onBackground),
           onPressed: () => context.pop(),
           tooltip: 'Back',
         ),

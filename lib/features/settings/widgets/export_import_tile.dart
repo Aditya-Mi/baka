@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/providers/entries_provider.dart';
@@ -17,7 +18,7 @@ class ExportImportTile extends ConsumerWidget {
       children: [
         // Export
         SettingsRow(
-          icon: Icons.upload_rounded,
+          icon: AppIconData.upload,
           title: 'Export journal',
           chevron: true,
           onTap: () async {
@@ -41,7 +42,7 @@ class ExportImportTile extends ConsumerWidget {
         const SettingsDivider(),
         // Import
         SettingsRow(
-          icon: Icons.download_rounded,
+          icon: AppIconData.download,
           title: 'Import journal',
           chevron: true,
           onTap: () => _handleImport(context, ref, errorColor),

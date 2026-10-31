@@ -15,6 +15,7 @@ import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/user_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/widgets/motion.dart';
 import 'package:baka/widgets/state_views.dart';
 
@@ -84,9 +85,9 @@ class HomeScreen extends HookConsumerWidget {
                     label: Text('$inboxCount'),
                     backgroundColor: t.primary,
                     textColor: Theme.of(context).colorScheme.onPrimary,
-                    child: Icon(Icons.mic_none_rounded, size: 24, color: t.onBackground),
+                    child: AppIcon(AppIconData.mic, size: 24, color: t.onBackground),
                   )
-                : Icon(Icons.mic_none_rounded, size: 24, color: t.onBackground),
+                : AppIcon(AppIconData.mic, size: 24, color: t.onBackground),
             onPressed: () => context.push('/inbox'),
             tooltip: 'Voice Inbox',
           ),
@@ -178,21 +179,27 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.menu_book_outlined, size: 56, color: t.onSurfaceMuted),
+          const InkDoodle(Doodle.notebook, width: 180),
           const SizedBox(height: 20),
-          Text(
-            'Your story begins here.',
-            style: AppText.heading(context).copyWith(
-                fontWeight: FontWeight.w600,
-                color: t.onBackground,
+          // The words arrive once the pen has finished drawing.
+          FadeRise(
+            delay: const Duration(milliseconds: 1100),
+            child: Column(children: [
+              Text(
+                'Your story begins here.',
+                style: AppText.heading(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: t.onBackground,
+                  ),
               ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap Write to add your first entry.',
-            style: AppText.caption(context).copyWith(
-                color: t.onSurfaceMuted,
+              const SizedBox(height: 8),
+              Text(
+                'Tap Write to add your first entry.',
+                style: AppText.caption(context).copyWith(
+                    color: t.onSurfaceMuted,
+                  ),
               ),
+            ]),
           ),
         ],
       ),

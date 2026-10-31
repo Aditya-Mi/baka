@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/core/fonts/font_theme.dart';
 import 'package:baka/features/capture/widgets/waveform.dart';
 import 'package:baka/features/capture/widgets/permission_priming_sheet.dart';
@@ -266,7 +268,7 @@ class _MicCta extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(Icons.mic_off_rounded, size: 20, color: t.onPrimaryContainer),
+              AppIcon(AppIconData.micOff, size: 20, color: t.onPrimaryContainer),
               const SizedBox(width: 12),
               Expanded(
                 child: Text('Microphone off — tap to enable recording',
@@ -275,7 +277,7 @@ class _MicCta extends StatelessWidget {
                         color: t.onPrimaryContainer,
                       )),
               ),
-              Icon(Icons.chevron_right_rounded, size: 20, color: t.onPrimaryContainer),
+              AppIcon(AppIconData.chevronRight, size: 20, color: t.onPrimaryContainer),
             ],
           ),
         ),
@@ -298,11 +300,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96, height: 96,
-              decoration: BoxDecoration(color: t.surface, shape: BoxShape.circle),
-              child: Icon(Icons.mic_off_rounded, size: 44, color: t.onSurfaceMuted),
-            ),
+            const InkDoodle(Doodle.voice, width: 150),
             const SizedBox(height: 16),
             Text('No voice notes yet.',
                 style: AppText.numeral(context).copyWith(
@@ -377,8 +375,8 @@ class _CaptureTile extends StatelessWidget {
               onTap: onPlay,
               child: SizedBox(
                 width: 44, height: 44,
-                child: Icon(
-                  isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                child: AppIcon(
+                  isPlaying ? AppIconData.stop : AppIconData.play,
                   size: 24, color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
@@ -448,7 +446,7 @@ class _CaptureTile extends StatelessWidget {
               onTap: onDelete,
               child: SizedBox(
                 width: 36, height: 36,
-                child: Icon(Icons.delete_outline_rounded,
+                child: AppIcon(AppIconData.trash,
                     size: 20, color: t.onSurfaceMuted),
               ),
             ),

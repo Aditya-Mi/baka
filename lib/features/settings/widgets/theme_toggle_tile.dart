@@ -20,7 +20,7 @@ class ThemeToggleTile extends ConsumerWidget {
         (themeMode == ThemeMode.system && systemIsDark);
 
     return SettingsRow(
-      icon: Icons.contrast_rounded,
+      icon: AppIconData.contrast,
       title: 'Theme',
       subtitle: 'Candlelight or parchment.',
       // Segmented Light / Dark selector in a padded track

@@ -46,7 +46,7 @@ class EditorMeta extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined,
+                    AppIcon(AppIconData.calendar,
                         size: 14, color: t.onSurfaceMuted),
                     const SizedBox(width: 6),
                     Flexible(
@@ -67,7 +67,7 @@ class EditorMeta extends StatelessWidget {
                               color: t.primaryText,
                             )),
                     const SizedBox(width: 6),
-                    Icon(Icons.keyboard_arrow_down_rounded,
+                    AppIcon(AppIconData.chevronDown,
                         size: 18, color: t.onSurfaceMuted),
                   ],
                 ),

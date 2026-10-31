@@ -155,7 +155,7 @@ Baka is a private paper journal that quietly remembers. Every screen is a sheet 
 
 Density is calm and single-column. One 20px gutter holds every screen; sections breathe at 30px. Controls feel like tactile stationery: pills that read as tabs and stamps, chips like stickers, rows like ruled index lines. Two voices carry the system: a handwritten face for human moments and a bookish serif for everything you read or operate. A display serif sets headings and numerals.
 
-Motion is quiet and earned. There is one authored moment, saving today's page, and everything else is short, exponential ease-out feedback that disappears under the system reduce-motion setting.
+Motion is ink and paper. Saving today's page is the main authored moment; around it, a few ink gestures belong to the notebook: a blot blooms under a chosen mood, empty pages draw their doodle stroke by stroke, and a deleted page crumples and drops. Everything else is short, exponential ease-out feedback, and all of it steps aside under the system reduce-motion setting.
 
 **Key Characteristics:**
 - Aged-paper light theme ("Aged Paper") and a warm candlelit dark theme ("Midnight Ink"), each a full palette, not an inversion.
@@ -247,14 +247,14 @@ Gently rounded stationery. Cards round at 14px, inputs at 12px, dialogs and shee
 Tactile stationery: pills that read like tabs and stamps.
 - **Write** (extended FAB): terracotta pill, 56px tall, quill icon + "Write" in Caveat 700 18px (Signature Hand); the single lifted object. Shown on the Pages tab only.
 - **Save:** terracotta pill in the editor app bar, Lora 15px semibold label, no icon; disabled state is terracotta-wash with fired-clay text.
-- **Edit** (entry detail app bar): terracotta-wash pill, edit icon + "Edit" in Caveat 700 18px, fired-clay text (Signature Hand).
+- **Edit** (entry detail app bar): terracotta-wash pill, the same quill as Write + "Edit" in Caveat 700 18px, fired-clay text (Signature Hand).
 - **Secondary:** outlined pill in terracotta ("Use PIN instead"); never muted text, which reads as disabled.
 - **Text buttons:** terracotta Lora label, 48px minimum target.
 
 ### Chips
 - **Tag chip:** tag colour at 12% fill, 30% border, Caveat label, pill.
 - **Status / draft chip:** terracotta-wash pill with a 5px terracotta dot and fired-clay Caveat label.
-- **Mood:** glyph plus word together, never the glyph alone.
+- **Mood:** glyph plus word together, never the glyph alone. The one exception is the editor's mood strip, where every glyph is a labelled button and the chosen one writes its word beneath.
 
 ### Cards / Containers
 - **Entry card:** paper-leaf, 14px corners, 14/18/16px padding, no border, no shadow, no edge strip. Head row: Caveat date left, mood glyph + word grouped right; up to three lines of Lora preview with terracotta hashtags; tag chips beneath.
@@ -266,6 +266,15 @@ Tactile stationery: pills that read like tabs and stamps.
 
 ### Navigation
 - Three tabs (Pages, Stats, Settings) on the top sheet, 64px, labels always shown. Active tab: terracotta icon on a terracotta-wash pill indicator. Tabs cross-fade with a 4px rise (200ms) rather than cutting.
+
+### Icons
+One set, `AppIcon`: 24px grid, 1.75 stroke, round caps and joins, no fills, drawn as path data in `lib/widgets/app_icon.dart`. Write and Edit share the illustrated quill. Material Icons are not used anywhere, including implicit back and close buttons (themed through `actionIconTheme`).
+
+### Editor bottom bar
+The page starts right under the date. Below the paper, one bar holds the mood strip (all ten glyphs; the chosen one sits on a terracotta-wash ink blot that blooms in 0.2→1 with its name wiping in beneath), the tag chips, and a toolbar: # (add tag), location, weather, song, photo as 44px icon buttons that turn into value chips once set, with the word count pinned right. The mood strip folds away while typing.
+
+### Empty states and delete
+Empty screens show an `InkDoodle` (umber strokes, a terracotta accent) that draws itself in pen order over 1.2s, then the words fade in. Deleting an entry crumples the page (scale 0.55, −12° tilt, 60px drop, crease lines inking in, 450ms ease-in) and offers Undo for 5s; the database delete happens only after Undo has passed.
 
 ### This Week row (signature)
 Seven 40px discs, Monday first. Written days fill with paper-leaf; today wears terracotta-wash with a 1.5px terracotta ring; a day's mood glyph sits inside. The current streak (flame + "N-day streak") sits on the right and opens Stats. Saving today's page is the system's one authored moment: the disc fills, the glyph settles from 0.6 scale, the streak rolls up, and on milestone days a handwritten line appears beneath.
@@ -280,6 +289,7 @@ Editor and entry detail only: pencil-line rules behind the body text area, never
 - **Do** keep the 20px gutter on every screen.
 - **Do** pair every mood glyph with its word.
 - **Do** route every animation through `Motion` so reduce-motion turns it off; use exponential ease-out.
+- **Do** draw icons with `AppIcon`; add a missing glyph to the set rather than reaching for `Icons.*`.
 - **Do** keep delight proportional: celebrate milestones, let ordinary saves simply feel certain (a light haptic, no banner).
 
 ### Don't:

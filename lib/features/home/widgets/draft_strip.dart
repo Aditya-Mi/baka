@@ -114,7 +114,7 @@ class _DraftCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close_rounded, size: 18, color: t.onSurfaceMuted),
+                icon: AppIcon(AppIconData.close, size: 18, color: t.onSurfaceMuted),
                 onPressed: onDiscard,
                 tooltip: 'Discard draft',
               ),

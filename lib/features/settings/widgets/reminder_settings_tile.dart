@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -41,7 +42,7 @@ class ReminderSettingsTile extends HookConsumerWidget {
       children: [
         // Main switch row
         SettingsRow(
-          icon: Icons.notifications_none_rounded,
+          icon: AppIconData.bell,
           title: 'Daily reminder',
           subtitle: 'A gentle nudge to capture your thoughts.',
           trailing: Switch(
@@ -76,7 +77,7 @@ class ReminderSettingsTile extends HookConsumerWidget {
                       _PermissionWarning(t: t),
                     const SettingsDivider(),
                     SettingsRow(
-                      icon: Icons.schedule_rounded,
+                      icon: AppIconData.clock,
                       title: 'Remind me at',
                       value: timeStr,
                       valueColor: t.primary,
@@ -140,7 +141,7 @@ class _PermissionWarning extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(58, 0, 12, 8),
       child: Row(
         children: [
-          Icon(Icons.notifications_off_outlined, size: 18, color: t.primary),
+          AppIcon(AppIconData.bellOff, size: 18, color: t.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text('Notifications are off in system settings.',

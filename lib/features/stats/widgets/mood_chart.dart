@@ -81,7 +81,7 @@ class MoodChart extends StatelessWidget {
                 ),
                 if (onMoodTap != null) ...[
                   const SizedBox(width: 4),
-                  Icon(Icons.chevron_right_rounded, size: 16, color: muted),
+                  AppIcon(AppIconData.chevronRight, size: 16, color: muted),
                 ],
               ],
             ),

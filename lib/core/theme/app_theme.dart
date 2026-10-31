@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:baka/core/fonts/font_theme.dart';
+import 'package:baka/widgets/app_icon.dart';
 
 /// Tokens extracted directly from design mockups:
 ///   Light _ Aged Paper.html  /  Dark _ Midnight Ink.html
@@ -365,6 +366,13 @@ class AppTheme {
       cardColor: AppColors.lightCard,
       dividerColor: AppColors.lightOutline,
       textTheme: textTheme,
+      // Implicit back/close buttons use Baka's own icons, not Material's.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (c) => AppIcon(AppIconData.back,
+            color: IconTheme.of(c).color ?? AppColors.lightOnBackground),
+        closeButtonIconBuilder: (c) => AppIcon(AppIconData.close,
+            color: IconTheme.of(c).color ?? AppColors.lightOnBackground),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.lightBackground,
         foregroundColor: AppColors.lightOnBackground,
@@ -529,6 +537,13 @@ class AppTheme {
       cardColor: AppColors.darkCard,
       dividerColor: AppColors.darkOutline,
       textTheme: textTheme,
+      // Implicit back/close buttons use Baka's own icons, not Material's.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (c) => AppIcon(AppIconData.back,
+            color: IconTheme.of(c).color ?? AppColors.darkOnBackground),
+        closeButtonIconBuilder: (c) => AppIcon(AppIconData.close,
+            color: IconTheme.of(c).color ?? AppColors.darkOnBackground),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkBackground,
         foregroundColor: AppColors.darkOnBackground,

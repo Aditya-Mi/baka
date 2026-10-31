@@ -40,6 +40,23 @@ class EntriesNotifier extends AsyncNotifier<List<JournalEntry>> {
     state = AsyncData(updated);
   }
 
+  /// Takes an entry off the list without touching the database, so a
+  /// delete can still be undone. Pair with [restore] or [remove].
+  JournalEntry? stash(String id) {
+    final list  = state.valueOrNull ?? [];
+    final entry = list.where((x) => x.id == id).firstOrNull;
+    if (entry != null) {
+      state = AsyncData(list.where((x) => x.id != id).toList());
+    }
+    return entry;
+  }
+
+  void restore(JournalEntry e) {
+    final updated = <JournalEntry>[e, ...(state.valueOrNull ?? []).where((x) => x.id != e.id)]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = AsyncData(updated);
+  }
+
   Future<void> remove(String id) async {
     await DatabaseHelper.instance.deleteEntry(id);
     state = AsyncData(

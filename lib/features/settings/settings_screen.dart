@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -55,10 +56,10 @@ class SettingsScreen extends HookConsumerWidget {
           // ── Profile ──────────────────────────────────────────────────
           const _SectionHeader('Profile'),
           SettingsRow(
-            icon: Icons.person_outline_rounded,
+            icon: AppIconData.user,
             title: 'Your name',
             value: name.isNotEmpty ? name : 'Not set',
-            trailing: Icon(Icons.edit_outlined, size: 18, color: muted),
+            trailing: AppIcon(AppIconData.pencil, size: 18, color: muted),
             onTap: () => _showNameEdit(context, ref, name, t),
           ),
 
@@ -67,7 +68,7 @@ class SettingsScreen extends HookConsumerWidget {
           const ThemeToggleTile(),
           const SettingsDivider(),
           SettingsRow(
-            icon: Icons.text_fields_rounded,
+            icon: AppIconData.typeIcon,
             title: 'App font',
             value: preset.label,
             chevron: true,
@@ -83,7 +84,7 @@ class SettingsScreen extends HookConsumerWidget {
           ),
           const SettingsDivider(),
           SettingsRow(
-            icon: Icons.edit_note_rounded,
+            icon: AppIconData.quill,
             title: 'Writing font',
             value: _fontDisplayName(fontKey, preset),
             chevron: true,
@@ -105,7 +106,7 @@ class SettingsScreen extends HookConsumerWidget {
           // ── Security ─────────────────────────────────────────────────
           const _SectionHeader('Security'),
           SettingsRow(
-            icon: Icons.fingerprint_rounded,
+            icon: AppIconData.fingerprint,
             title: 'Lock with biometrics',
             trailing: Switch(
               value: auth.biometricsEnabled,
@@ -120,7 +121,7 @@ class SettingsScreen extends HookConsumerWidget {
           ),
           const SettingsDivider(),
           SettingsRow(
-            icon: Icons.lock_outline_rounded,
+            icon: AppIconData.lock,
             title: 'Change security method',
             chevron: true,
             onTap: () => _showSecurityOptions(context),
@@ -133,7 +134,7 @@ class SettingsScreen extends HookConsumerWidget {
           // ── About ────────────────────────────────────────────────────
           const _SectionHeader('About'),
           SettingsRow(
-            icon: Icons.info_outline_rounded,
+            icon: AppIconData.info,
             title: 'Version',
             value: versionStr,
           ),
@@ -335,7 +336,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
         SecurityOptionTile(
             label: 'Fingerprint + PIN',
             subtitle: 'Fingerprint first, custom PIN',
-            icon: Icons.fingerprint_rounded,
+            icon: AppIconData.fingerprint,
             selected: currentMode == AuthMode.biometricAndPin,
             loading: _loading,
             onTap: () => setState(() { _pinMode = 'biometricAndPin'; _firstPin = null; _pinError = null; })),
@@ -343,7 +344,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
         SecurityOptionTile(
             label: 'Fingerprint only',
             subtitle: 'Biometric only',
-            icon: Icons.fingerprint_rounded,
+            icon: AppIconData.fingerprint,
             selected: currentMode == AuthMode.biometric,
             loading: _loading,
             onTap: _biometricOnly),
@@ -351,7 +352,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
         SecurityOptionTile(
             label: 'PIN only',
             subtitle: 'Custom 4-digit PIN to unlock',
-            icon: Icons.pin_outlined,
+            icon: AppIconData.key,
             selected: currentMode == AuthMode.pin,
             loading: _loading,
             onTap: () => setState(() { _pinMode = 'pin'; _firstPin = null; _pinError = null; })),
@@ -359,7 +360,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
         SecurityOptionTile(
             label: 'No lock',
             subtitle: 'Anyone can open the app',
-            icon: Icons.lock_open_outlined,
+            icon: AppIconData.lockOpen,
             selected: currentMode == AuthMode.none,
             danger: true,
             loading: _loading,
@@ -376,7 +377,7 @@ class _SecurityOptionsSheetState extends ConsumerState<_SecurityOptionsSheet> {
       children: [
         IconButton(
           tooltip: 'Back',
-          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: t.onSurfaceMuted),
+          icon: AppIcon(AppIconData.back, size: 18, color: t.onSurfaceMuted),
           onPressed: () => setState(() {
             if (isConfirm) { _firstPin = null; _pinError = null; }
             else { _pinMode = null; }

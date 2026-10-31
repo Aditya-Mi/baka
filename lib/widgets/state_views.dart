@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 
 /// Calm, centred message for empty / not-found / error states.
 /// Shared so every screen fails the same, readable way.
 class StateMessage extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
+  /// Drawn in place of [icon] when set.
+  final Doodle? doodle;
   final String title;
   final String? body;
   final String? actionLabel;
@@ -14,6 +18,7 @@ class StateMessage extends StatelessWidget {
   const StateMessage({
     super.key,
     required this.icon,
+    this.doodle,
     required this.title,
     this.body,
     this.actionLabel,
@@ -29,7 +34,9 @@ class StateMessage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 40, color: t.onSurfaceMuted),
+            doodle != null
+                ? InkDoodle(doodle!, width: 130)
+                : AppIcon(icon, size: 40, color: t.onSurfaceMuted),
             const SizedBox(height: 16),
             Text(
               title,
@@ -88,7 +95,7 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StateMessage(
-        icon: Icons.error_outline_rounded,
+        icon: AppIconData.alert,
         title: "Couldn't load this",
         body: '$message Your entries are safe on this device.',
         actionLabel: onRetry != null ? 'Try again' : null,

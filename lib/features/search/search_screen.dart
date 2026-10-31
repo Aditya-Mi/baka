@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -69,7 +70,7 @@ class SearchScreen extends HookConsumerWidget {
         toolbarHeight: 72,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: onBg),
+          icon: AppIcon(AppIconData.back, color: onBg),
           onPressed: () => context.pop(),
           tooltip: 'Back',
         ),
@@ -94,11 +95,11 @@ class SearchScreen extends HookConsumerWidget {
                 fillColor: t.surfaceElev,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                prefixIcon: Icon(Icons.search_rounded, size: 20, color: muted),
+                prefixIcon: AppIcon(AppIconData.search, size: 20, color: muted),
                 suffixIcon: ctrl.text.isEmpty
                     ? null
                     : IconButton(
-                        icon: Icon(Icons.close_rounded, size: 20, color: muted),
+                        icon: AppIcon(AppIconData.close, size: 20, color: muted),
                         tooltip: 'Clear search',
                         onPressed: () {
                           ctrl.clear();

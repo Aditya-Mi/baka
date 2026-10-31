@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -10,19 +11,16 @@ import 'package:uuid/uuid.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/core/prompts/writing_prompts.dart';
-import 'package:baka/features/editor/widgets/anchor_bar.dart';
+import 'package:baka/features/editor/widgets/editor_bottom_bar.dart';
 import 'package:baka/features/editor/widgets/editor_meta.dart';
 import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
-import 'package:baka/features/editor/widgets/mood_selector.dart';
-import 'package:baka/features/editor/widgets/tag_input_field.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
 import 'package:baka/models/mood.dart';
 import 'package:baka/providers/draft_provider.dart';
 import 'package:baka/providers/entries_provider.dart';
-import 'package:baka/features/editor/widgets/word_counter_bar.dart';
 import 'package:baka/utils/hashtag_controller.dart';
 import 'package:baka/utils/lifecycle_observer.dart';
 import 'package:baka/utils/word_counter.dart';
@@ -60,6 +58,9 @@ class NewEntryScreen extends HookConsumerWidget {
     final bodyTags = useState<Set<String>>({});
     final anchor   = useState(const Anchor());
     final isSaving = useState(false);
+    // Set once the page is kept: no draft may be written after that, even
+    // by the dispose-time flush while the route is still popping.
+    final saved = useRef(false);
 
     // Body focus drives the collapsible metadata header.
     final bodyFocus   = useFocusNode();
@@ -89,7 +90,7 @@ class NewEntryScreen extends HookConsumerWidget {
 
     void flushDraft() {
       debounce.value?.cancel();
-      if (!hydrated.value || isSaving.value) return;
+      if (!hydrated.value || isSaving.value || saved.value) return;
       draftsNotifier.save(buildDraft());
     }
 
@@ -97,7 +98,7 @@ class NewEntryScreen extends HookConsumerWidget {
       if (!hydrated.value) return;
       debounce.value?.cancel();
       debounce.value = Timer(const Duration(milliseconds: 700), () {
-        if (isSaving.value) return;
+        if (isSaving.value || saved.value) return;
         draftsNotifier.save(buildDraft());
       });
     }
@@ -184,6 +185,7 @@ class NewEntryScreen extends HookConsumerWidget {
           wordCount: countWords(bodyCtrl.text),
           anchor:    anchor.value.isEmpty ? null : anchor.value,
         ));
+        saved.value = true;
         await ref.read(draftsProvider.notifier).clear(sessionId);
         // A page kept should feel certain without anything on screen.
         HapticFeedback.lightImpact();
@@ -204,7 +206,7 @@ class NewEntryScreen extends HookConsumerWidget {
       appBar: AppBar(
         backgroundColor: t.background,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: t.onBackground),
+          icon: AppIcon(AppIconData.close, color: t.onBackground),
           tooltip: 'Close',
           onPressed: () {
             // Closing never loses text: the draft autosaves on dispose.
@@ -266,22 +268,6 @@ class NewEntryScreen extends HookConsumerWidget {
               tagCount: tags.value.length,
               expanded: [
                 PageHeader(date: dateVal, entryDate: entryDate),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Divider(color: t.outlineSoft, height: 1),
-                ),
-                MoodSelector(
-                  selected: mood.value,
-                  onChanged: (m) { mood.value = m; scheduleSave(); },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Divider(color: t.outlineSoft, height: 1),
-                ),
-                TagInputField(
-                  tags: tags.value,
-                  onChanged: (updated) { tags.value = updated; scheduleSave(); },
-                ),
               ],
             ),
           ),
@@ -322,19 +308,16 @@ class NewEntryScreen extends HookConsumerWidget {
             ),
           )),
 
-          // ── Anchor bar ──────────────────────────────────────────────────
-          AnchorBar(
+          // ── Mood, tags, anchors, word count ─────────────────────────────
+          EditorBottomBar(
+            typing: bodyFocused.value,
+            mood: mood.value,
+            onMood: (m) { mood.value = m; scheduleSave(); },
+            tags: tags.value,
+            onTags: (updated) { tags.value = updated; scheduleSave(); },
             anchor: anchor.value,
-            onChanged: (a) { anchor.value = a; scheduleSave(); },
-          ),
-
-          // ── Counter — isolated leaf, zero parent rebuild on typing ───────
-          WordCounterBar(
-            controller: bodyCtrl,
-            outline: t.outline,
-            bg: t.background,
-            muted: t.onSurfaceMuted,
-            showTopBorder: false,
+            onAnchor: (a) { anchor.value = a; scheduleSave(); },
+            body: bodyCtrl,
           ),
         ],
       ),

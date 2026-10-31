@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:baka/core/theme/app_theme.dart';
 
 /// Bottom sheet for setting a location label.
@@ -85,7 +86,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                     fontStyle: FontStyle.italic,
                     color: t.onSurfaceMuted,
                   ),
-                prefixIcon: Icon(Icons.location_on_outlined,
+                prefixIcon: AppIcon(AppIconData.mapPin,
                     size: 20, color: t.primary),
               ),
               onSubmitted: (_) => _submit(),

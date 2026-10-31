@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 
@@ -56,7 +57,7 @@ class TagChip extends StatelessWidget {
                 child: Padding(
                   // Bigger hit area for the ✕ without a bigger glyph.
                   padding: const EdgeInsets.all(8),
-                  child: Icon(Icons.close_rounded, size: 14, color: color),
+                  child: AppIcon(AppIconData.close, size: 14, color: color),
                 ),
               ),
             ),

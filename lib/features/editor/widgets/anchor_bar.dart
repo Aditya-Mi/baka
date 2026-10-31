@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
@@ -11,215 +12,261 @@ import 'location_sheet.dart';
 import 'photo_sheet.dart';
 import 'weather_sheet.dart';
 
+/// The editor's bottom toolbar. Unset anchors are quiet icon buttons; once
+/// set they become chips that show their value. [leading] (the tag button)
+/// sits first, [trailing] (the word count) stays pinned to the right.
 class AnchorBar extends StatelessWidget {
   final Anchor anchor;
   final ValueChanged<Anchor> onChanged;
+  final Widget? leading;
+  final Widget? trailing;
 
-  const AnchorBar({super.key, required this.anchor, required this.onChanged});
+  const AnchorBar({
+    super.key,
+    required this.anchor,
+    required this.onChanged,
+    this.leading,
+    this.trailing,
+  });
+
+  Future<void> _pickLocation(BuildContext context) async {
+    final result = await showLocationSheet(context, initial: anchor.location);
+    if (result == null) return;
+    onChanged(anchor.copyWith(location: result.isEmpty ? null : result));
+  }
+
+  Future<void> _pickWeather(BuildContext context) async {
+    final result = await showWeatherSheet(
+      context,
+      initialCondition: anchor.weatherCondition,
+      initialTemp: anchor.weatherTemp,
+    );
+    if (result == null) return;
+    if (result.isRemove) {
+      onChanged(anchor.copyWith(weather: null, weatherTemp: null));
+    } else {
+      onChanged(anchor.copyWith(
+        weather: result.condition,
+        weatherTemp: result.temp,
+      ));
+    }
+  }
+
+  Future<void> _pickSong(BuildContext context) async {
+    final nameCtrl   = TextEditingController(text: anchor.songName ?? '');
+    final artistCtrl = TextEditingController(text: anchor.songArtist ?? '');
+    final urlCtrl    = TextEditingController(text: anchor.songUrl ?? '');
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Song'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: 'Song name *',
+                labelStyle: AppText.label(context),
+                hintStyle: AppText.label(context),
+              ),
+              style: AppText.rowTitle(context),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: artistCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: 'Artist',
+                labelStyle: AppText.label(context),
+              ),
+              style: AppText.rowTitle(context),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: urlCtrl,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: 'Spotify / YouTube / Apple Music URL',
+                labelStyle: AppText.label(context),
+                hintText: 'https://',
+                hintStyle: AppText.label(context),
+              ),
+              style: AppText.rowTitle(context),
+            ),
+          ],
+        ),
+        actions: [
+          if (anchor.hasSong)
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('Remove'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved == null) return;
+    if (!saved) {
+      onChanged(anchor.copyWith(songName: null, songArtist: null, songUrl: null));
+      return;
+    }
+    final name = nameCtrl.text.trim();
+    if (name.isEmpty) return;
+    final url = urlCtrl.text.trim();
+    onChanged(anchor.copyWith(
+      songName:   name,
+      songArtist: artistCtrl.text.trim().isEmpty ? null : artistCtrl.text.trim(),
+      songUrl:    url.isEmpty ? null : normalizeSongUrl(url),
+    ));
+  }
+
+  Future<void> _pickPhoto(BuildContext context) async {
+    final result = await showPhotoSheet(context, existingPath: anchor.photoPath);
+    if (result == null) return;
+    onChanged(anchor.copyWith(photoPath: result.isEmpty ? null : result));
+  }
+
+  Widget _valueChip(BuildContext context, BakaTokens t,
+      {required Widget icon, required String label, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: _Chip(
+        active: true,
+        t: t,
+        onTap: onTap,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          icon,
+          const SizedBox(width: 5),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.meta(context).copyWith(color: t.onPrimaryContainer)),
+          ),
+        ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: t.outlineSoft, width: 1)),
-        color: t.background,
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  if (leading != null) leading!,
 
-          // ── Location ──────────────────────────────────────────────────
-          _Chip(
-            onTap: () async {
-              final result = await showLocationSheet(
-                context, initial: anchor.location);
-              if (result == null) return;
-              onChanged(anchor.copyWith(
-                location: result.isEmpty ? null : result));
-            },
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(
-                anchor.hasLocation
-                    ? Icons.location_on_rounded
-                    : Icons.location_on_outlined,
-                size: 16,
-                color: anchor.hasLocation ? t.primary : t.onSurfaceMuted,
+                  if (anchor.hasLocation)
+                    _valueChip(context, t,
+                        icon: AppIcon(AppIconData.mapPin, size: 16, color: t.primary),
+                        label: anchor.location!,
+                        onTap: () => _pickLocation(context))
+                  else
+                    ToolButton(
+                        icon: AppIconData.mapPin,
+                        tooltip: 'Location',
+                        onTap: () => _pickLocation(context)),
+
+                  if (anchor.hasWeather)
+                    _valueChip(context, t,
+                        icon: WeatherIcon(anchor.weatherCondition!,
+                            size: 16, color: t.primary),
+                        label: anchor.weatherTemp != null
+                            ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
+                            : anchor.weatherCondition!.label,
+                        onTap: () => _pickWeather(context))
+                  else
+                    ToolButton(
+                        icon: AppIconData.cloud,
+                        tooltip: 'Weather',
+                        onTap: () => _pickWeather(context)),
+
+                  if (anchor.hasSong)
+                    _valueChip(context, t,
+                        icon: AppIcon(AppIconData.music, size: 16, color: t.primary),
+                        label: anchor.songArtist != null
+                            ? '${anchor.songName!} · ${anchor.songArtist!}'
+                            : anchor.songName!,
+                        onTap: () => _pickSong(context))
+                  else
+                    ToolButton(
+                        icon: AppIconData.music,
+                        tooltip: 'Song',
+                        onTap: () => _pickSong(context)),
+
+                  if (anchor.hasPhoto)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: _PhotoChip(
+                          anchor: anchor, t: t, onTap: () => _pickPhoto(context)),
+                    )
+                  else
+                    ToolButton(
+                        icon: AppIconData.image,
+                        tooltip: 'Photo',
+                        onTap: () => _pickPhoto(context)),
+                ],
               ),
-              const SizedBox(width: 5),
-              Text(
-                anchor.hasLocation ? anchor.location! : 'Location',
-                style: AppText.meta(context).copyWith(
-                    color: anchor.hasLocation ? t.onPrimaryContainer : t.onSurface,
-                  ),
-              ),
-            ]),
-            active: anchor.hasLocation,
-            t: t,
+            ),
           ),
-          const SizedBox(width: 10),
-
-          // ── Weather ───────────────────────────────────────────────────
-          _Chip(
-            onTap: () async {
-              final result = await showWeatherSheet(
-                context,
-                initialCondition: anchor.weatherCondition,
-                initialTemp: anchor.weatherTemp,
-              );
-              if (result == null) return;
-              if (result.isRemove) {
-                onChanged(anchor.copyWith(weather: null, weatherTemp: null));
-              } else {
-                onChanged(anchor.copyWith(
-                  weather: result.condition,
-                  weatherTemp: result.temp,
-                ));
-              }
-            },
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              anchor.hasWeather
-                  ? WeatherIcon(anchor.weatherCondition!, size: 16, color: t.primary)
-                  : Icon(Icons.wb_cloudy_outlined, size: 16, color: t.onSurfaceMuted),
-              const SizedBox(width: 5),
-              Text(
-                anchor.hasWeather
-                    ? (anchor.weatherTemp != null
-                        ? '${anchor.weatherCondition!.label} · ${anchor.weatherTemp}°C'
-                        : anchor.weatherCondition!.label)
-                    : 'Weather',
-                style: AppText.meta(context).copyWith(
-                    color: anchor.hasWeather ? t.onPrimaryContainer : t.onSurface,
-                  ),
-              ),
-            ]),
-            active: anchor.hasWeather,
-            t: t,
-          ),
-          const SizedBox(width: 10),
-
-          // ── Song ──────────────────────────────────────────────────────
-          _Chip(
-            active: anchor.hasSong,
-            t: t,
-            onTap: () async {
-              final nameCtrl   = TextEditingController(text: anchor.songName ?? '');
-              final artistCtrl = TextEditingController(text: anchor.songArtist ?? '');
-              final urlCtrl    = TextEditingController(text: anchor.songUrl ?? '');
-
-              final saved = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Song'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: nameCtrl,
-                        autofocus: true,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Song name *',
-                          labelStyle: AppText.label(context),
-                          hintStyle: AppText.label(context),
-                        ),
-                        style: AppText.rowTitle(context),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: artistCtrl,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Artist',
-                          labelStyle: AppText.label(context),
-                        ),
-                        style: AppText.rowTitle(context),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: urlCtrl,
-                        keyboardType: TextInputType.url,
-                        decoration: InputDecoration(
-                          labelText: 'Spotify / YouTube / Apple Music URL',
-                          labelStyle: AppText.label(context),
-                          hintText: 'https://',
-                          hintStyle: AppText.label(context),
-                        ),
-                        style: AppText.rowTitle(context),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    if (anchor.hasSong)
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context).colorScheme.error),
-                        child: const Text('Remove'),
-                      ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Save'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (saved == null) return;
-              if (!saved) {
-                onChanged(anchor.copyWith(
-                  songName: null, songArtist: null, songUrl: null));
-                return;
-              }
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              final url = urlCtrl.text.trim();
-              onChanged(anchor.copyWith(
-                songName:   name,
-                songArtist: artistCtrl.text.trim().isEmpty ? null : artistCtrl.text.trim(),
-                songUrl:    url.isEmpty ? null : normalizeSongUrl(url),
-              ));
-            },
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(
-                Icons.music_note_rounded,
-                size: 16,
-                color: anchor.hasSong ? t.primary : t.onSurfaceMuted,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                anchor.hasSong
-                    ? (anchor.songArtist != null
-                        ? '${anchor.songName!} · ${anchor.songArtist!}'
-                        : anchor.songName!)
-                    : 'Song',
-                style: AppText.meta(context).copyWith(
-                    color: anchor.hasSong ? t.onPrimaryContainer : t.onSurface,
-                  ),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 10),
-
-          // ── Photo ─────────────────────────────────────────────────────
-          _PhotoChip(
-            anchor: anchor,
-            t: t,
-            onTap: () async {
-              final result = await showPhotoSheet(
-                context, existingPath: anchor.photoPath);
-              if (result == null) return;
-              onChanged(anchor.copyWith(
-                photoPath: result.isEmpty ? null : result));
-            },
-          ),
-          ],
-        ),
+          if (trailing != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8, right: 20),
+              child: trailing!,
+            ),
+        ],
       ),
     );
   }
+}
+
+/// 44×44 icon-only toolbar button with a tooltip (also its TalkBack label).
+class ToolButton extends StatelessWidget {
+  final AppIconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color? color;
+  const ToolButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 22,
+          child: SizedBox(
+            width: 44, height: 44,
+            child: Center(
+              child: AppIcon(icon,
+                  size: 20, color: color ?? context.tokens.onSurfaceMuted),
+            ),
+          ),
+        ),
+      );
 }
 
 // ── Generic chip ──────────────────────────────────────────────────────────────
@@ -274,7 +321,7 @@ class _PhotoChip extends StatelessWidget {
         active: false,
         t: t,
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.image_outlined, size: 16, color: t.onSurfaceMuted),
+          AppIcon(AppIconData.image, size: 16, color: t.onSurfaceMuted),
           const SizedBox(width: 5),
           Text('Photo', style: AppText.meta(context).copyWith(
               color: t.onSurface,
@@ -310,7 +357,7 @@ class _PhotoChip extends StatelessWidget {
                         cacheWidth: (24 * MediaQuery.devicePixelRatioOf(context)).round()),
                   )
                 else
-                  Icon(Icons.image_rounded, size: 16, color: t.primary),
+                  AppIcon(AppIconData.image, size: 16, color: t.primary),
                 const SizedBox(width: 5),
                 Text('Photo', style: AppText.meta(context).copyWith(
                     color: t.onPrimaryContainer,

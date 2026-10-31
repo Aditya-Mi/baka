@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 
 /// Bottom sheet that explains why Baka needs the microphone (and, on Android 13+,
 /// notifications for recording controls), then requests them. Returns true if
@@ -55,12 +56,8 @@ class _PrimingSheetState extends State<_PrimingSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72, height: 72,
-              decoration: BoxDecoration(color: t.primary, shape: BoxShape.circle),
-              child: Icon(Icons.mic_rounded, size: 34, color: Theme.of(context).colorScheme.onPrimary),
-            ),
-            const SizedBox(height: 16),
+            const InkDoodle(Doodle.voice, width: 104),
+            const SizedBox(height: 12),
             Text('Let Baka hear you',
                 style: AppText.numeral(context).copyWith(
                     fontWeight: FontWeight.w600,

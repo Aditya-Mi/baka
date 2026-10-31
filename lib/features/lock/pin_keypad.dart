@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
@@ -102,7 +103,7 @@ class _PinKeypadState extends State<PinKeypad>
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.isError) ...[
-                Icon(Icons.error_outline_rounded, size: 16, color: err),
+                AppIcon(AppIconData.alert, size: 16, color: err),
                 const SizedBox(width: 5),
               ],
               Flexible(
@@ -198,7 +199,7 @@ class _PinKeypadState extends State<PinKeypad>
         t: t,
         transparent: true,
         semanticLabel: 'Delete digit',
-        child: Icon(Icons.backspace_outlined, size: 24, color: t.onSurfaceMuted),
+        child: AppIcon(AppIconData.backspace, size: 24, color: t.onSurfaceMuted),
       );
 }
 

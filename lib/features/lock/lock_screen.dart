@@ -80,7 +80,7 @@ class LockScreen extends HookConsumerWidget {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back_rounded,
+                      icon: AppIcon(AppIconData.back,
                           size: 24, color: t.onBackground),
                       tooltip: 'Back',
                       onPressed: () {
@@ -512,7 +512,7 @@ class _SecurityStep extends StatelessWidget {
             color: t.primaryContainer,
             border: Border.all(color: t.primary, width: 1.5),
           ),
-          child: Icon(Icons.lock_outline_rounded, size: 28, color: t.primary),
+          child: AppIcon(AppIconData.lock, size: 28, color: t.primary),
         ),
         const SizedBox(height: 16),
         Text('Protect your journal?',
@@ -537,19 +537,19 @@ class _SecurityStep extends StatelessWidget {
         ],
         const SizedBox(height: 20),
         SecurityOptionTile(
-            icon: Icons.fingerprint_rounded,
+            icon: AppIconData.fingerprint,
             label: 'Fingerprint + PIN',
             subtitle: 'Fingerprint first, custom PIN',
             loading: loading, onTap: onBiometricAndPin),
         const SizedBox(height: 8),
         SecurityOptionTile(
-            icon: Icons.fingerprint_rounded,
+            icon: AppIconData.fingerprint,
             label: 'Fingerprint only',
             subtitle: 'Biometric only',
             loading: loading, onTap: onBiometricOnly),
         const SizedBox(height: 8),
         SecurityOptionTile(
-            icon: Icons.pin_outlined,
+            icon: AppIconData.key,
             label: 'PIN only',
             subtitle: 'Set a custom 4-digit PIN',
             loading: loading, onTap: onPinOnly),
@@ -591,7 +591,7 @@ class _ReminderStep extends HookConsumerWidget {
             color: t.primaryContainer,
             border: Border.all(color: t.primary, width: 1.5),
           ),
-          child: Icon(Icons.notifications_outlined, size: 28, color: t.primary),
+          child: AppIcon(AppIconData.bell, size: 28, color: t.primary),
         ),
         const SizedBox(height: 16),
         Text('Daily reminders?',
@@ -626,7 +626,7 @@ class _ReminderStep extends HookConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.access_time_rounded, size: 16, color: t.primary),
+                AppIcon(AppIconData.clock, size: 16, color: t.primary),
                 const SizedBox(width: 8),
                 Text(
                   selectedTime.value.format(context),
@@ -636,7 +636,7 @@ class _ReminderStep extends HookConsumerWidget {
                     ),
                 ),
                 const SizedBox(width: 6),
-                Icon(Icons.edit_rounded, size: 13, color: t.primary.withValues(alpha: 0.7)),
+                AppIcon(AppIconData.pencil, size: 13, color: t.primary.withValues(alpha: 0.7)),
               ],
             ),
           ),

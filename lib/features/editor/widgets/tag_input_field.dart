@@ -8,7 +8,9 @@ import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/tag_chip.dart';
 
-/// Horizontal tag row with inline add-tag input.
+/// The entry's tags as a chip row, with an inline input opened by the
+/// toolbar's # button ([TagInputFieldState.startEditing]). Takes no space
+/// while there are no tags and nothing is being typed.
 class TagInputField extends ConsumerStatefulWidget {
   final List<String> tags;
   final ValueChanged<List<String>> onChanged;
@@ -16,10 +18,10 @@ class TagInputField extends ConsumerStatefulWidget {
   const TagInputField({super.key, required this.tags, required this.onChanged});
 
   @override
-  ConsumerState<TagInputField> createState() => _TagInputFieldState();
+  ConsumerState<TagInputField> createState() => TagInputFieldState();
 }
 
-class _TagInputFieldState extends ConsumerState<TagInputField> {
+class TagInputFieldState extends ConsumerState<TagInputField> {
   bool _editing = false;
   final _ctrl = TextEditingController();
   final _focus = FocusNode();
@@ -31,7 +33,8 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
     super.dispose();
   }
 
-  void _startEditing() {
+  void startEditing() {
+    if (_editing) return;
     setState(() => _editing = true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
   }
@@ -55,14 +58,15 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
     final t       = context.tokens;
     final primary = t.primary;
     final tagBg   = t.primaryContainer;
-    final outline = t.outline;
     final muted   = t.onSurfaceMuted;
     final onBg    = t.onBackground;
     final tagList = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
 
+    if (widget.tags.isEmpty && !_editing) return const SizedBox.shrink();
+
     return Container(
       width: double.infinity, // full width so the chips sit on the left edge
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 4),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -129,34 +133,6 @@ class _TagInputFieldState extends ConsumerState<TagInputField> {
                 ],
               ),
             )
-          else
-            // "Add tag" button
-            Material(
-              color: Colors.transparent,
-              shape: StadiumBorder(side: BorderSide(color: outline)),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: _startEditing,
-                child: Container(
-                  height: 32,
-                  padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_rounded, size: 16, color: muted),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Add tag',
-                        style: AppText.meta(context).copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: muted,
-                          ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

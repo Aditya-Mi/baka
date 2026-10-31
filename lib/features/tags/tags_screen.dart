@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
@@ -28,7 +30,7 @@ class TagsScreen extends HookConsumerWidget {
       appBar: AppBar(
         backgroundColor: t.background,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: t.onBackground),
+          icon: AppIcon(AppIconData.back, color: t.onBackground),
           onPressed: () => context.pop(),
           tooltip: 'Back',
         ),
@@ -83,12 +85,16 @@ class TagsScreen extends HookConsumerWidget {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Text('No tags yet.\nWrite #anything in a page and it shows up here.',
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const InkDoodle(Doodle.tag, width: 140),
+                  const SizedBox(height: 16),
+                  Text('No tags yet.\nWrite #anything in a page and it shows up here.',
                     textAlign: TextAlign.center,
                     style: AppText.bodyPreview(context).copyWith(
                         fontStyle: FontStyle.italic,
                         color: t.onSurfaceMuted,
                       )),
+                ]),
               ),
             );
           }
@@ -195,7 +201,7 @@ class TagsScreen extends HookConsumerWidget {
                         ),
                       ),
                       child: isSelected
-                          ? Icon(Icons.check_rounded, size: 20, color: tc.color)
+                          ? AppIcon(AppIconData.check, size: 20, color: tc.color)
                           : null,
                     ),
                   ),

@@ -37,14 +37,16 @@ class DraftsNotifier extends AsyncNotifier<List<Draft>> {
 
   /// Upsert by id. Empty-body drafts are dropped instead of stored.
   Future<void> save(Draft draft) async {
-    final list = List<Draft>.from(state.valueOrNull ?? [])
+    // Await the stored list: building on a still-loading state would
+    // overwrite every other draft with this one.
+    final list = List<Draft>.from(await future)
       ..removeWhere((d) => d.id == draft.id);
     if (draft.body.trim().isNotEmpty) list.add(draft);
     await _persist(list);
   }
 
   Future<void> clear(String id) async {
-    await _persist(List<Draft>.from(state.valueOrNull ?? [])
+    await _persist(List<Draft>.from(await future)
       ..removeWhere((d) => d.id == id));
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:baka/core/theme/app_theme.dart';
 
 class SecurityOptionTile extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String label;
   final String subtitle;
   final bool selected;
@@ -48,7 +49,7 @@ class SecurityOptionTile extends StatelessWidget {
                     border: Border.all(color: borderColor, width: 1),
                   ),
             child: Row(children: [
-              Icon(icon, size: 20, color: labelColor),
+              AppIcon(icon, size: 20, color: labelColor),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -63,7 +64,7 @@ class SecurityOptionTile extends StatelessWidget {
                         )),
                 ]),
               ),
-              if (filled) Icon(Icons.check_circle_rounded, size: 18, color: cs.onPrimary),
+              if (filled) AppIcon(AppIconData.checkCircle, size: 18, color: cs.onPrimary),
             ]),
           ),
         ),

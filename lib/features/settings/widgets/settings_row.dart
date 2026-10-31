@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
 
 /// The one row style used across Settings: leading icon, body-font title,
 /// optional handwritten subtitle, optional value and trailing widget.
 class SettingsRow extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String title;
   final String? subtitle;
   final String? value;
@@ -39,7 +40,7 @@ class SettingsRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
             children: [
-              Icon(icon, size: 22, color: t.onSurfaceMuted),
+              AppIcon(icon, size: 22, color: t.onSurfaceMuted),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -85,7 +86,7 @@ class SettingsRow extends StatelessWidget {
               ],
               if (chevron) ...[
                 const SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded, size: 20, color: t.onSurfaceMuted),
+                AppIcon(AppIconData.chevronRight, size: 20, color: t.onSurfaceMuted),
               ],
             ],
           ),

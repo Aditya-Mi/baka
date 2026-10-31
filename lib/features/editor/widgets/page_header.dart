@@ -100,7 +100,7 @@ class _TimeChip extends StatelessWidget {
                       color: t.onPrimaryContainer,
                     )),
               const SizedBox(width: 2),
-              Icon(Icons.keyboard_arrow_down_rounded,
+              AppIcon(AppIconData.chevronDown,
                   size: 18, color: t.onPrimaryContainer),
             ],
           ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -9,13 +10,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:baka/core/theme/app_theme.dart';
-import 'package:baka/features/editor/widgets/anchor_bar.dart';
+import 'package:baka/features/editor/widgets/editor_bottom_bar.dart';
 import 'package:baka/features/editor/widgets/editor_meta.dart';
 import 'package:baka/features/editor/widgets/lined_paper_background.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
-import 'package:baka/features/editor/widgets/word_counter_bar.dart';
-import 'package:baka/features/editor/widgets/mood_selector.dart';
-import 'package:baka/features/editor/widgets/tag_input_field.dart';
 import 'package:baka/models/anchor.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
@@ -59,6 +57,9 @@ class EditEntryScreen extends HookConsumerWidget {
     final hydrated  = useState(false);
     final restored  = useState(false);
     final isSaving  = useState(false);
+    // Set once the page is kept: no draft may be written after that, even
+    // by the dispose-time flush while the route is still popping.
+    final saved = useRef(false);
     final entryDate = useState(DateTime.now());
 
     // Body focus drives the collapsible metadata header.
@@ -147,7 +148,7 @@ class EditEntryScreen extends HookConsumerWidget {
     final draftsNotifier = ref.read(draftsProvider.notifier);
 
     void commitDraft() {
-      if (!hydrated.value || isSaving.value) return;
+      if (!hydrated.value || isSaving.value || saved.value) return;
       final notifier = draftsNotifier;
       if (matchesEntry()) {
         notifier.clear(sessionId);
@@ -228,6 +229,7 @@ class EditEntryScreen extends HookConsumerWidget {
           wordCount: countWords(bodyCtrl.text),
           anchor:    anchor.value.isEmpty ? null : anchor.value,
         ));
+        saved.value = true;
         await ref.read(draftsProvider.notifier).clear(sessionId);
         // A page kept should feel certain without anything on screen.
         HapticFeedback.lightImpact();
@@ -262,7 +264,7 @@ class EditEntryScreen extends HookConsumerWidget {
       appBar: AppBar(
         backgroundColor: t.background,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: t.onBackground),
+          icon: AppIcon(AppIconData.close, color: t.onBackground),
           tooltip: 'Close',
           onPressed: () {
             // Closing never loses text: the draft autosaves on dispose.
@@ -323,22 +325,6 @@ class EditEntryScreen extends HookConsumerWidget {
               tagCount: tags.value.length,
               expanded: [
                 PageHeader(date: dateVal, entryDate: entryDate),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Divider(color: t.outlineSoft, height: 1),
-                ),
-                MoodSelector(
-                  selected: mood.value,
-                  onChanged: (m) { mood.value = m; scheduleSave(); },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Divider(color: t.outlineSoft, height: 1),
-                ),
-                TagInputField(
-                  tags: tags.value,
-                  onChanged: (updated) { tags.value = updated; scheduleSave(); },
-                ),
               ],
             ),
           ),
@@ -385,19 +371,16 @@ class EditEntryScreen extends HookConsumerWidget {
             ),
           )),
 
-          // ── Anchor bar ──────────────────────────────────────────────────
-          AnchorBar(
+          // ── Mood, tags, anchors, word count ─────────────────────────────
+          EditorBottomBar(
+            typing: bodyFocused.value,
+            mood: mood.value,
+            onMood: (m) { mood.value = m; scheduleSave(); },
+            tags: tags.value,
+            onTags: (updated) { tags.value = updated; scheduleSave(); },
             anchor: anchor.value,
-            onChanged: (a) { anchor.value = a; scheduleSave(); },
-          ),
-
-          // ── Counter — isolated, zero parent rebuild ───────────────────────
-          WordCounterBar(
-            controller: bodyCtrl,
-            outline: t.outline,
-            bg: t.background,
-            muted: t.onSurfaceMuted,
-            showTopBorder: false,
+            onAnchor: (a) { anchor.value = a; scheduleSave(); },
+            body: bodyCtrl,
           ),
         ],
       ),
@@ -421,7 +404,7 @@ class _RestoredBanner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
       child: Row(
         children: [
-          Icon(Icons.history_rounded, size: 16, color: t.primary),
+          AppIcon(AppIconData.history, size: 16, color: t.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text('Restored unsaved changes',
@@ -440,7 +423,7 @@ class _RestoredBanner extends StatelessWidget {
           IconButton(
             tooltip: 'Dismiss',
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.close_rounded, size: 18, color: t.onSurfaceMuted),
+            icon: AppIcon(AppIconData.close, size: 18, color: t.onSurfaceMuted),
             onPressed: onDismiss,
           ),
         ],

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'dart:io';
 
 import 'package:baka/core/theme/app_theme.dart';
+import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
 import 'package:baka/features/capture/widgets/waveform.dart';
 import 'package:baka/utils/song_preview.dart';
@@ -17,6 +20,7 @@ import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
 import 'package:baka/widgets/illustrations.dart';
+import 'package:baka/widgets/motion.dart';
 import 'package:baka/widgets/state_views.dart';
 import 'package:baka/widgets/weather_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -37,6 +41,13 @@ class EntryDetailScreen extends HookConsumerWidget {
     final entriesAsync = ref.watch(entriesProvider);
     final tagList      = ref.watch(tagsProvider).valueOrNull ?? <Tag>[];
     final entry = entriesAsync.valueOrNull?.where((e) => e.id == id).firstOrNull;
+    final crumple = useAnimationController(duration: const Duration(milliseconds: 450));
+
+    // Just deleted from here: the page already crumpled away, so show plain
+    // paper while the route pops instead of the "no longer exists" message.
+    if (entry == null && crumple.value > 0) {
+      return Scaffold(backgroundColor: bg);
+    }
 
     if (entry == null) {
       // Loading, failed, or the entry was deleted — never spin forever.
@@ -49,7 +60,8 @@ class EntryDetailScreen extends HookConsumerWidget {
         body = const Center(child: CircularProgressIndicator());
       } else {
         body = StateMessage(
-          icon: Icons.menu_book_outlined,
+          icon: AppIconData.book,
+          doodle: Doodle.missingPage,
           title: 'This entry no longer exists',
           body: 'It may have been deleted.',
           actionLabel: 'Back to your pages',
@@ -93,7 +105,7 @@ class EntryDetailScreen extends HookConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.edit_outlined, size: 18, color: t.onPrimaryContainer),
+                      AppIcon(AppIconData.quill, size: 18, color: t.onPrimaryContainer),
                       const SizedBox(width: 6),
                       Text('Edit',
                           style: AppText.handAction(context).copyWith(
@@ -107,14 +119,16 @@ class EntryDetailScreen extends HookConsumerWidget {
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, size: 22, color: muted),
-            onPressed: () => _confirmDelete(context, ref),
+            icon: AppIcon(AppIconData.trash, size: 22, color: muted),
+            onPressed: () => _confirmDelete(context, ref, crumple),
             tooltip: 'Delete',
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
+      body: _Crumple(
+        animation: crumple,
+        child: Column(
         children: [
             PageHeader(date: entry.createdAt, mood: entry.mood),
 
@@ -191,15 +205,17 @@ class EntryDetailScreen extends HookConsumerWidget {
             ),
           ],
         ),
+      ),
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, AnimationController crumple) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete entry?'),
-        content: const Text('This cannot be undone.'),
+        content: const Text('You can undo for a few seconds afterwards.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -213,11 +229,111 @@ class EntryDetailScreen extends HookConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true && context.mounted) {
-      await ref.read(entriesProvider.notifier).remove(id);
-      if (context.mounted) context.go('/');
+    if (confirmed != true || !context.mounted) return;
+
+    HapticFeedback.mediumImpact();
+    final notifier  = ref.read(entriesProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    if (Motion.reduced(context)) {
+      crumple.value = 1;
+    } else {
+      await crumple.forward();
+    }
+    if (!context.mounted) return;
+
+    context.go('/');
+    // Off the list now, out of the database only once Undo has passed.
+    final entry = notifier.stash(id);
+    if (entry == null) return;
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: const Text('Entry deleted'),
+        duration: const Duration(seconds: 5),
+        // Snackbars with an action stay up by default; this one must time
+        // out, since the delete only commits once it closes.
+        persist: false,
+        action: SnackBarAction(
+            label: 'Undo', onPressed: () => notifier.restore(entry)),
+      )).closed.then((reason) {
+        if (reason != SnackBarClosedReason.action) notifier.remove(id);
+      });
+  }
+}
+
+/// The page crumpling away on delete: it shrinks, tilts and drops while
+/// crease lines ink in, then fades. Exits faster than anything arrives.
+class _Crumple extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+  const _Crumple({required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final v = animation.value;
+        if (v == 0) return child!;
+        final crush  = Curves.easeInCubic.transform(v);
+        final crease = const Interval(0.15, 0.6, curve: Curves.easeOut).transform(v);
+        final fade   = const Interval(0.55, 1, curve: Curves.easeIn).transform(v);
+        return Opacity(
+          opacity: 1 - fade,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..translateByDouble(0.0, 60 * crush, 0.0, 1.0)
+              ..rotateZ(-0.21 * crush)
+              ..scaleByDouble(1 - 0.45 * crush, 1 - 0.45 * crush, 1.0, 1.0),
+            child: Stack(
+              fit: StackFit.passthrough,
+              children: [
+                child!,
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _CreasePainter(
+                          t.onSurface.withValues(alpha: 0.35 * crease)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CreasePainter extends CustomPainter {
+  final Color color;
+  const _CreasePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width, h = size.height;
+    final c = Offset(w * 0.48, h * 0.46);
+    final p = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    // Folds radiate from where the hand closed on the page.
+    for (final end in [
+      Offset(w * 0.06, h * 0.2), Offset(w * 0.94, h * 0.3),
+      Offset(w * 0.15, h * 0.8), Offset(w * 0.72, h * 0.95),
+      Offset(w * 0.52, h * 0.04),
+    ]) {
+      canvas.drawLine(c, end, p);
     }
   }
+
+  @override
+  bool shouldRepaint(_CreasePainter o) => o.color != color;
 }
 
 // ── Anchor bar (location + weather) ──────────────────────────────────────────
@@ -271,7 +387,7 @@ class _AnchorBar extends StatelessWidget {
           children: [
             if (anchor.hasLocation)
               _chip(context,
-                icon: Icon(Icons.location_on_outlined, size: 16, color: t.onSurfaceMuted),
+                icon: AppIcon(AppIconData.mapPin, size: 16, color: t.onSurfaceMuted),
                 label: anchor.location!),
             if (anchor.hasWeather)
               _chip(context,
@@ -281,7 +397,7 @@ class _AnchorBar extends StatelessWidget {
                     : anchor.weatherCondition!.label),
             if (anchor.hasSong)
               _chip(context,
-                icon: Icon(Icons.music_note_rounded, size: 16,
+                icon: AppIcon(AppIconData.music, size: 16,
                     color: hasLink ? t.primary : t.onSurfaceMuted),
                 label: anchor.songArtist != null
                     ? '${anchor.songName!} · ${anchor.songArtist!}'
@@ -348,7 +464,7 @@ class _PhotoViewState extends State<_PhotoView> {
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
                 child: Row(
                   children: [
-                    Icon(Icons.image_outlined, size: 16,
+                    AppIcon(AppIconData.image, size: 16,
                         color: widget.t.onSurfaceMuted),
                     const SizedBox(width: 6),
                     Text('Photo',
@@ -356,10 +472,10 @@ class _PhotoViewState extends State<_PhotoView> {
                             color: widget.t.onSurfaceMuted,
                           )),
                     const Spacer(),
-                    Icon(
+                    AppIcon(
                       _expanded
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
+                          ? AppIconData.chevronUp
+                          : AppIconData.chevronDown,
                       size: 18, color: widget.t.onSurfaceMuted,
                     ),
                   ],
@@ -538,8 +654,8 @@ class _SongPreviewState extends State<_SongPreview> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: onPrimary),
                       )
-                    : Icon(
-                        _playing ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                    : AppIcon(
+                        _playing ? AppIconData.stop : AppIconData.play,
                         size: 18, color: onPrimary,
                       ),
               ),

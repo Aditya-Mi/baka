@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:baka/widgets/app_icon.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -112,7 +113,7 @@ class _PhotoSheet extends StatelessWidget {
                 )),
           const SizedBox(height: 24),
           _Option(
-            icon: Icons.photo_library_outlined,
+            icon: AppIconData.images,
             label: 'Choose from gallery',
             t: t,
             onTap: () async {
@@ -122,7 +123,7 @@ class _PhotoSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _Option(
-            icon: Icons.photo_camera_outlined,
+            icon: AppIconData.camera,
             label: 'Take photo',
             t: t,
             onTap: () async {
@@ -132,7 +133,7 @@ class _PhotoSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _Option(
-            icon: Icons.folder_open_outlined,
+            icon: AppIconData.folderOpen,
             label: 'Browse files',
             t: t,
             onTap: () async {
@@ -143,7 +144,7 @@ class _PhotoSheet extends StatelessWidget {
           if (existingPath != null) ...[
             const SizedBox(height: 12),
             _Option(
-              icon: Icons.delete_outline_rounded,
+              icon: AppIconData.trash,
               label: 'Remove photo',
               t: t,
               danger: true,
@@ -152,7 +153,7 @@ class _PhotoSheet extends StatelessWidget {
           ],
           const SizedBox(height: 12),
           _Option(
-            icon: Icons.close_rounded,
+            icon: AppIconData.close,
             label: 'Cancel',
             t: t,
             onTap: () => Navigator.of(context).pop(null),
@@ -166,7 +167,7 @@ class _PhotoSheet extends StatelessWidget {
 }
 
 class _Option extends StatelessWidget {
-  final IconData icon;
+  final AppIconData icon;
   final String label;
   final BakaTokens t;
   final VoidCallback onTap;
@@ -183,7 +184,7 @@ class _Option extends StatelessWidget {
         ? Theme.of(context).colorScheme.error
         : muted ? t.onSurfaceMuted : t.onBackground;
     return ListTile(
-      leading: Icon(icon, color: color, size: 22),
+      leading: AppIcon(icon, color: color, size: 22),
       title: Text(label,
           style: AppText.sectionLabel(context).copyWith(
               fontWeight: FontWeight.w600,

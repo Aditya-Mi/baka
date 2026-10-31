@@ -69,7 +69,7 @@ class _MoodCalendarState extends State<MoodCalendar> {
           children: [
             IconButton(
               tooltip: 'Previous month',
-              icon: Icon(Icons.chevron_left_rounded,
+              icon: AppIcon(AppIconData.back,
                   color: t.onSurfaceMuted, size: 22),
               onPressed: _prev,
               visualDensity: VisualDensity.compact,
@@ -87,7 +87,7 @@ class _MoodCalendarState extends State<MoodCalendar> {
             ),
             IconButton(
               tooltip: 'Next month',
-              icon: Icon(Icons.chevron_right_rounded,
+              icon: AppIcon(AppIconData.chevronRight,
                   color: isCurrentMonth
                       ? t.outline
                       : t.onSurfaceMuted,
