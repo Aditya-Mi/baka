@@ -11,10 +11,12 @@ import 'anchor_bar.dart';
 import 'mood_selector.dart';
 import 'paper_sheet.dart';
 import 'tag_input_field.dart';
+import 'writing_strip.dart';
 
 /// Everything about the page that isn't the writing: mood strip, tags,
 /// anchors and the word count, kept under the paper so the page starts
-/// right below the date. The mood strip steps aside while typing.
+/// right below the date. While typing, the mood strip gives way to the
+/// writing strip (format row and @/[[ suggestions).
 class EditorBottomBar extends StatefulWidget {
   final bool typing;
   final Mood? mood;
@@ -26,6 +28,8 @@ class EditorBottomBar extends StatefulWidget {
   final TextEditingController body;
   final Paper paper;
   final ValueChanged<Paper> onPaper;
+  /// The page being edited, if it's been saved before.
+  final String? selfId;
 
   const EditorBottomBar({
     super.key,
@@ -39,6 +43,7 @@ class EditorBottomBar extends StatefulWidget {
     required this.body,
     required this.paper,
     required this.onPaper,
+    this.selfId,
   });
 
   @override
@@ -68,7 +73,7 @@ class _EditorBottomBarState extends State<EditorBottomBar> {
                 curve: Motion.curve,
                 alignment: Alignment.bottomCenter,
                 child: widget.typing
-                    ? const SizedBox(width: double.infinity)
+                    ? WritingStrip(body: widget.body, selfId: widget.selfId)
                     : MoodSelector(selected: widget.mood, onChanged: widget.onMood),
               ),
               TagInputField(

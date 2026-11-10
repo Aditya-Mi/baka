@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:baka/utils/note_marks.dart';
+import 'package:baka/utils/note_editing.dart';
 import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -240,7 +242,8 @@ class EditEntryScreen extends HookConsumerWidget {
       isSaving.value = true;
       debounce.value?.cancel();
       try {
-        await ref.read(entriesProvider.notifier).updateEntry(entry.copyWith(
+        final before  = ref.read(entriesProvider).valueOrNull ?? const <JournalEntry>[];
+        final updated = entry.copyWith(
           createdAt: entryDate.value,
           updatedAt: DateTime.now(),
           body:      bodyCtrl.text.trim(),
@@ -250,7 +253,19 @@ class EditEntryScreen extends HookConsumerWidget {
           anchor:    anchor.value.isEmpty ? null : anchor.value,
           title:     titleCtrl.text.trim().isEmpty ? null : titleCtrl.text.trim(),
           paper:     paper.value,
-        ));
+        );
+        final notifier = ref.read(entriesProvider.notifier);
+        await notifier.updateEntry(updated);
+        // Renamed (or re-dated): pages pointing here follow the new name.
+        final from = pageRefFor(entry), to = pageRefFor(updated);
+        if (from.toLowerCase() != to.toLowerCase() &&
+            resolvePageRef(from, before)?.id == entry.id) {
+          for (final other in before) {
+            if (other.id == entry.id) continue;
+            final body = renamePageRefs(other.body, from, to);
+            if (body != null) await notifier.updateEntry(other.copyWith(body: body));
+          }
+        }
         saved.value = true;
         await ref.read(draftsProvider.notifier).clear(sessionId);
         // A page kept should feel certain without anything on screen.
@@ -380,6 +395,7 @@ class EditEntryScreen extends HookConsumerWidget {
                 child: TextField(
                   controller: bodyCtrl,
                   focusNode: bodyFocus,
+                  inputFormatters: [ListContinuation()],
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
@@ -418,6 +434,7 @@ class EditEntryScreen extends HookConsumerWidget {
             body: bodyCtrl,
             paper: paper.value,
             onPaper: (p) { paper.value = p; scheduleSave(); },
+            selfId: id,
           ),
         ],
       ),

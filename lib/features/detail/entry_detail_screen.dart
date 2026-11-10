@@ -13,6 +13,13 @@ import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/features/editor/widgets/page_header.dart';
 import 'package:baka/features/capture/widgets/waveform.dart';
+import 'package:baka/features/home/widgets/page_stack.dart';
+import 'package:baka/models/journal_entry.dart';
+import 'package:baka/utils/link_preview.dart';
+import 'package:baka/utils/note_marks.dart';
+import 'package:baka/widgets/note_body.dart';
+import 'package:intl/intl.dart';
+import 'package:baka/utils/links.dart';
 import 'package:baka/utils/song_preview.dart';
 import 'package:baka/utils/tag_utils.dart';
 import 'package:baka/widgets/tag_chip.dart';
@@ -177,14 +184,37 @@ class EntryDetailScreen extends HookConsumerWidget {
                 paper: entry.paper,
                 child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    child: SelectableText.rich(
-                      buildTagSpan(
-                        entry.body,
-                        t.primaryText,
-                        Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: onBg, height: 1.75, fontSize: 17,
-                        ) ?? TextStyle(fontSize: 17, height: 1.75, color: onBg),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        NoteBody(
+                          text: entry.body,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: onBg, height: 1.75, fontSize: 17,
+                          ) ?? TextStyle(fontSize: 17, height: 1.75, color: onBg),
+                          onToggle: (i) => _toggleCheck(ref, entry, i),
+                          onPerson: (name) => context.push('/people/$name'),
+                          onLink: (link) => openLink(context, linkUri(link)),
+                          onPage: (ref_) {
+                            final to = resolvePageRef(
+                                ref_, entriesAsync.valueOrNull ?? const []);
+                            if (to != null) {
+                              context.push('/entry/${to.id}');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text('No page called “$ref_” yet')));
+                            }
+                          },
+                        ),
+                        for (final (i, uri) in distinctLinks(entry.body).indexed)
+                          Padding(
+                            padding: EdgeInsets.only(top: i == 0 ? 18 : 10),
+                            child: _LinkCard(key: ValueKey(uri), uri: uri),
+                          ),
+                        _Mentions(
+                            mentions: mentionsOf(
+                                entry, entriesAsync.valueOrNull ?? const [])),
+                      ],
                     ),
                   ),
               ),
@@ -214,6 +244,15 @@ class EntryDetailScreen extends HookConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Ticks or unticks the checkbox on [line], right on the page.
+  void _toggleCheck(WidgetRef ref, JournalEntry entry, int line) {
+    final l = noteLines(entry.body)[line];
+    final mark = l.marker.replaceFirst(
+        RegExp(r'\[[ xX]\]'), l.kind == LineKind.done ? '[ ]' : '[x]');
+    ref.read(entriesProvider.notifier).updateEntry(entry.copyWith(
+        body: entry.body.replaceRange(l.start, l.start + l.marker.length, mark)));
   }
 
   Future<void> _confirmDelete(
@@ -671,5 +710,139 @@ class _SongPreviewState extends State<_SongPreview> {
               )),
       ],
     ]);
+  }
+}
+
+/// A link written in the entry, as a small card: the page's title and site.
+/// Starts with the address and fills in once the page has been read.
+class _LinkCard extends StatefulWidget {
+  final Uri uri;
+  const _LinkCard({super.key, required this.uri});
+
+  @override
+  State<_LinkCard> createState() => _LinkCardState();
+}
+
+class _LinkCardState extends State<_LinkCard> {
+  late LinkPreview? _preview = LinkPreviews.known(widget.uri);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_preview == null) {
+      LinkPreviews.find(widget.uri).then((p) {
+        if (mounted) setState(() => _preview = p);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final uri = widget.uri;
+    final address = uri.host.replaceFirst(RegExp(r'^www\.'), '') +
+        (uri.path.length > 1 ? uri.path : '');
+    final title = _preview?.title;
+    final site = _preview?.site ?? uri.host.replaceFirst(RegExp(r'^www\.'), '');
+
+    return Semantics(
+      button: true,
+      link: true,
+      label: 'Open ${title ?? address}',
+      child: Material(
+        color: t.surfaceElev,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: t.outlineSoft),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => openLink(context, uri),
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              child: Row(
+                children: [
+                  AppIcon(AppIconData.link, size: 18, color: t.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AnimatedSize(
+                      duration: Motion.of(context, Motion.settle),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topLeft,
+                      child: AnimatedSwitcher(
+                        duration: Motion.of(context, Motion.settle),
+                        layoutBuilder: (cur, prev) => Stack(
+                          alignment: Alignment.topLeft,
+                          children: [...prev, if (cur != null) cur],
+                        ),
+                        child: Column(
+                          key: ValueKey(title),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title ?? address,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.body(context,
+                                      title == null ? t.onSurfaceMuted : t.onBackground)
+                                  .copyWith(
+                                fontWeight: title == null ? FontWeight.w400 : FontWeight.w600,
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              site,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.caption(context)
+                                  .copyWith(color: t.onSurfaceMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The pages that point here with [[…]], as small sheets.
+class _Mentions extends StatelessWidget {
+  final List<JournalEntry> mentions;
+  const _Mentions({required this.mentions});
+
+  @override
+  Widget build(BuildContext context) {
+    if (mentions.isEmpty) return const SizedBox.shrink();
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Mentioned in',
+              style: AppText.caption(context).copyWith(color: t.onSurfaceMuted, fontSize: 17)),
+          for (final e in mentions)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: PageSheet(
+                seed: e.id.hashCode,
+                paper: e.paper,
+                onTap: () => context.push('/entry/${e.id}'),
+                child: SheetFace(
+                    date: DateFormat('EEE, MMM d').format(e.createdAt), entry: e),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

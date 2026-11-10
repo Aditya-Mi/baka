@@ -30,7 +30,7 @@ class PaperBackground extends StatefulWidget {
     required this.paper,
     required this.child,
     this.rule = false,
-    this.spacing = 29,
+    this.spacing = 29.75,
     this.topOffset = 16,
     this.inset = 20,
   });
@@ -114,7 +114,7 @@ class PaperPainter extends CustomPainter {
     required this.rule,
     required this.margin,
     this.progress,
-    this.spacing = 29,
+    this.spacing = 29.75,
     this.topOffset = 16,
     this.inset = 20,
     this.stroke = 0.6,

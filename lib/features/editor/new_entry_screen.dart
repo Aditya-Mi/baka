@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:baka/utils/note_editing.dart';
 import 'package:baka/widgets/app_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -318,6 +319,7 @@ class NewEntryScreen extends HookConsumerWidget {
                 child: TextField(
                   controller: bodyCtrl,
                   focusNode: bodyFocus,
+                  inputFormatters: [ListContinuation()],
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,

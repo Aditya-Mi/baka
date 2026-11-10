@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:baka/utils/note_marks.dart';
 import 'package:baka/core/theme/app_theme.dart';
 import 'package:baka/models/draft.dart';
 import 'package:baka/models/journal_entry.dart';
@@ -93,14 +94,15 @@ class _MarginPainter extends CustomPainter {
 
 /// The sheet's two lines: what day it is and how it felt, then the page's
 /// title, or its first line faded when it has none.
-class _SheetFace extends StatelessWidget {
+class SheetFace extends StatelessWidget {
   final String date;
   final JournalEntry? entry;
   final String? lead;
   final int pages;
   final Widget? trailing;
   final Color? dateColor;
-  const _SheetFace({
+  const SheetFace({
+    super.key,
     required this.date,
     this.entry,
     this.lead,
@@ -167,8 +169,7 @@ class _SheetFace extends StatelessWidget {
     );
   }
 
-  static String _firstLine(String body) =>
-      body.trim().split('\n').first.trim();
+  static String _firstLine(String body) => leadLine(body);
 }
 
 /// One day's pages as a stack. A single page opens on tap; several deal
@@ -208,7 +209,7 @@ class DayStack extends HookConsumerWidget {
             seed: e.id.hashCode,
             paper: e.paper,
             onTap: onTap ?? () => context.push('/entry/${e.id}'),
-            child: _SheetFace(
+            child: SheetFace(
               date: pages > 1 || entries.length == 1
                   ? date
                   : DateFormat('EEE, MMM d · h:mm a').format(e.createdAt),
@@ -316,10 +317,10 @@ class DraftSheet extends ConsumerWidget {
       draft: true,
       onTap: () => context.push(
           draft.isEdit ? '/edit/${draft.entryId}' : '/new?draftId=${draft.id}'),
-      child: _SheetFace(
+      child: SheetFace(
         date: '$label · ${_relTime(draft.savedAt)}',
         dateColor: t.primaryText,
-        lead: title.isNotEmpty ? title : _SheetFace._firstLine(draft.body),
+        lead: title.isNotEmpty ? title : SheetFace._firstLine(draft.body),
         trailing: SizedBox(
           width: 28, height: 20,
           child: IconButton(

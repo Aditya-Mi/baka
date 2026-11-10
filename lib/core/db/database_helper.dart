@@ -14,10 +14,11 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const _dbName    = 'baka_journal.db';
-  static const _dbVersion = 7; // v7: page title + paper
+  static const _dbVersion = 8; // v8: link previews
   static const tableEntries  = 'entries';
   static const tableTagsMeta = 'tags_meta';
   static const tableCaptures = 'voice_captures';
+  static const tableLinkPreviews = 'link_previews';
 
   Database? _db;
 
@@ -66,6 +67,20 @@ class DatabaseHelper {
       )
     ''');
     await _createCapturesTable(db);
+    await _createLinkPreviewsTable(db);
+  }
+
+  /// What each linked page said about itself, so a page only reads it once.
+  /// A cache, not part of the journal: never backed up.
+  Future<void> _createLinkPreviewsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableLinkPreviews (
+        url         TEXT PRIMARY KEY,
+        title       TEXT,
+        site        TEXT,
+        fetched_at  INTEGER NOT NULL
+      )
+    ''');
   }
 
   Future<void> _createCapturesTable(Database db) async {
@@ -121,6 +136,9 @@ class DatabaseHelper {
           "ALTER TABLE $tableEntries ADD COLUMN title TEXT NOT NULL DEFAULT ''");
       await db.execute(
           "ALTER TABLE $tableEntries ADD COLUMN paper TEXT NOT NULL DEFAULT 'ruled'");
+    }
+    if (oldVersion < 8) {
+      await _createLinkPreviewsTable(db);
     }
   }
 
@@ -207,6 +225,7 @@ class DatabaseHelper {
   Future<void> deleteAllEntries() async {
     final db = await database;
     await db.delete(tableEntries);
+    await db.delete(tableLinkPreviews);
   }
 
   Future<void> insertOrIgnoreEntry(JournalEntry entry) async {
@@ -269,6 +288,28 @@ class DatabaseHelper {
   Future<void> deleteCapture(String id) async {
     final db = await database;
     await db.delete(tableCaptures, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ── Link previews ────────────────────────────────────────────────────────────
+
+  Future<Map<String, Object?>?> getLinkPreview(String url) async {
+    final db   = await database;
+    final rows = await db.query(tableLinkPreviews, where: 'url = ?', whereArgs: [url]);
+    return rows.firstOrNull;
+  }
+
+  Future<void> putLinkPreview(String url, String? title, String? site) async {
+    final db = await database;
+    await db.insert(
+      tableLinkPreviews,
+      {
+        'url':        url,
+        'title':      title,
+        'site':       site,
+        'fetched_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   // ── Tags meta CRUD ───────────────────────────────────────────────────────────

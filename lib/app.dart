@@ -66,6 +66,10 @@ GoRouter buildRouter() {
         path: '/tags/:tag',
         builder: (_, state) => TagsScreen(filterTag: state.pathParameters['tag']),
       ),
+      GoRoute(
+        path: '/people/:name',
+        builder: (_, state) => TagsScreen(filterPerson: state.pathParameters['name']),
+      ),
       // Shell routes (have bottom nav)
       ShellRoute(
         builder: (_, __, child) => ShellScaffold(child: child),

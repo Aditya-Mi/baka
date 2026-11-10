@@ -8,11 +8,15 @@ import 'package:baka/widgets/ink_doodle.dart';
 import 'package:baka/features/home/widgets/journal_card.dart';
 import 'package:baka/models/tag.dart';
 import 'package:baka/providers/entries_provider.dart';
+import 'package:baka/providers/people_provider.dart';
 import 'package:baka/providers/tags_provider.dart';
+import 'package:baka/utils/note_marks.dart';
 
 class TagsScreen extends HookConsumerWidget {
   final String? filterTag;
-  const TagsScreen({super.key, this.filterTag});
+  /// Shows the pages about this person instead of the cloud.
+  final String? filterPerson;
+  const TagsScreen({super.key, this.filterTag, this.filterPerson});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +39,11 @@ class TagsScreen extends HookConsumerWidget {
           tooltip: 'Back',
         ),
         title: Text(
-          filterTag != null ? '#${filterTag!.toLowerCase()}' : 'Tags',
+          filterTag != null
+              ? '#${filterTag!.toLowerCase()}'
+              : filterPerson != null
+                  ? '@${filterPerson!.toLowerCase()}'
+                  : 'Tags & people',
           overflow: TextOverflow.ellipsis,
           style: AppText.screenTitle(context).copyWith(
               fontWeight: FontWeight.w700,
@@ -50,14 +58,20 @@ class TagsScreen extends HookConsumerWidget {
           onRetry: () => ref.invalidate(entriesProvider),
         ),
         data: (entries) {
-          if (filterTag != null) {
+          if (filterTag != null || filterPerson != null) {
+            final tag = filterTag?.toLowerCase();
+            final person = filterPerson?.toLowerCase();
             final filtered = entries
-                .where((e) => e.tags.any(
-                    (tg) => tg.toLowerCase() == filterTag!.toLowerCase()))
+                .where((e) => tag != null
+                    ? e.tags.any((tg) => tg.toLowerCase() == tag)
+                    : peopleIn(e.body).contains(person))
                 .toList();
             return filtered.isEmpty
                 ? Center(
-                    child: Text('No entries tagged #${filterTag!.toLowerCase()}.',
+                    child: Text(
+                        tag != null
+                            ? 'No entries tagged #$tag.'
+                            : 'No pages mention @$person.',
                         style: AppText.bodyPreview(context).copyWith(
                             fontStyle: FontStyle.italic,
                             color: t.onSurfaceMuted,
@@ -81,14 +95,15 @@ class TagsScreen extends HookConsumerWidget {
 
           // Tag cloud
           final tagCounts = _countTags(entries);
-          if (tagCounts.isEmpty) {
+          final people = ref.watch(peopleProvider);
+          if (tagCounts.isEmpty && people.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   const InkDoodle(Doodle.tag, width: 140),
                   const SizedBox(height: 16),
-                  Text('No tags yet.\nWrite #anything in a page and it shows up here.',
+                  Text('No tags or people yet.\nWrite #anything or @someone in a page and they show up here.',
                     textAlign: TextAlign.center,
                     style: AppText.bodyPreview(context).copyWith(
                         fontStyle: FontStyle.italic,
@@ -106,32 +121,52 @@ class TagsScreen extends HookConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
             children: [
               Text(
-                'Tap a tag to see its entries. Long-press to change its colour.',
+                'Tap a tag or a person to see their pages. Long-press a tag to change its colour.',
                 style: AppText.meta(context).copyWith(
                     height: 1.4,
                     color: t.onSurfaceMuted,
                   ),
               ),
-              const SizedBox(height: 14),
-              Wrap(
-              spacing: 8,
-              runSpacing: 10,
-              children: sorted.map((entry) {
-                final tag = tagMap[entry.key];
-                return _TagChip(
-                  name:  entry.key,
-                  count: entry.value,
-                  tag:   tag,
-                  t:     t,
-                  onTap: () => context.push('/tags/${entry.key}'),
-                  onLongPress: () => _showColorPicker(
-                    context, ref,
-                    tag ?? Tag(name: entry.key, color: TagPalette.forName(entry.key)),
-                    t,
-                  ),
-                );
-              }).toList(),
-              ),
+              if (sorted.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _SectionLabel('Tags', t: t),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 10,
+                  children: sorted.map((entry) {
+                    final tag = tagMap[entry.key];
+                    return _TagChip(
+                      name:  entry.key,
+                      count: entry.value,
+                      tag:   tag,
+                      t:     t,
+                      onTap: () => context.push('/tags/${entry.key}'),
+                      onLongPress: () => _showColorPicker(
+                        context, ref,
+                        tag ?? Tag(name: entry.key, color: TagPalette.forName(entry.key)),
+                        t,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (people.isNotEmpty) ...[
+                const SizedBox(height: 26),
+                _SectionLabel('People', t: t),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 10,
+                  children: [
+                    for (final p in people)
+                      _PersonChip(
+                        name: p.name,
+                        count: p.pages,
+                        t: t,
+                        onTap: () => context.push('/people/${p.name}'),
+                      ),
+                  ],
+                ),
+              ],
             ],
           );
         },
@@ -286,6 +321,66 @@ class _TagChip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  final BakaTokens t;
+  const _SectionLabel(this.text, {required this.t});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(text,
+            style: AppText.sectionLabel(context).copyWith(
+                fontSize: 20, color: t.onSurfaceMuted)),
+      );
+}
+
+/// A person, in sage and outlined: tags are filled, people aren't.
+class _PersonChip extends StatelessWidget {
+  final String name;
+  final int count;
+  final BakaTokens t;
+  final VoidCallback onTap;
+  const _PersonChip(
+      {required this.name, required this.count, required this.t, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: '@$name, $count ${count == 1 ? 'page' : 'pages'}',
+        excludeSemantics: true,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: t.secondary, width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 220),
+                  child: Text('@$name',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.sectionLabel(context).copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: t.onSecondaryContainer)),
+                ),
+                const SizedBox(width: 7),
+                Text('$count',
+                    style: AppText.small(context).copyWith(
+                        fontWeight: FontWeight.w500, color: t.onSurfaceMuted)),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 /// Friendly load failure with a retry — replaces raw `Error: $e` text.

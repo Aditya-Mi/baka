@@ -15,7 +15,7 @@ enum AppIconData {
   back, close, chevronRight, chevronDown, chevronUp, search, book, stats, cog,
   // Write
   quill, pencil, hash, mapPin, cloud, music, image, images, camera,
-  calendar, clock, history, paper,
+  calendar, clock, history, paper, link, list, checkSquare, quote, at, pageLink,
   // Voice
   mic, micOff, play, stop, trash,
   // Settings
@@ -53,6 +53,12 @@ const Map<AppIconData, String> _glyphs = {
   AppIconData.mic:          'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3',
   AppIconData.micOff:       'M2 2l20 20M18.9 13.2A7 7 0 0 0 19 12v-2M5 10v2a7 7 0 0 0 12 5M15 9.3V5a3 3 0 0 0-5.7-1.3M9 9v3a3 3 0 0 0 5.1 2.1M12 19v3',
   AppIconData.paper:        'M7 3h7.5L19 7.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM14 3v5h5M9.5 12h6M9.5 15.5h6M9.5 19h3',
+  AppIconData.link:         'M10 13.5a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.2 1.2M14 10.5a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.2-1.2',
+  AppIconData.list:         'M9.5 6H20M9.5 12H20M9.5 18H20M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+  AppIconData.checkSquare:  'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1ZM8.5 12.5l2.5 2.5 5-5.5',
+  AppIconData.quote:        'M10 6.5c-3 .8-4.5 3.2-4.5 6.5v4h4.5v-4.5H6M19 6.5c-3 .8-4.5 3.2-4.5 6.5v4H19v-4.5h-4',
+  AppIconData.at:           'M16 12a4 4 0 1 1-8 0a4 4 0 1 1 8 0M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1',
+  AppIconData.pageLink:     'M7 3h7.5L19 7.5V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM14 3v5h5M9.5 14.5h5.5M12.75 12l2.5 2.5-2.5 2.5',
   AppIconData.play:         'M8.5 6.2v11.6a1 1 0 0 0 1.5.86l9.2-5.8a1 1 0 0 0 0-1.72L10 5.34a1 1 0 0 0-1.5.86Z',
   AppIconData.stop:         'M9 7h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z',
   AppIconData.trash:        'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6',
